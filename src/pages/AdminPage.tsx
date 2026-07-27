@@ -131,7 +131,7 @@ export default function AdminPage() {
     localStorage.setItem('admin_equipment', JSON.stringify(items))
     // Also sync to database
     for (const item of items) {
-      await apiSaveEquipment(item).catch(() => {})
+      try { await apiSaveEquipment(item) } catch (e) { console.error('API save failed', e) }
     }
   }
 
@@ -140,7 +140,7 @@ export default function AdminPage() {
     localStorage.setItem('admin_static_overrides', JSON.stringify(ov))
     // Sync each override to database
     for (const [slug, data] of Object.entries(ov)) {
-      await apiSaveEquipment({ slug, ...data as any }).catch(() => {})
+      try { await apiSaveEquipment({ slug, ...data as any }) } catch (e) { console.error('API override save failed', e) }
     }
   }
 
@@ -353,20 +353,19 @@ export default function AdminPage() {
           <button onClick={async () => {
             setMenuOpen(false)
             try {
-              const { seedDatabase, saveEquipment } = await import('../api')
               const { default: eq } = await import('../data/equipments.json')
-              await seedDatabase(eq)
-              // Sync admin-added equipment
+              await apiSaveEquipment({ slug: '_seed_', en: { name: 'seeding' } })
+              // Sync admin equipment
               const saved = localStorage.getItem('admin_equipment')
               if (saved) {
                 const items = JSON.parse(saved)
                 for (const item of items) {
-                  await saveEquipment(item).catch(() => {})
+                  await apiSaveEquipment(item)
                 }
               }
-              setToastMsg('Database fully synced!'); setToastShow(true)
+              setToastMsg('Database synced!'); setToastShow(true)
             } catch (e) {
-              setToastMsg('Database not available, using localStorage'); setToastShow(true)
+              setToastMsg('Sync failed: ' + (e?.message || 'unknown error')); setToastShow(true)
             }
           }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm text-sm hover:bg-lum-soft transition-colors">
             <Database className="w-4 h-4 text-lum-slate-light" />
