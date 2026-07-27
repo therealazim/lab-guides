@@ -353,8 +353,6 @@ export default function AdminPage() {
           <button onClick={async () => {
             setMenuOpen(false)
             try {
-              const { default: eq } = await import('../data/equipments.json')
-              await apiSaveEquipment({ slug: '_seed_', en: { name: 'seeding' } })
               // Sync admin equipment
               const saved = localStorage.getItem('admin_equipment')
               if (saved) {
@@ -364,7 +362,7 @@ export default function AdminPage() {
                 }
               }
               setToastMsg('Database synced!'); setToastShow(true)
-            } catch (e) {
+            } catch (e: any) {
               setToastMsg('Sync failed: ' + (e?.message || 'unknown error')); setToastShow(true)
             }
           }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm text-sm hover:bg-lum-soft transition-colors">
