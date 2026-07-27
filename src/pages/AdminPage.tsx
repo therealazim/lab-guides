@@ -353,12 +353,17 @@ export default function AdminPage() {
           <button onClick={async () => {
             setMenuOpen(false)
             try {
-              const { seedDatabase, savePartner } = await import('../api')
+              const { seedDatabase, saveEquipment } = await import('../api')
               const { default: eq } = await import('../data/equipments.json')
               await seedDatabase(eq)
-              // Sync admin equipment overrides
+              // Sync admin-added equipment
               const saved = localStorage.getItem('admin_equipment')
-              if (saved) { const items = JSON.parse(saved); for (const item of items) { await savePartner({ name: item.en?.name || item.slug, url: '', image: item.image || null }).catch(() => {}) } }
+              if (saved) {
+                const items = JSON.parse(saved)
+                for (const item of items) {
+                  await saveEquipment(item).catch(() => {})
+                }
+              }
               setToastMsg('Database fully synced!'); setToastShow(true)
             } catch (e) {
               setToastMsg('Database not available, using localStorage'); setToastShow(true)
