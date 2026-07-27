@@ -9,7 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, saveEquipment as apiSaveEquipment, deleteEquipmentApi, seedDatabase as apiSeed } from '../api'
+import { fetchEquipment as apiFetchEquipment, saveEquipment as apiSaveEquipment, deleteEquipmentApi, savePartner as apiSavePartner, deletePartnerApi, seedDatabase as apiSeed } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
@@ -446,6 +446,7 @@ export default function AdminPage() {
                   }
                   setPartners(updated)
                   localStorage.setItem('admin_partners', JSON.stringify(updated.filter(p => !p._default)))
+                  apiSavePartner({ name: partnerName, url: partnerUrl, image: partnerImg }).catch(() => {})
                   setPartnerEditIdx(null)
                   setPartnerName(''); setPartnerUrl(''); setPartnerImg(null)
                 }} className="btn-lum-primary text-xs px-5 py-3">{partnerEditIdx !== null ? 'Update Partner' : 'Add Partner'}</button>
