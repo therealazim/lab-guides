@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Shield, ListOrdered, Wrench, Info, MapPin, Hash, Tag, ShoppingCart, Package, BookOpen } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
@@ -53,12 +53,17 @@ function InfoBadge({ icon: Icon, label, value }: { icon: any; label: string; val
 export default function EquipmentPage() {
   const { slug } = useParams<{ slug: string }>()
   const { lang, t } = useI18n()
+  const [apiEquipment, setApiEquipment] = useState<any>(null)
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    // Fetch from API if available
+    if (slug) {
+      apiFetchEq(slug).then(data => { if (data) setApiEquipment(data) }).catch(() => {})
+    }
   }, [slug])
   
-  const equipment = findEquipment(slug || '')
+  const equipment = apiEquipment || findEquipment(slug || '')
   const meta = getMeta(slug || '')
 
   if (!equipment) {

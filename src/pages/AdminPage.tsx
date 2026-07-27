@@ -205,7 +205,7 @@ export default function AdminPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.lang.en?.name || !form.lang.en?.description) {
       alert('English name and description are required')
       return
@@ -240,18 +240,15 @@ export default function AdminPage() {
       if (editIsStatic) {
         const ov = { ...overrides }
         ov[editIdx] = data
-        saveOverrides(ov)
-        alert('Equipment updated!')
+        await saveOverrides(ov)
       } else {
         const updated = [...savedItems]
         const idx = savedItems.findIndex((it: any) => it.slug === editIdx)
-        if (idx >= 0) { updated[idx] = data; save(updated) }
-        else { save([...savedItems, data]) }
-        alert('Equipment updated!')
+        if (idx >= 0) { updated[idx] = data; await save(updated) }
+        else { await save([...savedItems, data]) }
       }
     } else {
-      save([...savedItems, data])
-      alert('Equipment added!')
+      await save([...savedItems, data])
     }
     resetForm()
   }
@@ -356,10 +353,13 @@ export default function AdminPage() {
           <button onClick={async () => {
             setMenuOpen(false)
             try {
-              const { seedDatabase } = await import('../api')
+              const { seedDatabase, savePartner } = await import('../api')
               const { default: eq } = await import('../data/equipments.json')
-              const res = await seedDatabase(eq)
-              setToastMsg(`Database synced: ${res.seeded || 'OK'} items`); setToastShow(true)
+              await seedDatabase(eq)
+              // Sync admin equipment overrides
+              const saved = localStorage.getItem('admin_equipment')
+              if (saved) { const items = JSON.parse(saved); for (const item of items) { await savePartner({ name: item.en?.name || item.slug, url: '', image: item.image || null }).catch(() => {}) } }
+              setToastMsg('Database fully synced!'); setToastShow(true)
             } catch (e) {
               setToastMsg('Database not available, using localStorage'); setToastShow(true)
             }
