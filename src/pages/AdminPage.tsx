@@ -9,7 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, saveEquipment as apiSaveEquipment, deleteEquipmentApi, savePartner as apiSavePartner } from '../api'
+import { fetchEquipment as apiFetchEquipment, deleteEquipmentApi, savePartner as apiSavePartner } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
@@ -129,18 +129,25 @@ export default function AdminPage() {
   const save = async (items: any[]) => {
     setSavedItems(items)
     localStorage.setItem('admin_equipment', JSON.stringify(items))
-    // Also sync to database
+    // Directly save to database
     for (const item of items) {
-      try { await apiSaveEquipment(item) } catch (e) { console.error('API save failed', e) }
+      try {
+        await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
+      } catch (e) {
+        console.error('DB save failed', e)
+      }
     }
   }
 
   const saveOverrides = async (ov: Record<string, any>) => {
     setOverrides({...ov})
     localStorage.setItem('admin_static_overrides', JSON.stringify(ov))
-    // Sync each override to database
     for (const [slug, data] of Object.entries(ov)) {
-      try { await apiSaveEquipment({ slug, ...data as any }) } catch (e) { console.error('API override save failed', e) }
+      try {
+        await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, ...data as any }) })
+      } catch (e) {
+        console.error('DB override save failed', e)
+      }
     }
   }
 
