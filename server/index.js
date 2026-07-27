@@ -31,8 +31,15 @@ app.get('/api/equipment/:slug', async (req, res) => {
 
 app.post('/api/equipment', async (req, res) => {
   const { slug, ...data } = req.body
-  await sql`INSERT INTO equipment (slug, data, override) VALUES (${slug}, ${JSON.stringify(data)}, true) ON CONFLICT (slug) DO UPDATE SET data = ${JSON.stringify(data)}, override = true`
-  res.json({ ok: true })
+  console.log(`[SAVE] Received: slug="${slug}", name="${data?.en?.name || '?'}"`)
+  try {
+    await sql`INSERT INTO equipment (slug, data, override) VALUES (${slug}, ${JSON.stringify(data)}, true) ON CONFLICT (slug) DO UPDATE SET data = ${JSON.stringify(data)}, override = true`
+    console.log(`[SAVE] OK: ${slug}`)
+    res.json({ ok: true })
+  } catch (err) {
+    console.error(`[SAVE] ERROR: ${slug} - ${err.message}`)
+    res.status(500).json({ error: err.message })
+  }
 })
 
 app.delete('/api/equipment/:slug', async (req, res) => {
