@@ -33,6 +33,7 @@ export default function EquipmentCard({ equipment, index }: Props) {
               alt={data.name}
               className="max-h-32 max-w-[80%] object-contain transition-transform duration-700 active:scale-105 md:group-hover:scale-105 relative z-10"
               loading="lazy"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
             />
           </div>
 
