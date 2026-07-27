@@ -31,7 +31,7 @@ app.get('/api/equipment/:slug', async (req, res) => {
 
 app.post('/api/equipment', async (req, res) => {
   const { slug, ...data } = req.body
-  await sql`INSERT INTO equipment (slug, data) VALUES (${slug}, ${JSON.stringify(data)}) ON CONFLICT (slug) DO UPDATE SET data = ${JSON.stringify(data)}, override = true`
+  await sql`INSERT INTO equipment (slug, data, override) VALUES (${slug}, ${JSON.stringify(data)}, true) ON CONFLICT (slug) DO UPDATE SET data = ${JSON.stringify(data)}, override = true`
   res.json({ ok: true })
 })
 
@@ -66,7 +66,7 @@ app.post('/api/seed', async (req, res) => {
   const items = req.body
   for (const item of items) {
     const { slug, ...data } = item
-    await sql`INSERT INTO equipment (slug, data) VALUES (${slug}, ${JSON.stringify(data)}) ON CONFLICT (slug) DO NOTHING`
+    await sql`INSERT INTO equipment (slug, data, override) VALUES (${slug}, ${JSON.stringify(data)}, false) ON CONFLICT (slug) DO NOTHING`
   }
   res.json({ seeded: items.length })
 })

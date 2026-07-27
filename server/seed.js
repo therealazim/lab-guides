@@ -20,7 +20,7 @@ async function seed() {
   console.log('Tables created')
   for (const eq of equipments) {
     const { slug, ...data } = eq
-    await sql`INSERT INTO equipment (slug, data) VALUES (${slug}, ${JSON.stringify(data)}) ON CONFLICT (slug) DO NOTHING`
+    await sql`INSERT INTO equipment (slug, data, override) VALUES (${slug}, ${JSON.stringify(data)}, false) ON CONFLICT (slug) DO NOTHING`
   }
   console.log(`Seeded ${equipments.length} equipment items`)
 
