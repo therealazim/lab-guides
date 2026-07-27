@@ -27,6 +27,7 @@ export default function HomePage() {
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>(loadOverrides)
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
   const [hiddenSlugs] = useState<string[]>(loadHidden)
+  const [apiCount, setApiCount] = useState(0)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -85,6 +86,7 @@ export default function HomePage() {
         ])
         if (eqData) {
           const apiOverridden = eqData.filter((d: any) => d._overridden)
+          setApiCount(eqData.length)
           // Merge API items with localStorage items (localStorage takes precedence)
           const localAdmin = loadAdmin()
           const merged = [...localAdmin]
@@ -374,7 +376,7 @@ export default function HomePage() {
       <section className="py-24 px-8 md:px-12 lg:px-16">
         <div className="w-full">
           <div className="text-center mb-16">
-            <p className="section-tag">{t('equipSectionTag')}</p>
+            <p className="section-tag">{t('equipSectionTag')} {apiCount > 0 && <span className="text-lum-slate-warm/40 ml-2">(API: {apiCount})</span>}</p>
             <h2 className="section-title">{t('allEquipment')} <strong>({filtered.length})</strong></h2>
             <p className="section-body mx-auto">{t('equipSectionDesc')}</p>
           </div>
