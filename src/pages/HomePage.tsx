@@ -105,13 +105,14 @@ export default function HomePage() {
           setStaticOverrides(loadOverrides())
         }
         if (partnerData) {
-          const defaults = [
+          const defaults: {name:string;url:string;src:string}[] = [
             { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
             { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
             { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
             { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
           ]
-          setAdminPartners([...defaults, ...partnerData.map((p: any) => ({ name: p.name, url: p.url, src: p.image || `/logos/${p.name.toLowerCase().replace(/\s+/g, '-')}.svg` }))])
+          const apiPartners = partnerData.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
+          setAdminPartners([...defaults, ...apiPartners])
         } else {
           setAdminPartners(JSON.parse(localStorage.getItem('admin_partners') || '[]'))
         }
