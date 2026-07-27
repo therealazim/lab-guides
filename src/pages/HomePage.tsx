@@ -84,21 +84,22 @@ export default function HomePage() {
           apiFetchPartners().catch(() => null),
         ])
         if (eqData) {
-          // Merge API data with localStorage fallback
-          setAdminItems(eqData.filter((d: any) => d._overridden))
+          const apiOverridden = eqData.filter((d: any) => d._overridden)
+          // Merge API items with localStorage items (localStorage takes precedence)
+          const localAdmin = loadAdmin()
+          const merged = [...localAdmin]
+          for (const apiItem of apiOverridden) {
+            if (!merged.find((m: any) => m.slug === apiItem.slug)) {
+              merged.push(apiItem)
+            }
+          }
+          setAdminItems(merged)
           const ovs: Record<string, any> = {}
           eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
-          setStaticOverrides(ovs)
-          // Also merge any localStorage items not yet in API
-          const localAdmin = loadAdmin()
-          const apiSlugs = new Set(eqData.map((d: any) => d.slug))
-          const missing = localAdmin.filter((d: any) => !apiSlugs.has(d.slug))
-          if (missing.length) setAdminItems(prev => [...prev, ...missing])
+          // Merge with localStorage overrides
           const localOv = loadOverrides()
-          for (const slug of Object.keys(localOv)) {
-            if (!ovs[slug]) ovs[slug] = localOv[slug]
-          }
-          if (Object.keys(localOv).length) setStaticOverrides(ovs)
+          for (const slug of Object.keys(localOv)) { if (!ovs[slug]) ovs[slug] = localOv[slug] }
+          setStaticOverrides(ovs)
         } else {
           // Fallback to localStorage
           setAdminItems(loadAdmin())
