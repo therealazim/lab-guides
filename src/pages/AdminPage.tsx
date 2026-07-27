@@ -353,17 +353,17 @@ export default function AdminPage() {
           <button onClick={async () => {
             setMenuOpen(false)
             try {
-              // Sync admin equipment
               const saved = localStorage.getItem('admin_equipment')
-              if (saved) {
-                const items = JSON.parse(saved)
-                for (const item of items) {
-                  await apiSaveEquipment(item)
-                }
+              const items = saved ? JSON.parse(saved) : []
+              let synced = 0
+              for (const item of items) {
+                const r = await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
+                const result = await r.json()
+                if (result.ok) synced++
               }
-              setToastMsg('Database synced!'); setToastShow(true)
+              setToastMsg(`Synced ${synced}/${items.length} items`); setToastShow(true)
             } catch (e: any) {
-              setToastMsg('Sync failed: ' + (e?.message || 'unknown error')); setToastShow(true)
+              setToastMsg('Sync error: ' + (e?.message || 'unknown')); setToastShow(true)
             }
           }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm text-sm hover:bg-lum-soft transition-colors">
             <Database className="w-4 h-4 text-lum-slate-light" />
