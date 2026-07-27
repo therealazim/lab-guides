@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless'
 
-const sql = neon(process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_IZnPOM41DiLd@ep-little-lab-axjdyfei-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require')
+const sql = neon(process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_IZnPOM41DiLd@ep-little-lab-axjdyfei.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require')
 
 async function clean() {
   // Delete junk entries (single chars, numbers)
