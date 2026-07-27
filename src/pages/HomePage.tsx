@@ -8,23 +8,13 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import EquipmentCard from '../components/EquipmentCard'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
+import { fetchEquipment as apiFetchEq, fetchPartners as apiFetchPartners } from '../api'
 
 const SCROLL_KEY = 'homeScrollY'
 
-function loadAdmin() {
-  try { return JSON.parse(localStorage.getItem('admin_equipment') || '[]') }
-  catch (e) { return [] }
-}
-
-function loadOverrides() {
-  try { return JSON.parse(localStorage.getItem('admin_static_overrides') || '{}') }
-  catch (e) { return {} }
-}
-
-function loadHidden() {
-  try { return JSON.parse(localStorage.getItem('admin_hidden') || '[]') }
-  catch (e) { return [] }
-}
+function loadAdmin() { try { return JSON.parse(localStorage.getItem('admin_equipment') || '[]') } catch { return [] } }
+function loadOverrides() { try { return JSON.parse(localStorage.getItem('admin_static_overrides') || '{}') } catch { return {} } }
+function loadHidden() { try { return JSON.parse(localStorage.getItem('admin_hidden') || '[]') } catch { return [] } }
 
 export default function HomePage() {
   const { lang, t } = useI18n()
@@ -87,19 +77,39 @@ export default function HomePage() {
 
   // Load admin data on mount
   useEffect(() => {
-    setAdminItems(loadAdmin())
-    setStaticOverrides(loadOverrides())
-    setHiddenSlugs(loadHidden())
-    try {
-      const allPartners = [
-        { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
-        { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
-        { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
-        { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
-      ]
-      const admin = JSON.parse(localStorage.getItem('admin_partners') || '[]')
-      setAdminPartners([...allPartners, ...admin])
-    } catch {}
+    async function load() {
+      try {
+        const [eqData, partnerData] = await Promise.all([
+          apiFetchEq().catch(() => null),
+          apiFetchPartners().catch(() => null),
+        ])
+        if (eqData) {
+          setAdminItems(eqData.filter((d: any) => d._overridden))
+          const ovs: Record<string, any> = {}
+          eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
+          setStaticOverrides(ovs)
+        } else {
+          // Fallback to localStorage
+          setAdminItems(loadAdmin())
+          setStaticOverrides(loadOverrides())
+        }
+        if (partnerData) {
+          const defaults = [
+            { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
+            { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
+            { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
+            { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
+          ]
+          setAdminPartners([...defaults, ...partnerData.map((p: any) => ({ name: p.name, url: p.url, src: p.image || `/logos/${p.name.toLowerCase().replace(/\s+/g, '-')}.svg` }))])
+        } else {
+          setAdminPartners(JSON.parse(localStorage.getItem('admin_partners') || '[]'))
+        }
+      } catch {
+        setAdminItems(loadAdmin())
+        setStaticOverrides(loadOverrides())
+      }
+    }
+    load()
   }, [])
 
   useEffect(() => {

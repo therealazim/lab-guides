@@ -9,6 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
+import { fetchEquipment as apiFetchEquipment, saveEquipment as apiSaveEquipment, deleteEquipmentApi, seedDatabase as apiSeed } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
@@ -97,10 +98,22 @@ export default function AdminPage() {
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([])
 
   useEffect(() => {
-    const stored = localStorage.getItem('admin_equipment')
-    if (stored) { try { setSavedItems(JSON.parse(stored)) } catch {} }
-    const ov = localStorage.getItem('admin_static_overrides')
-    if (ov) { try { setOverrides(JSON.parse(ov)) } catch {} }
+    // Load from database API, fallback to localStorage
+    apiFetchEquipment().then(data => {
+      if (data && data.length) {
+        const admin = data.filter((d: any) => d._overridden)
+        const ovs: Record<string, any> = {}
+        data.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
+        setSavedItems(admin)
+        setOverrides(ovs)
+      }
+    }).catch(() => {
+      // Fallback to localStorage
+      const stored = localStorage.getItem('admin_equipment')
+      if (stored) { try { setSavedItems(JSON.parse(stored)) } catch {} }
+      const ov = localStorage.getItem('admin_static_overrides')
+      if (ov) { try { setOverrides(JSON.parse(ov)) } catch {} }
+    })
     const hs = localStorage.getItem('admin_hidden')
     if (hs) { try { setHiddenSlugs(JSON.parse(hs)) } catch {} }
     const pt = localStorage.getItem('admin_partners')
@@ -113,14 +126,22 @@ export default function AdminPage() {
     return () => window.removeEventListener('mousemove', onMove)
   }, [])
 
-  const save = (items: any[]) => {
+  const save = async (items: any[]) => {
     setSavedItems(items)
     localStorage.setItem('admin_equipment', JSON.stringify(items))
+    // Also sync to database
+    for (const item of items) {
+      await apiSaveEquipment(item).catch(() => {})
+    }
   }
 
-  const saveOverrides = (ov: Record<string, any>) => {
+  const saveOverrides = async (ov: Record<string, any>) => {
     setOverrides({...ov})
     localStorage.setItem('admin_static_overrides', JSON.stringify(ov))
+    // Sync each override to database
+    for (const [slug, data] of Object.entries(ov)) {
+      await apiSaveEquipment({ slug, ...data as any }).catch(() => {})
+    }
   }
 
   const overriddenStatic = staticEquipments.map(eq => {
@@ -385,7 +406,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-lum-slate-warm truncate">{item.slug}</p>
                   </div>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { const u = [...hiddenSlugs, slug]; setHiddenSlugs(u); localStorage.setItem('admin_hidden', JSON.stringify(u)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
+                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { const u = [...hiddenSlugs, slug]; setHiddenSlugs(u); localStorage.setItem('admin_hidden', JSON.stringify(u)); deleteEquipmentApi(slug).catch(() => {}); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

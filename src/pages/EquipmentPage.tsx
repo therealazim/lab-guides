@@ -8,18 +8,20 @@ import ThemeToggle from '../components/ThemeToggle'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import youtubeVideos from '../data/youtube-videos.json'
+import { fetchEquipmentBySlug as apiFetchEq } from '../api'
 
 const findEquipment = (slug: string) => {
+  // Try from static data first (for already loaded items)
+  const hidden = (() => { try { return JSON.parse(localStorage.getItem('admin_hidden') || '[]') } catch { return [] } })()
+  if (hidden.includes(slug)) return undefined
+  const fromStatic = staticEquipments.find((eq: any) => eq.slug === slug)
+  if (fromStatic) return fromStatic
+  // Try from localStorage
   try {
     const admin = JSON.parse(localStorage.getItem('admin_equipment') || '[]')
-    const hidden = JSON.parse(localStorage.getItem('admin_hidden') || '[]')
-    if (hidden.includes(slug)) return undefined
-    return [...staticEquipments, ...admin].find((eq: any) => eq.slug === slug)
-  } catch {
-    return staticEquipments.find((eq: any) => eq.slug === slug)
-  }
+    return admin.find((eq: any) => eq.slug === slug)
+  } catch { return undefined }
 }
- 
 const getMeta = (slug: string) => {
   const eq = findEquipment(slug) as any
   if (!eq) return { brand: '', model: '', location: '', quantity: '', purchase_date: '', installation_date: '', status: '' }
