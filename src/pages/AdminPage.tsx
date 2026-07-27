@@ -9,7 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, saveEquipment as apiSaveEquipment, deleteEquipmentApi, savePartner as apiSavePartner, deletePartnerApi, seedDatabase as apiSeed } from '../api'
+import { fetchEquipment as apiFetchEquipment, saveEquipment as apiSaveEquipment, deleteEquipmentApi, savePartner as apiSavePartner } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'

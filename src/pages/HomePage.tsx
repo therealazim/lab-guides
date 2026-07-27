@@ -26,7 +26,7 @@ export default function HomePage() {
   const [adminItems, setAdminItems] = useState<any[]>(loadAdmin)
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>(loadOverrides)
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
-  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(loadHidden)
+  const [hiddenSlugs] = useState<string[]>(loadHidden)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
