@@ -196,7 +196,7 @@ export default function EquipmentPage() {
               </div>
               <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{section.title}</h2>
             </div>
-            <p className="text-sm font-light leading-relaxed text-lum-slate-light">{section.content}</p>
+            <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: section.content }} />
           </motion.section>
         ))}
 
@@ -214,20 +214,7 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('safety')}</h2>
           </div>
-          <ul className="space-y-3">
-            {(Array.isArray((data as any).safetyGuidelines) ? (data as any).safetyGuidelines : (data as any).safety?.split('\n') || []).map((item: string, idx: number) => (
-              <motion.li
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="flex gap-3 text-sm font-light text-lum-slate-light"
-              >
-                <span className="w-5 h-5 rounded-full bg-red-500/10 text-red-400 text-[10px] font-semibold flex items-center justify-center flex-shrink-0 mt-0.5">{idx + 1}</span>
-                <span>{item}</span>
-              </motion.li>
-            ))}
-          </ul>
+          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).safety || '' }} />
         </motion.section>
 
         {/* Procedure */}
@@ -244,20 +231,7 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('procedure')}</h2>
           </div>
-          <ol className="space-y-3">
-            {(Array.isArray((data as any).operatingProcedure) ? (data as any).operatingProcedure : (data as any).procedure?.split('\n') || []).map((step: string, idx: number) => (
-              <motion.li
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="flex gap-3 text-sm font-light text-lum-slate-light"
-              >
-                <span className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold flex items-center justify-center flex-shrink-0 mt-0.5">{idx + 1}</span>
-                <span>{step}</span>
-              </motion.li>
-            ))}
-          </ol>
+          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).procedure || '' }} />
         </motion.section>
 
         {/* Maintenance */}
@@ -274,20 +248,7 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('maintenance')}</h2>
           </div>
-          <ul className="space-y-3">
-            {(Array.isArray((data as any).maintenance) ? (data as any).maintenance : (data as any).maintenance?.split('\n') || []).map((item: string, idx: number) => (
-              <motion.li
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="flex gap-3 text-sm font-light text-lum-slate-light"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500/60 mt-2 flex-shrink-0" />
-                <span>{item}</span>
-              </motion.li>
-            ))}
-          </ul>
+          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).maintenance || '' }} />
         </motion.section>
 
         {/* Video Tutorial */}
