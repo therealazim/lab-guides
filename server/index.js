@@ -1,5 +1,6 @@
 import express from 'express'
 import path from 'path'
+import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { neon } from '@neondatabase/serverless'
 
@@ -84,13 +85,13 @@ app.use(express.static(distPath))
 app.get('*', async (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' })
   try {
-    const [html, rows, partners] = await Promise.all([
-      import('fs').then(fs => fs.promises.readFile(path.join(distPath, 'index.html'), 'utf-8')),
+    const html = await fs.readFile(path.join(distPath, 'index.html'), 'utf-8')
+    const [rows, partnerRows] = await Promise.all([
       sql`SELECT * FROM equipment WHERE hidden = false ORDER BY slug`,
       sql`SELECT * FROM partners ORDER BY sort_order`,
     ])
     const equipment = rows.map(r => ({ slug: r.slug, ...r.data, _overridden: r.override }))
-    const inject = `<script>window.__INITIAL_DATA__ = ${JSON.stringify({ equipment, partners }) .replace(/</g, '\\u003c')}<\/script>`
+    const inject = `<script>window.__INITIAL_DATA__ = ${JSON.stringify({ equipment, partners: partnerRows }).replace(/</g, '\\u003c')}<\/script>`
     res.send(html.replace('</head>', inject + '</head>'))
   } catch {
     res.sendFile(path.join(distPath, 'index.html'))
