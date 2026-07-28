@@ -122,7 +122,6 @@ export default function HomePage() {
       setAdminPartners(JSON.parse(localStorage.getItem('admin_partners') || '[]'))
     }
   }, [])
-  }, [])
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
