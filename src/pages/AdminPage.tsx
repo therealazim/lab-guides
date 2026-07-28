@@ -505,9 +505,9 @@ export default function AdminPage() {
         {showTranslations && (
           <div>
             <h1 className="text-lg font-bold text-lum-ivory mb-2">Translations</h1>
-            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Override UI text per language</p>
+            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Override UI text per language — or export, edit in any text editor, and import back</p>
 
-            <div className="flex gap-2 mb-4 flex-wrap">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
               {['en','uz','kk','ru','ko'].map(l => (
                 <button key={l} onClick={() => setTransLang(l)}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
@@ -516,6 +516,57 @@ export default function AdminPage() {
                   {l.toUpperCase()}
                 </button>
               ))}
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => {
+                const all: Record<string, Record<string, string>> = {}
+                const langs = ['en','uz','kk','ru','ko']
+                langs.forEach(l => { all[l] = {} })
+                transKeys.forEach(key => {
+                  langs.forEach(l => {
+                    all[l][key] = translations[key]?.[l] || UI_STRINGS[l as keyof typeof UI_STRINGS]?.[key] || UI_STRINGS.en[key] || key
+                  })
+                })
+                const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url; a.download = 'translations.json'; a.click()
+                URL.revokeObjectURL(url)
+              }} className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
+                Export JSON
+              </button>
+              <label className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors cursor-pointer">
+                Import JSON
+                <input type="file" accept=".json" className="hidden" onChange={async e => {
+                  const f = e.target.files?.[0]
+                  if (!f) return
+                  const text = await f.text()
+                  try {
+                    const data = JSON.parse(text)
+                    const updated = { ...translations }
+                    const langs = ['en','uz','kk','ru','ko']
+                    for (const lang of langs) {
+                      if (data[lang]) {
+                        for (const [key, value] of Object.entries(data[lang])) {
+                          if (!updated[key]) updated[key] = {}
+                          updated[key][lang] = value as string
+                          await fetch('/api/translations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ key, lang, value }),
+                          })
+                        }
+                      }
+                    }
+                    setTranslations(updated)
+                    setToastMsg('Translations imported!'); setToastShow(true)
+                  } catch (err) {
+                    setToastMsg('Invalid JSON file'); setToastShow(true)
+                  }
+                  e.target.value = ''
+                }} />
+              </label>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-2">
