@@ -103,42 +103,43 @@ def get_partners():
     return jsonify(rows)
 
 # ─── Frontend ───
-@app.route('/', defaults={'path': ''})
+@app.route('/')
+def serve_root():
+    return serve_injected()
+
 @app.route('/<path:path>')
-def serve(path):
+def serve_path(path):
     if path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
-    
-    # Inject data for root
-    if not path or path == 'index.html':
-        try:
-            with open('dist/index.html', 'r') as f:
-                html = f.read()
-            conn = get_db()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
-            rows = cur.fetchall()
-            cur.execute('SELECT * FROM partners ORDER BY sort_order')
-            partners = cur.fetchall()
-            cur.close()
-            conn.close()
-            
-            equipment = []
-            for r in rows:
-                data = r['data'] if r['data'] else {}
-                data['slug'] = r['slug']
-                data['_overridden'] = r['override']
-                equipment.append(data)
-            
-            inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
-            return html.replace('</head>', inject + '</head>')
-        except Exception as e:
-            print(f'Injection error: {e}')
-    
-    # Serve static files
     try:
         return send_from_directory('dist', path)
     except:
+        return serve_injected()
+
+def serve_injected():
+    try:
+        with open('dist/index.html', 'r') as f:
+            html = f.read()
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
+        rows = cur.fetchall()
+        cur.execute('SELECT * FROM partners ORDER BY sort_order')
+        partners = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        equipment = []
+        for r in rows:
+            data = r['data'] if r['data'] else {}
+            data['slug'] = r['slug']
+            data['_overridden'] = r['override']
+            equipment.append(data)
+        
+        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
+        return html.replace('</head>', inject + '</head>')
+    except Exception as e:
+        print(f'Injection error: {e}')
         return send_from_directory('dist', 'index.html')
 
 if __name__ == '__main__':
