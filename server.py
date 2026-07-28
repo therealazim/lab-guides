@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -110,12 +110,11 @@ def serve_frontend(path):
     if path and path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
     
-    # Serve static files
+    # Serve static files with proper MIME types
     if path:
         file_path = os.path.join(DIST_DIR, path)
         if os.path.exists(file_path) and os.path.isfile(file_path):
-            with open(file_path, 'rb') as f:
-                return f.read()
+            return send_file(file_path)
     
     # HTML pages - serve with injected data
     index_file = os.path.join(DIST_DIR, 'index.html')
