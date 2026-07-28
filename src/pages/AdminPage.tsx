@@ -506,18 +506,7 @@ export default function AdminPage() {
         {showTranslations && (
           <div>
             <h1 className="text-lg font-bold text-lum-ivory mb-2">Translations</h1>
-            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Override UI text per language — or export, edit in any text editor, and import back</p>
-
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              {['en','uz','kk','ru','ko'].map(l => (
-                <button key={l} onClick={() => setTransLang(l)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                    transLang === l ? 'bg-lum-slate-light/20 text-lum-ivory' : 'text-lum-slate-warm hover:text-lum-ivory'
-                  }`}>
-                  {l.toUpperCase()}
-                </button>
-              ))}
-            </div>
+            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Export to Excel, edit, and import back — all 5 languages included.</p>
 
             <div className="flex gap-2 mb-4">
               <button onClick={() => {
@@ -544,10 +533,10 @@ export default function AdminPage() {
                 const wb = XLSX.utils.book_new()
                 XLSX.utils.book_append_sheet(wb, ws, 'Translations')
                 XLSX.writeFile(wb, 'translations.xlsx')
-              }} className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
+              }} className="px-5 py-3 rounded-xl text-xs font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
                 Export Excel
               </button>
-              <label className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors cursor-pointer">
+              <label className="px-5 py-3 rounded-xl text-xs font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors cursor-pointer">
                 Import Excel
                 <input type="file" accept=".xlsx,.xls" className="hidden" onChange={async e => {
                   const f = e.target.files?.[0]
@@ -583,42 +572,6 @@ export default function AdminPage() {
                   e.target.value = ''
                 }} />
               </label>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-2">
-              {transKeys.map(key => {
-                const dbVal = translations[key]?.[transLang] || ''
-                const defaultVal = UI_STRINGS[transLang as keyof typeof UI_STRINGS]?.[key] || UI_STRINGS.en[key] || key
-                return (
-                  <div key={key} className="lum-card p-3 flex items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[9px] text-lum-slate-warm/50 mb-0.5 font-mono truncate">{key}</p>
-                      <input
-                        value={dbVal}
-                        onChange={e => {
-                          const updated = { ...translations }
-                          if (!updated[key]) updated[key] = {}
-                          updated[key][transLang] = e.target.value
-                          setTranslations(updated)
-                        }}
-                        onBlur={async () => {
-                          if (dbVal !== translations[key]?.[transLang]) {
-                            await fetch('/api/translations', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ key, lang: transLang, value: dbVal }),
-                            })
-                          }
-                          setTransKeys([...transKeys])
-                        }}
-                        placeholder={defaultVal}
-                        className="w-full px-2 py-1.5 rounded-lg bg-lum-soft border border-lum-panel-border text-lum-ivory text-xs outline-none focus:border-lum-slate-light/20"
-                      />
-                      <p className="text-[9px] text-lum-slate-warm/60 mt-0.5 truncate">default: {defaultVal}</p>
-                    </div>
-                  </div>
-                )
-              })}
             </div>
           </div>
         )}
