@@ -123,10 +123,18 @@ export default function AdminPage() {
       const ov = localStorage.getItem('admin_static_overrides')
       if (ov) { try { setOverrides(JSON.parse(ov)) } catch {} }
     })
+    // Load partners from API
+    fetch('/api/partners').then(r => r.json()).then(data => {
+      if (data && data.length) {
+        const apiPartners = data.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, src: p.image, url: p.url, _id: p.id, _default: false }))
+        setPartners([...DEFAULT_PARTNERS, ...apiPartners])
+      }
+    }).catch(() => {
+      const pt = localStorage.getItem('admin_partners')
+      if (pt) { try { const admin = JSON.parse(pt); setPartners([...DEFAULT_PARTNERS, ...admin]) } catch {} }
+    })
     const hs = localStorage.getItem('admin_hidden')
     if (hs) { try { setHiddenSlugs(JSON.parse(hs)) } catch {} }
-    const pt = localStorage.getItem('admin_partners')
-    if (pt) { try { const admin = JSON.parse(pt); setPartners([...DEFAULT_PARTNERS, ...admin]) } catch {} }
   }, [])
 
   const loadTranslations = async () => {
