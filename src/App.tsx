@@ -1,10 +1,9 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState, useRef } from 'react'
-import { ArrowUp, Pencil, Eye } from 'lucide-react'
+import { ArrowUp } from 'lucide-react'
 import { I18nProvider, useI18n } from './i18n'
 import { ThemeProvider } from './ThemeContext'
-import { EditModeProvider, useEditMode } from './EditModeContext'
 import HomePage from './pages/HomePage'
 import EquipmentPage from './pages/EquipmentPage'
 import AdminPage from './pages/AdminPage'
@@ -35,36 +34,6 @@ function ScrollToTop() {
   )
 }
 
-function EditModeToggle() {
-  const { editMode, setEditMode } = useEditMode()
-  const location = useLocation()
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('admin_auth') === 'true')
-
-  useEffect(() => {
-    const check = () => setIsAdmin(localStorage.getItem('admin_auth') === 'true')
-    window.addEventListener('storage', check)
-    return () => window.removeEventListener('storage', check)
-  }, [])
-
-  if (!isAdmin || location.pathname.startsWith('/admin')) return null
-
-  return (
-    <button
-      onClick={() => setEditMode(!editMode)}
-      className={`fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full backdrop-blur-xl border shadow-2xl transition-all ${
-        editMode
-          ? 'bg-lum-ivory text-lum-deep border-lum-ivory'
-          : 'bg-lum-slate-light/10 text-lum-ivory border-lum-panel-border hover:bg-lum-slate-light/20'
-      }`}
-    >
-      {editMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
-      <span className="text-[10px] font-semibold tracking-wider uppercase">
-        {editMode ? 'Done Editing' : 'Edit Site'}
-      </span>
-    </button>
-  )
-}
-
 function AnimatedRoutes() {
   const { lang, t } = useI18n()
   const location = useLocation()
@@ -83,6 +52,7 @@ function AnimatedRoutes() {
         setDisplayedText([])
         setRippling(false)
 
+        // Show all characters at once with staggered wave
         const chars = msg.split('')
         setDisplayedText(chars)
         setTimeout(() => setRippling(true), 800)
@@ -113,6 +83,7 @@ function AnimatedRoutes() {
         </motion.div>
       </AnimatePresence>
 
+      {/* Greeting toast - typewriter style */}
       <AnimatePresence>
         {greeting && (
           <motion.div
@@ -124,6 +95,7 @@ function AnimatedRoutes() {
             className="fixed inset-0 z-[100] flex items-center justify-center"
             style={{ backgroundColor: '#0F1115' }}
           >
+            {/* Rings */}
             {rippling && (
               <>
                 <motion.span
@@ -146,6 +118,7 @@ function AnimatedRoutes() {
                 />
               </>
             )}
+            {/* Lottie background */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
               <dotlottie-wc
                 src="https://lottie.host/9935dd26-5e32-4a46-beb6-d68b32896c22/Jn60r5uNap.lottie"
@@ -180,8 +153,9 @@ function AnimatedRoutes() {
         )}
       </AnimatePresence>
 
+      {/* Scroll to top button */}
       <ScrollToTop />
-      <EditModeToggle />
+
     </>
   )
 }
@@ -190,9 +164,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <I18nProvider>
-        <EditModeProvider>
-          <AnimatedRoutes />
-        </EditModeProvider>
+        <AnimatedRoutes />
       </I18nProvider>
     </ThemeProvider>
   )

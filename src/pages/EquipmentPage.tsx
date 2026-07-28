@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
-import Editable from '../components/Editable'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import youtubeVideos from '../data/youtube-videos.json'
@@ -55,14 +54,6 @@ export default function EquipmentPage() {
   const { slug } = useParams<{ slug: string }>()
   const { lang, t } = useI18n()
   const [apiEquipment, setApiEquipment] = useState<any>(null)
-  const [siteContent, setSiteContent] = useState<Record<string, string>>(() => {
-    const initial = (window as any).__INITIAL_DATA__
-    return initial?.content || {}
-  })
-  const saveContent = async (key: string, value: string) => {
-    setSiteContent(prev => ({ ...prev, [key]: value }))
-    await fetch('/api/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, value }) })
-  }
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -203,9 +194,7 @@ export default function EquipmentPage() {
               <div className="w-9 h-9 rounded-xl bg-lum-graphite border border-lum-panel-border flex items-center justify-center">
                 <section.icon className="w-4 h-4 text-lum-slate-light" />
               </div>
-              <h2 className="text-base font-semibold text-lum-ivory tracking-tight">
-                <Editable text={siteContent[`eq_section_${section.key}`] || section.title} contentKey={`eq_section_${section.key}`} onSave={saveContent} tag="span" />
-              </h2>
+              <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{section.title}</h2>
             </div>
             <p className="text-sm font-light leading-relaxed text-lum-slate-light">{section.content}</p>
           </motion.section>
@@ -223,7 +212,7 @@ export default function EquipmentPage() {
             <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
               <Shield className="w-4 h-4 text-red-400" />
             </div>
-            <h2 className="text-base font-semibold text-lum-ivory tracking-tight"><Editable text={siteContent.equip_safety || t('safety')} contentKey="equip_safety" onSave={saveContent} tag="span" /></h2>
+            <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('safety')}</h2>
           </div>
           <ul className="space-y-3">
             {(Array.isArray((data as any).safetyGuidelines) ? (data as any).safetyGuidelines : (data as any).safety?.split('\n') || []).map((item: string, idx: number) => (
@@ -253,7 +242,7 @@ export default function EquipmentPage() {
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
               <ListOrdered className="w-4 h-4 text-emerald-400" />
             </div>
-            <h2 className="text-base font-semibold text-lum-ivory tracking-tight"><Editable text={siteContent.equip_procedure || t('procedure')} contentKey="equip_procedure" onSave={saveContent} tag="span" /></h2>
+            <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('procedure')}</h2>
           </div>
           <ol className="space-y-3">
             {(Array.isArray((data as any).operatingProcedure) ? (data as any).operatingProcedure : (data as any).procedure?.split('\n') || []).map((step: string, idx: number) => (
@@ -283,7 +272,7 @@ export default function EquipmentPage() {
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
               <Wrench className="w-4 h-4 text-amber-400" />
             </div>
-            <h2 className="text-base font-semibold text-lum-ivory tracking-tight"><Editable text={siteContent.equip_maintenance || t('maintenance')} contentKey="equip_maintenance" onSave={saveContent} tag="span" /></h2>
+            <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('maintenance')}</h2>
           </div>
           <ul className="space-y-3">
             {(Array.isArray((data as any).maintenance) ? (data as any).maintenance : (data as any).maintenance?.split('\n') || []).map((item: string, idx: number) => (
@@ -310,7 +299,7 @@ export default function EquipmentPage() {
             transition={{ duration: 1.2, ease: silkEase, delay: 0.5 }}
             className="lum-card p-4 md:p-6 lg:p-8 mb-6"
           >
-            <h2 className="text-base font-semibold text-lum-ivory tracking-tight mb-6"><Editable text={siteContent.equip_video || t('videoTutorial')} contentKey="equip_video" onSave={saveContent} tag="span" /></h2>
+            <h2 className="text-base font-semibold text-lum-ivory tracking-tight mb-6">{t('videoTutorial')}</h2>
             <div className="aspect-video rounded-2xl overflow-hidden border border-lum-panel-border max-w-3xl mx-auto">
               <iframe
                 width="100%"
