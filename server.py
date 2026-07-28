@@ -118,6 +118,36 @@ def get_partners():
     conn.close()
     return jsonify(rows)
 
+@app.route('/api/partners', methods=['POST'])
+def save_partner():
+    body = request.get_json()
+    name = body.get('name', '')
+    url = body.get('url', '')
+    image = body.get('image', '')
+    if not name:
+        return jsonify({'error': 'No name'}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO partners (name, url, image) VALUES (%s, %s, %s) RETURNING id',
+        (name, url, image)
+    )
+    partner_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True, 'id': partner_id})
+
+@app.route('/api/partners/<int:partner_id>', methods=['DELETE'])
+def delete_partner(partner_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM partners WHERE id = %s', (partner_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
 # ─── Translations API ───
 @app.route('/api/translations', methods=['GET'])
 def get_translations():
