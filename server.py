@@ -1,6 +1,7 @@
 import os
 import json
-from flask import Flask, request, jsonify, send_from_directory
+import mimetypes
+from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -114,7 +115,10 @@ def serve_frontend(path):
     if path:
         file_path = os.path.join(DIST_DIR, path)
         if os.path.exists(file_path) and os.path.isfile(file_path):
-            return send_from_directory(DIST_DIR, path)
+            with open(file_path, 'rb') as f:
+                content = f.read()
+            mime = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+            return Flask.response_class(content, mimetype=mime)
     
     # HTML pages - serve with injected data
     index_file = os.path.join(DIST_DIR, 'index.html')
