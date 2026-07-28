@@ -106,18 +106,6 @@ def get_partners():
 # ─── Frontend ───
 @app.route('/')
 def serve_root():
-    return serve_injected()
-
-@app.route('/<path:path>')
-def serve_path(path):
-    if path.startswith('api/'):
-        return jsonify({'error': 'Not found'}), 404
-    try:
-        return send_file(os.path.join(DIST_DIR, path))
-    except:
-        return serve_injected()
-
-def serve_injected():
     try:
         index_path = os.path.join(DIST_DIR, 'index.html')
         with open(index_path, 'r') as f:
@@ -141,7 +129,16 @@ def serve_injected():
         inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
         return html.replace('</head>', inject + '</head>')
     except Exception as e:
-        print(f'Injection error: {e}')
+        print(f'Root error: {e}')
+        return send_file(os.path.join(DIST_DIR, 'index.html'))
+
+@app.route('/<path:path>')
+def serve_path(path):
+    if path.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
+    try:
+        return send_file(os.path.join(DIST_DIR, path))
+    except:
         return send_file(os.path.join(DIST_DIR, 'index.html'))
 
 if __name__ == '__main__':
