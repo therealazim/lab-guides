@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, send_file, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -113,7 +113,7 @@ def serve_path(path):
     if path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
     try:
-        return send_from_directory(DIST_DIR, path)
+        return send_file(os.path.join(DIST_DIR, path))
     except:
         return serve_injected()
 
@@ -142,7 +142,7 @@ def serve_injected():
         return html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Injection error: {e}')
-        return send_from_directory(DIST_DIR, 'index.html')
+        return send_file(os.path.join(DIST_DIR, 'index.html'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
