@@ -74,7 +74,7 @@ export default function HomePage() {
         eq.en?.name?.toLowerCase().includes(q)
       )
     })
-  }, [query, lang])
+  }, [query, lang, allEquipments])
 
   // Load admin data from API (always fetches fresh, uses injected data as initial)
   useEffect(() => {
