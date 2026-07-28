@@ -345,15 +345,11 @@ export default function AdminPage() {
         className="fixed top-0 left-0 bottom-0 z-40 w-64 bg-lum-mid border-r border-lum-panel-border pt-20 px-4 overflow-y-auto shadow-2xl"
       >
         <div className="space-y-2">
-          <button onClick={() => { setShowForm(true); setShowEquipList(false); setShowPartners(false); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory font-medium text-sm hover:bg-lum-soft transition-colors">
-            <FilePlus className="w-4 h-4 text-lum-slate-light" />
-            {t('adminAddNew')}
-          </button>
-          <button onClick={() => { setShowEquipList(true); setShowForm(false); setShowPartners(false); setEditIdx(null); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
+          <button onClick={() => { setShowEquipList(true); setShowPartners(false); setEditIdx(null); resetForm(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory font-medium text-sm hover:bg-lum-soft transition-colors">
             <List className="w-4 h-4 text-lum-slate-light" />
             {t('adminAllEq')}
           </button>
-          <button onClick={() => { setShowPartners(true); setShowForm(false); setShowEquipList(false); setEditIdx(null); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
+          <button onClick={() => { setShowPartners(true); setShowEquipList(false); setEditIdx(null); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
             <Link2 className="w-4 h-4 text-lum-slate-light" />
             Partners
           </button>
@@ -403,9 +399,24 @@ export default function AdminPage() {
           <h1 className="text-lg font-bold text-lum-ivory mb-6">{t('adminAllEq')} ({staticEquipments.length + savedItems.length - hiddenSlugs.length})</h1>
         ) : null}
 
-        {/* Equipment list */}
+        {/* Add form + Equipment list (combined) */}
         {showEquipList && !editIdx && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+          <>
+            {/* Inline add form */}
+            <div className="lum-card p-4 md:p-6 mb-6">
+              <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-4">{t('adminAddNew')}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})} placeholder={t('adminSlug')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <input value={form.lang.en?.name || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, name: e.target.value}}}}) } placeholder={t('adminName') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+              </div>
+              <textarea value={form.lang.en?.description || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, description: e.target.value}}}}) } rows={2} placeholder={t('adminDesc') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none mb-3" />
+              <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
+                <Save className="w-3.5 h-3.5" /> Save
+              </button>
+            </div>
+
+            {/* Equipment grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
             {[...overriddenStatic, ...savedItems].filter((item: any) => !hiddenSlugs.includes(item.slug)).map((item: any) => (
               <div key={item.slug} className="lum-card p-4 flex items-center justify-between hover:border-lum-slate-light/20 transition-colors cursor-pointer" onClick={() => editItem(item)}>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -421,6 +432,7 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+          </>
         )}
 
         {/* Partners management */}
