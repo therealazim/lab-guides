@@ -6,6 +6,7 @@ import { useI18n, type Lang } from '../i18n'
 import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import EquipmentCard from '../components/EquipmentCard'
+import Editable from '../components/Editable'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq } from '../api'
@@ -28,6 +29,14 @@ export default function HomePage() {
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
   const [hiddenSlugs] = useState<string[]>(loadHidden)
   const [apiCount, setApiCount] = useState(0)
+  const [siteContent, setSiteContent] = useState<Record<string, string>>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return initial?.content || {}
+  })
+  const saveContent = async (key: string, value: string) => {
+    setSiteContent(prev => ({ ...prev, [key]: value }))
+    await fetch('/api/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, value }) })
+  }
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -232,8 +241,10 @@ export default function HomePage() {
             transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
             className="text-[clamp(2.8rem,6.5vw,5.5rem)] font-light tracking-[-0.05em] leading-[1] text-lum-ivory mb-6"
           >
-            {t('title')}<br />
-            <strong className="font-semibold bg-gradient-to-r from-lum-ivory via-lum-silver to-lum-slate-light bg-clip-text text-transparent">{t('heroTagline')}</strong>
+            <Editable text={siteContent.home_title || t('title')} contentKey="home_title" onSave={saveContent} tag="span" /><br />
+            <strong className="font-semibold bg-gradient-to-r from-lum-ivory via-lum-silver to-lum-slate-light bg-clip-text text-transparent">
+              <Editable text={siteContent.home_tagline || t('heroTagline')} contentKey="home_tagline" onSave={saveContent} tag="span" />
+            </strong>
           </motion.h1>
 
           <motion.p
@@ -242,7 +253,7 @@ export default function HomePage() {
             transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
             className="text-[clamp(0.85rem,1.2vw,1rem)] font-light leading-relaxed text-lum-slate-light max-w-[520px] mx-auto mb-12"
           >
-            {t('subtitle')}
+            <Editable text={siteContent.home_subtitle || t('subtitle')} contentKey="home_subtitle" onSave={saveContent} tag="span" />
           </motion.p>
 
           {/* Search */}
@@ -380,9 +391,9 @@ export default function HomePage() {
       <section className="py-24 px-8 md:px-12 lg:px-16">
         <div className="w-full">
           <div className="text-center mb-16">
-            <p className="section-tag">{t('equipSectionTag')} {apiCount > 0 && <span className="text-lum-slate-warm/40 ml-2">(API: {apiCount})</span>}</p>
-            <h2 className="section-title">{t('allEquipment')} <strong>({filtered.length})</strong></h2>
-            <p className="section-body mx-auto">{t('equipSectionDesc')}</p>
+            <p className="section-tag"><Editable text={siteContent.home_equip_tag || t('equipSectionTag')} contentKey="home_equip_tag" onSave={saveContent} tag="span" /> {apiCount > 0 && <span className="text-lum-slate-warm/40 ml-2">(API: {apiCount})</span>}</p>
+            <h2 className="section-title"><Editable text={siteContent.home_equip_title || t('allEquipment')} contentKey="home_equip_title" onSave={saveContent} tag="span" /> <strong>({filtered.length})</strong></h2>
+            <p className="section-body mx-auto"><Editable text={siteContent.home_equip_desc || t('equipSectionDesc')} contentKey="home_equip_desc" onSave={saveContent} tag="span" /></p>
           </div>
 
           {filtered.length === 0 ? (

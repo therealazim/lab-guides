@@ -37,6 +37,11 @@ def init_db():
             url TEXT NOT NULL, image TEXT, sort_order INTEGER DEFAULT 0
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS site_content (
+            key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT ''
+        )
+    ''')
     conn.commit()
     cur.close()
     conn.close()
@@ -112,6 +117,38 @@ def get_partners():
     conn.close()
     return jsonify(rows)
 
+# ─── Site Content API ───
+@app.route('/api/content', methods=['GET'])
+def get_content():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT * FROM site_content')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    result = {}
+    for r in rows:
+        result[r['key']] = r['value']
+    return jsonify(result)
+
+@app.route('/api/content', methods=['POST'])
+def save_content():
+    body = request.get_json()
+    key = body.get('key')
+    value = body.get('value', '')
+    if not key:
+        return jsonify({'error': 'No key'}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO site_content (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = %s',
+        (key, value, value)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
 # ─── Frontend ───
 @app.route('/', defaults={'path': None})
 @app.route('/<path:path>')
@@ -154,7 +191,13 @@ def serve_frontend(path):
             data['_overridden'] = r['override']
             equipment.append(data)
         
-        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
+        cur.execute('SELECT * FROM site_content')
+        content_rows = cur.fetchall()
+        site_content = {}
+        for r in content_rows:
+            site_content[r['key']] = r['value']
+        
+        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners, "content": site_content})}</script>'
         html = html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Data injection error: {e}')
