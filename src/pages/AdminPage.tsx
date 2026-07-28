@@ -529,6 +529,18 @@ export default function AdminPage() {
                   data.push(row)
                 })
                 const ws = XLSX.utils.json_to_sheet(data)
+                const border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } }
+                const range = XLSX.utils.decode_range(ws['!ref'])
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                  for (let C = range.s.c; C <= range.e.c; C++) {
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C })
+                    if (!ws[addr]) ws[addr] = { t: 's', v: '' }
+                    if (!ws[addr].s) ws[addr].s = {}
+                    ws[addr].s.border = border
+                    if (R === 0) { ws[addr].s.font = { bold: true } }
+                  }
+                }
+                ws['!cols'] = [{ wch: 30 }, ...langs.map(() => ({ wch: 40 }))]
                 const wb = XLSX.utils.book_new()
                 XLSX.utils.book_append_sheet(wb, ws, 'Translations')
                 XLSX.writeFile(wb, 'translations.xlsx')
