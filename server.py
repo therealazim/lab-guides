@@ -109,56 +109,53 @@ def ping():
     return 'pong'
 
 # ─── Frontend ───
-@app.route('/')
-@app.route('/index.html')
-def serve_root():
-    try:
-        index_path = os.path.join(DIST_DIR, 'index.html')
-        with open(index_path, 'r') as f:
-            html = f.read()
-        conn = get_db()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
-        rows = cur.fetchall()
-        cur.execute('SELECT * FROM partners ORDER BY sort_order')
-        partners = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        equipment = []
-        for r in rows:
-            data = r['data'] if r['data'] else {}
-            data['slug'] = r['slug']
-            data['_overridden'] = r['override']
-            equipment.append(data)
-        
-        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
-        return html.replace('</head>', inject + '</head>')
-    except Exception as e:
-        print(f'Root error: {e}')
-        index_path = os.path.join(DIST_DIR, 'index.html')
-        if os.path.exists(index_path):
-            with open(index_path) as f:
-                return f.read()
-        return 'Not found', 404
-
+@app.route('/', defaults={'path': None})
 @app.route('/<path:path>')
-def serve_path(path):
-    if path.startswith('api/'):
+def serve_frontend(path):
+    # API routes are handled separately
+    if path and path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
     
-    # Check if it's a static file
-    file_path = os.path.join(DIST_DIR, path)
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        with open(file_path, 'rb') as f:
-            return f.read()
+    # For the root or HTML pages, inject data
+    if not path or path == 'index.html' or not os.path.splitext(path)[1]:
+        try:
+            index_file = os.path.join(DIST_DIR, 'index.html')
+            with open(index_file, 'r') as f:
+                html = f.read()
+            conn = get_db()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
+            rows = cur.fetchall()
+            cur.execute('SELECT * FROM partners ORDER BY sort_order')
+            partners = cur.fetchall()
+            cur.close()
+            conn.close()
+            
+            equipment = []
+            for r in rows:
+                data = r['data'] if r['data'] else {}
+                data['slug'] = r['slug']
+                data['_overridden'] = r['override']
+                equipment.append(data)
+            
+            inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
+            return html.replace('</head>', inject + '</head>')
+        except Exception as e:
+            print(f'Injection error: {e}')
     
-    # SPA fallback - serve index.html
-    try:
-        with open(os.path.join(DIST_DIR, 'index.html')) as f:
+    # Serve static files
+    if path:
+        file_path = os.path.join(DIST_DIR, path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
+                return f.read()
+    
+    # Fallback to index.html
+    index_file = os.path.join(DIST_DIR, 'index.html')
+    if os.path.exists(index_file):
+        with open(index_file) as f:
             return f.read()
-    except:
-        return 'Not found', 404
+    return 'Not found', 404
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
