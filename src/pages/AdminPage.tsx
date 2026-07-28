@@ -407,9 +407,9 @@ export default function AdminPage() {
               <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-4">{t('adminAddNew')}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})} placeholder={t('adminSlug')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-                <input value={form.lang.en?.name || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, name: e.target.value}}}}) } placeholder={t('adminName') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <input value={form.lang.en?.name || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, name: e.target.value}}})} placeholder={t('adminName') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
               </div>
-              <textarea value={form.lang.en?.description || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, description: e.target.value}}}}) } rows={2} placeholder={t('adminDesc') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none mb-3" />
+              <textarea value={form.lang.en?.description || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, description: e.target.value}}})} rows={2} placeholder={t('adminDesc') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none mb-3" />
               <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
                 <Save className="w-3.5 h-3.5" /> Save
               </button>
