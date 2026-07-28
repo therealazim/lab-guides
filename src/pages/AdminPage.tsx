@@ -12,7 +12,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
 import RichEditor from '../components/RichEditor'
-import { fetchEquipment as apiFetchEquipment, deleteEquipmentApi, savePartner as apiSavePartner } from '../api'
+import { fetchEquipment as apiFetchEquipment, deleteEquipmentApi, savePartner as apiSavePartner, deletePartnerApi } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
@@ -462,18 +462,18 @@ export default function AdminPage() {
               </div>
               {partnerImg && <img src={partnerImg} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border mb-3" />}
               <div className="flex gap-2">
-                <button onClick={() => {
+                <button onClick={async () => {
                   if (!partnerName || !partnerUrl || !partnerImg) { alert('Fill all fields'); return }
                   let updated: typeof partners
                   if (partnerEditIdx !== null) {
                     updated = [...partners]
-                    updated[partnerEditIdx] = { name: partnerName, src: partnerImg, url: partnerUrl, _default: false }
+                    updated[partnerEditIdx] = { ...updated[partnerEditIdx], name: partnerName, src: partnerImg, url: partnerUrl, _default: false }
                   } else {
-                    updated = [...partners, { name: partnerName, src: partnerImg, url: partnerUrl, _default: false }]
+                    const res = await apiSavePartner({ name: partnerName, url: partnerUrl, image: partnerImg })
+                    updated = [...partners, { name: partnerName, src: partnerImg, url: partnerUrl, _default: false, _id: res?.id }]
                   }
                   setPartners(updated)
                   localStorage.setItem('admin_partners', JSON.stringify(updated.filter(p => !p._default)))
-                  apiSavePartner({ name: partnerName, url: partnerUrl, image: partnerImg }).catch(() => {})
                   setPartnerEditIdx(null)
                   setPartnerName(''); setPartnerUrl(''); setPartnerImg(null)
                 }} className="btn-lum-primary text-xs px-5 py-3">{partnerEditIdx !== null ? 'Update Partner' : 'Add Partner'}</button>
@@ -490,7 +490,7 @@ export default function AdminPage() {
                 <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No partners added yet</p>
               ) : partners.map((p, i) => (
                 <div key={i} className="lum-card p-4 text-center relative cursor-pointer hover:border-lum-slate-light/20 transition-colors" onClick={() => { setPartnerName(p.name); setPartnerUrl(p.url); setPartnerImg(p.src); setPartnerEditIdx(i) }}>
-                  <button onClick={(e) => { e.stopPropagation(); const idx = i; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); localStorage.setItem('admin_partners', JSON.stringify(u.filter(p => !p._default))); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); localStorage.setItem('admin_partners', JSON.stringify(u.filter(p => !p._default))); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <img src={p.src} alt={p.name} className="h-16 mx-auto mb-2 object-contain" />
