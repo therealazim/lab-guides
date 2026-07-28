@@ -68,7 +68,7 @@ const DEFAULT_PARTNERS = [
 export default function AdminPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const [authed, setAuthed] = useState(false)
+  const [authed, setAuthed] = useState(() => localStorage.getItem('admin_auth') === 'true')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -172,7 +172,7 @@ export default function AdminPage() {
   const login = () => {
     if (username === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
       setLoginSuccess(true)
-      setTimeout(() => { setAuthed(true); setLoginSuccess(false) }, 2500)
+      setTimeout(() => { setAuthed(true); localStorage.setItem('admin_auth', 'true'); setLoginSuccess(false) }, 2500)
       setUsername(''); setPassword('')
     } else {
       setLoginError(true)
@@ -343,7 +343,7 @@ export default function AdminPage() {
             <button onClick={() => navigate('/')} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminBack')}</span>
             </button>
-            <button onClick={() => { setAuthed(false) }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
+            <button onClick={() => { setAuthed(false); localStorage.removeItem('admin_auth') }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
               <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminLogout')}</span>
             </button>
           </div>
