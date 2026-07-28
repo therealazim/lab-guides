@@ -82,8 +82,9 @@ app.post('/api/seed', async (req, res) => {
 // ─── Serve frontend ───
 const distPath = path.join(__dirname, '..', 'dist')
 
-// Inject data into index.html
+// Inject data into index.html with no-cache
 app.get('/', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
   try {
     const [html, rows, partnerRows] = await Promise.all([
       fs.readFile(path.join(distPath, 'index.html'), 'utf-8'),
@@ -98,12 +99,13 @@ app.get('/', async (req, res) => {
   }
 })
 
-// Serve static files
-app.use(express.static(distPath))
+// Serve static files with caching for assets but not HTML
+app.use(express.static(distPath, { maxAge: '1h', setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache') } }))
 
-// SPA fallback
+// SPA fallback with no-cache
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' })
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
   res.sendFile(path.join(distPath, 'index.html'))
 })
 
