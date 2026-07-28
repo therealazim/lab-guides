@@ -7,6 +7,7 @@ import { ThemeProvider } from './ThemeContext'
 import HomePage from './pages/HomePage'
 import EquipmentPage from './pages/EquipmentPage'
 import AdminPage from './pages/AdminPage'
+import CatalogPage from './pages/CatalogPage'
 
 function ScrollToTop() {
   const [visible, setVisible] = useState(false)
@@ -77,6 +78,7 @@ function AnimatedRoutes() {
         >
           <Routes location={location}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/equipment/:slug" element={<EquipmentPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>

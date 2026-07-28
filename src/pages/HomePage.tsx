@@ -200,6 +200,9 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/catalog" className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
+              Catalog
+            </Link>
             <ThemeToggle />
             <LanguageSwitcher />
           </div>
