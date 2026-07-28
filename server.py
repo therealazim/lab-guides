@@ -3,9 +3,10 @@ import json
 from flask import Flask, send_from_directory, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from urllib.parse import urlparse
 
-app = Flask(__name__, static_folder='dist')
+app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://neondb_owner:npg_hDg20lCiSJme@ep-silent-brook-asbj63i2-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require')
 
@@ -112,13 +113,14 @@ def serve_path(path):
     if path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
     try:
-        return send_from_directory('dist', path)
+        return send_from_directory(DIST_DIR, path)
     except:
         return serve_injected()
 
 def serve_injected():
     try:
-        with open('dist/index.html', 'r') as f:
+        index_path = os.path.join(DIST_DIR, 'index.html')
+        with open(index_path, 'r') as f:
             html = f.read()
         conn = get_db()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -140,7 +142,7 @@ def serve_injected():
         return html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Injection error: {e}')
-        return send_from_directory('dist', 'index.html')
+        return send_from_directory(DIST_DIR, 'index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
