@@ -37,6 +37,12 @@ def init_db():
             url TEXT NOT NULL, image TEXT, sort_order INTEGER DEFAULT 0
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS translations (
+            key TEXT NOT NULL, lang TEXT NOT NULL, value TEXT NOT NULL DEFAULT '',
+            PRIMARY KEY (key, lang)
+        )
+    ''')
     conn.commit()
     cur.close()
     conn.close()
@@ -112,6 +118,42 @@ def get_partners():
     conn.close()
     return jsonify(rows)
 
+# ─── Translations API ───
+@app.route('/api/translations', methods=['GET'])
+def get_translations():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT * FROM translations')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    result = {}
+    for r in rows:
+        key = r['key']
+        if key not in result:
+            result[key] = {}
+        result[key][r['lang']] = r['value']
+    return jsonify(result)
+
+@app.route('/api/translations', methods=['POST'])
+def save_translation():
+    body = request.get_json()
+    key = body.get('key')
+    lang = body.get('lang')
+    value = body.get('value', '')
+    if not key or not lang:
+        return jsonify({'error': 'Missing key or lang'}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO translations (key, lang, value) VALUES (%s, %s, %s) ON CONFLICT (key, lang) DO UPDATE SET value = %s',
+        (key, lang, value, value)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
 # ─── Frontend ───
 @app.route('/', defaults={'path': None})
 @app.route('/<path:path>')
@@ -144,6 +186,8 @@ def serve_frontend(path):
         rows = cur.fetchall()
         cur.execute('SELECT * FROM partners ORDER BY sort_order')
         partners = cur.fetchall()
+        cur.execute('SELECT * FROM translations')
+        translation_rows = cur.fetchall()
         cur.close()
         conn.close()
         
@@ -154,7 +198,14 @@ def serve_frontend(path):
             data['_overridden'] = r['override']
             equipment.append(data)
         
-        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
+        translations = {}
+        for r in translation_rows:
+            key = r['key']
+            if key not in translations:
+                translations[key] = {}
+            translations[key][r['lang']] = r['value']
+        
+        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners, "translations": translations})}</script>'
         html = html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Data injection error: {e}')

@@ -16,7 +16,7 @@ export const LANGUAGES: LangInfo[] = [
   { code: 'ko', label: '한국어', flag: 'kr' },
 ]
 
-const UI_STRINGS: Record<Lang, Record<string, string>> = {
+export const UI_STRINGS: Record<Lang, Record<string, string>> = {
   en: {
     title: 'KMI - LUPIC Laboratory',
     subtitle: 'Equipment Guide System',
@@ -306,7 +306,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('app_lang') as Lang | null
     return saved && ['en','uz','kk','ru','ko'].includes(saved) ? saved : 'en'
   })
-  const t = (key: string) => UI_STRINGS[lang]?.[key] ?? UI_STRINGS.en?.[key] ?? key
+  const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return initial?.translations || {}
+  })
+  const t = (key: string) => {
+    const dbVal = overrides[key]?.[lang] || overrides[key]?.en
+    if (dbVal) return dbVal
+    return UI_STRINGS[lang]?.[key] ?? UI_STRINGS.en?.[key] ?? key
+  }
   const setLangPersist = (l: Lang) => { setLang(l); localStorage.setItem('app_lang', l) }
   return (
     <I18nContext.Provider value={{ lang, setLang: setLangPersist, t }}>{children}</I18nContext.Provider>

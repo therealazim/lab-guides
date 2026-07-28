@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, FilePlus, List, Link2, Database, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, FilePlus, List, Link2, Database, Image as ImageIcon, Languages } from 'lucide-react'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { useI18n } from '../i18n'
+import { UI_STRINGS } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
@@ -79,12 +80,18 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [showEquipList, setShowEquipList] = useState(false)
   const [showPartners, setShowPartners] = useState(false)
+  const [showTranslations, setShowTranslations] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [partners, setPartners] = useState<{name: string; src: string; url: string; _default?: boolean}[]>(DEFAULT_PARTNERS)
   const [partnerName, setPartnerName] = useState('')
   const [partnerUrl, setPartnerUrl] = useState('')
   const [partnerImg, setPartnerImg] = useState<string | null>(null)
   const [partnerEditIdx, setPartnerEditIdx] = useState<number | null>(null)
+  const [translations, setTranslations] = useState<Record<string, Record<string, string>>>({})
+  const [transKeys, setTransKeys] = useState<string[]>([])
+  const [transLang, setTransLang] = useState('ko')
+  const [transEditKey, setTransEditKey] = useState('')
+  const [transEditVal, setTransEditVal] = useState('')
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
   const [confirmMsg, setConfirmMsg] = useState('')
   const [toastMsg, setToastMsg] = useState('')
@@ -120,6 +127,18 @@ export default function AdminPage() {
     const pt = localStorage.getItem('admin_partners')
     if (pt) { try { const admin = JSON.parse(pt); setPartners([...DEFAULT_PARTNERS, ...admin]) } catch {} }
   }, [])
+
+  const loadTranslations = async () => {
+    try {
+      const r = await fetch('/api/translations')
+      const data = await r.json()
+      setTranslations(data)
+      const allKeys = new Set<string>()
+      Object.keys(data).forEach(k => allKeys.add(k))
+      Object.keys(UI_STRINGS.en).forEach(k => allKeys.add(k))
+      setTransKeys(Array.from(allKeys).sort())
+    } catch {}
+  }
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => setMouse({ x: (e.clientX / window.innerWidth) * 100, y: (e.clientY / window.innerHeight) * 100 })
@@ -354,12 +373,16 @@ export default function AdminPage() {
             <Link2 className="w-4 h-4 text-lum-slate-light" />
             Partners
           </button>
+          <button onClick={() => { setShowTranslations(true); setShowEquipList(false); setShowPartners(false); setEditIdx(null); loadTranslations(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
+            <Languages className="w-4 h-4 text-lum-slate-light" />
+            Translations
+          </button>
         </div>
       </motion.div>
 
       <main className="max-w-6xl mx-auto px-4 py-6 relative">
         {/* Admin home - grid background with mouse spotlight */}
-        {!editIdx && !showEquipList && !showPartners && !showForm && (
+        {!editIdx && !showEquipList && !showPartners && !showForm && !showTranslations && (
           <>
             <div
               className="fixed inset-0 pointer-events-none"
@@ -474,6 +497,61 @@ export default function AdminPage() {
                   <p className="text-[9px] text-lum-slate-warm truncate">{p.url}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Translations editor */}
+        {showTranslations && (
+          <div>
+            <h1 className="text-lg font-bold text-lum-ivory mb-2">Translations</h1>
+            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Override UI text per language</p>
+
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {['en','uz','kk','ru','ko'].map(l => (
+                <button key={l} onClick={() => setTransLang(l)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                    transLang === l ? 'bg-lum-slate-light/20 text-lum-ivory' : 'text-lum-slate-warm hover:text-lum-ivory'
+                  }`}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-2">
+              {transKeys.map(key => {
+                const dbVal = translations[key]?.[transLang] || ''
+                const defaultVal = UI_STRINGS[transLang as keyof typeof UI_STRINGS]?.[key] || UI_STRINGS.en[key] || key
+                return (
+                  <div key={key} className="lum-card p-3 flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] text-lum-slate-warm/50 mb-0.5 font-mono truncate">{key}</p>
+                      <input
+                        value={dbVal}
+                        onChange={e => {
+                          const updated = { ...translations }
+                          if (!updated[key]) updated[key] = {}
+                          updated[key][transLang] = e.target.value
+                          setTranslations(updated)
+                        }}
+                        onBlur={async () => {
+                          if (dbVal !== translations[key]?.[transLang]) {
+                            await fetch('/api/translations', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ key, lang: transLang, value: dbVal }),
+                            })
+                          }
+                          setTransKeys([...transKeys])
+                        }}
+                        placeholder={defaultVal}
+                        className="w-full px-2 py-1.5 rounded-lg bg-lum-soft border border-lum-panel-border text-lum-ivory text-xs outline-none focus:border-lum-slate-light/20"
+                      />
+                      <p className="text-[9px] text-lum-slate-warm/30 mt-0.5 truncate">default: {defaultVal}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
