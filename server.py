@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, send_from_directory, send_file, request, jsonify
+from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -130,16 +130,19 @@ def serve_root():
         return html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Root error: {e}')
-        return send_file(os.path.join(DIST_DIR, 'index.html'))
+        with open(os.path.join(DIST_DIR, 'index.html')) as f:
+            return f.read()
 
 @app.route('/<path:path>')
 def serve_path(path):
     if path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
     try:
-        return send_file(os.path.join(DIST_DIR, path))
+        with open(os.path.join(DIST_DIR, path), 'rb') as f:
+            return f.read()
     except:
-        return send_file(os.path.join(DIST_DIR, 'index.html'))
+        with open(os.path.join(DIST_DIR, 'index.html')) as f:
+            return f.read()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
