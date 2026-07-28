@@ -2,7 +2,7 @@ services:
   - type: web
     name: kmi-lupic-lab
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm build && pip install -r requirements.txt
     startCommand: gunicorn server:app --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL
