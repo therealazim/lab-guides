@@ -414,8 +414,14 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <a href="/#/admin" className="text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Admin</a>
-              <Link to="/catalog" className="text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Catalog</Link>
+              <a href="/#/admin" className="inline-flex items-center gap-1.5 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Admin
+              </a>
+              <Link to="/catalog" className="inline-flex items-center gap-1.5 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                Catalog
+              </Link>
             </div>
           </div>
           <div className="text-center pt-8 border-t border-lum-panel-border">
@@ -425,7 +431,6 @@ export default function HomePage() {
             <p className="text-[11px] text-lum-slate-warm/50 mt-3 max-w-2xl mx-auto leading-relaxed">
               All information, media, and images on this site are credited to their respective owners. Use of materials is for educational purposes only.
             </p>
-            <a href="/#/admin" className="inline-block mt-4 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Admin</a>
           </div>
         </div>
       </footer>
