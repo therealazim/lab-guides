@@ -76,21 +76,18 @@ export default function HomePage() {
     })
   }, [query, lang])
 
-  // Load admin data from server-injected data or API
+  // Load admin data from API (always fetches fresh, uses injected data as initial)
   useEffect(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    if (initial?.equipment) {
+      const apiOverridden = initial.equipment.filter((d: any) => d._overridden)
+      setApiCount(initial.equipment.length)
+      setAdminItems(apiOverridden)
+      const ovs: Record<string, any> = {}
+      initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
+      setStaticOverrides(ovs)
+    }
     async function load() {
-      // Check if server injected data
-      const initial = (window as any).__INITIAL_DATA__
-      if (initial?.equipment) {
-        const apiOverridden = initial.equipment.filter((d: any) => d._overridden)
-        setApiCount(initial.equipment.length)
-        setAdminItems(apiOverridden)
-        const ovs: Record<string, any> = {}
-        initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
-        setStaticOverrides(ovs)
-        return
-      }
-      // Fallback: fetch from API
       try {
         const eqData = await apiFetchEq()
         if (eqData) {
@@ -106,21 +103,32 @@ export default function HomePage() {
     load()
   }, [])
 
-  // Load partners from server-injected data
+  // Load partners from API
   useEffect(() => {
+    const defaults = [
+      { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
+      { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
+      { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
+      { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
+    ]
     const initial = (window as any).__INITIAL_DATA__
     if (initial?.partners) {
-      const defaults = [
-        { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
-        { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
-        { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
-        { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
-      ]
       const apiPartners = initial.partners.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
       setAdminPartners([...defaults, ...apiPartners])
     } else {
-      setAdminPartners(JSON.parse(localStorage.getItem('admin_partners') || '[]'))
+      setAdminPartners(defaults)
     }
+    async function loadPartners() {
+      try {
+        const r = await fetch('/api/partners')
+        const data = await r.json()
+        if (data?.length) {
+          const apiPartners = data.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
+          setAdminPartners([...defaults, ...apiPartners])
+        }
+      } catch {}
+    }
+    loadPartners()
   }, [])
 
   useEffect(() => {
