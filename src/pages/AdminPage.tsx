@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, FilePlus, List, Link2, Database, Image as ImageIcon, Languages } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { useI18n } from '../i18n'
@@ -520,41 +521,44 @@ export default function AdminPage() {
 
             <div className="flex gap-2 mb-4">
               <button onClick={() => {
-                const all: Record<string, Record<string, string>> = {}
                 const langs = ['en','uz','kk','ru','ko']
-                langs.forEach(l => { all[l] = {} })
+                const data: any[] = []
                 transKeys.forEach(key => {
-                  langs.forEach(l => {
-                    all[l][key] = translations[key]?.[l] || UI_STRINGS[l as keyof typeof UI_STRINGS]?.[key] || UI_STRINGS.en[key] || key
-                  })
+                  const row: any = { key }
+                  langs.forEach(l => { row[l] = translations[key]?.[l] || UI_STRINGS[l as keyof typeof UI_STRINGS]?.[key] || UI_STRINGS.en[key] || key })
+                  data.push(row)
                 })
-                const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url; a.download = 'translations.json'; a.click()
-                URL.revokeObjectURL(url)
+                const ws = XLSX.utils.json_to_sheet(data)
+                const wb = XLSX.utils.book_new()
+                XLSX.utils.book_append_sheet(wb, ws, 'Translations')
+                XLSX.writeFile(wb, 'translations.xlsx')
               }} className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
-                Export JSON
+                Export Excel
               </button>
               <label className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors cursor-pointer">
-                Import JSON
-                <input type="file" accept=".json" className="hidden" onChange={async e => {
+                Import Excel
+                <input type="file" accept=".xlsx,.xls" className="hidden" onChange={async e => {
                   const f = e.target.files?.[0]
                   if (!f) return
-                  const text = await f.text()
+                  const buf = await f.arrayBuffer()
                   try {
-                    const data = JSON.parse(text)
+                    const wb = XLSX.read(buf, { type: 'array' })
+                    const ws = wb.Sheets[wb.SheetNames[0]]
+                    const rows: any[] = XLSX.utils.sheet_to_json(ws)
                     const updated = { ...translations }
                     const langs = ['en','uz','kk','ru','ko']
-                    for (const lang of langs) {
-                      if (data[lang]) {
-                        for (const [key, value] of Object.entries(data[lang])) {
+                    for (const row of rows) {
+                      const key = row.key
+                      if (!key) continue
+                      for (const lang of langs) {
+                        const val = row[lang]
+                        if (val && typeof val === 'string') {
                           if (!updated[key]) updated[key] = {}
-                          updated[key][lang] = value as string
+                          updated[key][lang] = val
                           await fetch('/api/translations', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ key, lang, value }),
+                            body: JSON.stringify({ key, lang, value: val }),
                           })
                         }
                       }
@@ -562,7 +566,7 @@ export default function AdminPage() {
                     setTranslations(updated)
                     setToastMsg('Translations imported!'); setToastShow(true)
                   } catch (err) {
-                    setToastMsg('Invalid JSON file'); setToastShow(true)
+                    setToastMsg('Invalid Excel file'); setToastShow(true)
                   }
                   e.target.value = ''
                 }} />
