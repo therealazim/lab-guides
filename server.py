@@ -105,6 +105,7 @@ def get_partners():
 
 # ─── Frontend ───
 @app.route('/')
+@app.route('/index.html')
 def serve_root():
     try:
         index_path = os.path.join(DIST_DIR, 'index.html')
@@ -130,19 +131,29 @@ def serve_root():
         return html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Root error: {e}')
-        with open(os.path.join(DIST_DIR, 'index.html')) as f:
-            return f.read()
+        index_path = os.path.join(DIST_DIR, 'index.html')
+        if os.path.exists(index_path):
+            with open(index_path) as f:
+                return f.read()
+        return 'Not found', 404
 
 @app.route('/<path:path>')
 def serve_path(path):
     if path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
-    try:
-        with open(os.path.join(DIST_DIR, path), 'rb') as f:
+    
+    # Check if it's a static file
+    file_path = os.path.join(DIST_DIR, path)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        with open(file_path, 'rb') as f:
             return f.read()
-    except:
+    
+    # SPA fallback - serve index.html
+    try:
         with open(os.path.join(DIST_DIR, 'index.html')) as f:
             return f.read()
+    except:
+        return 'Not found', 404
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
