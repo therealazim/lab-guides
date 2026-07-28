@@ -8,7 +8,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import EquipmentCard from '../components/EquipmentCard'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
-import { fetchEquipment as apiFetchEq, fetchPartners as apiFetchPartners } from '../api'
+import { fetchEquipment as apiFetchEq } from '../api'
 
 const SCROLL_KEY = 'homeScrollY'
 
@@ -26,7 +26,7 @@ export default function HomePage() {
   const [adminItems, setAdminItems] = useState<any[]>(loadAdmin)
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>(loadOverrides)
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
-  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(loadHidden)
+  const [hiddenSlugs] = useState<string[]>(loadHidden)
   const [apiCount, setApiCount] = useState(0)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
