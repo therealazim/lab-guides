@@ -107,36 +107,8 @@ def get_partners():
 @app.route('/', defaults={'path': None})
 @app.route('/<path:path>')
 def serve_frontend(path):
-    # API routes are handled separately
     if path and path.startswith('api/'):
         return jsonify({'error': 'Not found'}), 404
-    
-    # For the root or HTML pages, inject data
-    if not path or path == 'index.html' or not os.path.splitext(path)[1]:
-        try:
-            index_file = os.path.join(DIST_DIR, 'index.html')
-            with open(index_file, 'r') as f:
-                html = f.read()
-            conn = get_db()
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
-            rows = cur.fetchall()
-            cur.execute('SELECT * FROM partners ORDER BY sort_order')
-            partners = cur.fetchall()
-            cur.close()
-            conn.close()
-            
-            equipment = []
-            for r in rows:
-                data = r['data'] if r['data'] else {}
-                data['slug'] = r['slug']
-                data['_overridden'] = r['override']
-                equipment.append(data)
-            
-            inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
-            return html.replace('</head>', inject + '</head>')
-        except Exception as e:
-            print(f'Injection error: {e}')
     
     # Serve static files
     if path:
@@ -145,12 +117,38 @@ def serve_frontend(path):
             with open(file_path, 'rb') as f:
                 return f.read()
     
-    # Fallback to index.html
+    # HTML pages - serve with injected data
     index_file = os.path.join(DIST_DIR, 'index.html')
-    if os.path.exists(index_file):
-        with open(index_file) as f:
-            return f.read()
-    return 'Not found', 404
+    if not os.path.exists(index_file):
+        return 'Not found', 404
+    
+    with open(index_file, 'r') as f:
+        html = f.read()
+    
+    # Inject database data
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
+        rows = cur.fetchall()
+        cur.execute('SELECT * FROM partners ORDER BY sort_order')
+        partners = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        equipment = []
+        for r in rows:
+            data = r['data'] if r['data'] else {}
+            data['slug'] = r['slug']
+            data['_overridden'] = r['override']
+            equipment.append(data)
+        
+        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners})}</script>'
+        html = html.replace('</head>', inject + '</head>')
+    except Exception as e:
+        print(f'Data injection error: {e}')
+    
+    return html
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
