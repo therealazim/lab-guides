@@ -413,6 +413,10 @@ export default function HomePage() {
                 <span className="text-sm font-semibold tracking-[0.2em] uppercase text-lum-slate-light/70">KMI - LUPIC</span>
               </div>
             </div>
+            <div className="flex items-center gap-4">
+              <a href="/#/admin" className="text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Admin</a>
+              <Link to="/catalog" className="text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Catalog</Link>
+            </div>
           </div>
           <div className="text-center pt-8 border-t border-lum-panel-border">
             <p className="text-[10px] tracking-[0.15em] uppercase text-lum-slate-warm/80">
@@ -422,8 +426,6 @@ export default function HomePage() {
               All information, media, and images on this site are credited to their respective owners. Use of materials is for educational purposes only.
             </p>
             <a href="/#/admin" className="inline-block mt-4 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Admin</a>
-            <span className="inline-block mt-4 text-[9px] text-lum-slate-warm/20 mx-2">|</span>
-            <Link to="/catalog" className="inline-block mt-4 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Catalog</Link>
           </div>
         </div>
       </footer>
