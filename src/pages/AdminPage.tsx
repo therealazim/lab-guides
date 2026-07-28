@@ -68,7 +68,7 @@ const DEFAULT_PARTNERS = [
 export default function AdminPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const [authed, setAuthed] = useState(() => localStorage.getItem('admin_auth') === 'true')
+  const [authed, setAuthed] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -107,7 +107,6 @@ export default function AdminPage() {
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([])
 
   useEffect(() => {
-    // Load from database API, fallback to localStorage
     apiFetchEquipment().then(data => {
       if (data && data.length) {
         const admin = data.filter((d: any) => d._overridden)
@@ -116,25 +115,13 @@ export default function AdminPage() {
         setSavedItems(admin)
         setOverrides(ovs)
       }
-    }).catch(() => {
-      // Fallback to localStorage
-      const stored = localStorage.getItem('admin_equipment')
-      if (stored) { try { setSavedItems(JSON.parse(stored)) } catch {} }
-      const ov = localStorage.getItem('admin_static_overrides')
-      if (ov) { try { setOverrides(JSON.parse(ov)) } catch {} }
-    })
-    // Load partners from API
+    }).catch(() => {})
     fetch('/api/partners').then(r => r.json()).then(data => {
       if (data && data.length) {
         const apiPartners = data.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, src: p.image, url: p.url, _id: p.id, _default: false }))
         setPartners([...DEFAULT_PARTNERS, ...apiPartners])
       }
-    }).catch(() => {
-      const pt = localStorage.getItem('admin_partners')
-      if (pt) { try { const admin = JSON.parse(pt); setPartners([...DEFAULT_PARTNERS, ...admin]) } catch {} }
-    })
-    const hs = localStorage.getItem('admin_hidden')
-    if (hs) { try { setHiddenSlugs(JSON.parse(hs)) } catch {} }
+    }).catch(() => {})
   }, [])
 
   const loadTranslations = async () => {
@@ -157,8 +144,6 @@ export default function AdminPage() {
 
   const save = async (items: any[]) => {
     setSavedItems(items)
-    localStorage.setItem('admin_equipment', JSON.stringify(items))
-    // Directly save to database
     for (const item of items) {
       try {
         await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
@@ -170,7 +155,6 @@ export default function AdminPage() {
 
   const saveOverrides = async (ov: Record<string, any>) => {
     setOverrides({...ov})
-    localStorage.setItem('admin_static_overrides', JSON.stringify(ov))
     for (const [slug, data] of Object.entries(ov)) {
       try {
         await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, ...data as any }) })
@@ -188,7 +172,7 @@ export default function AdminPage() {
   const login = () => {
     if (username === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
       setLoginSuccess(true)
-      setTimeout(() => { setAuthed(true); localStorage.setItem('admin_auth', 'true'); setLoginSuccess(false) }, 2500)
+      setTimeout(() => { setAuthed(true); setLoginSuccess(false) }, 2500)
       setUsername(''); setPassword('')
     } else {
       setLoginError(true)
@@ -359,7 +343,7 @@ export default function AdminPage() {
             <button onClick={() => navigate('/')} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminBack')}</span>
             </button>
-            <button onClick={() => { setAuthed(false); localStorage.removeItem('admin_auth') }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
+            <button onClick={() => { setAuthed(false) }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
               <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminLogout')}</span>
             </button>
           </div>
@@ -440,7 +424,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-lum-slate-warm truncate">{item.slug}</p>
                   </div>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { const u = [...hiddenSlugs, slug]; setHiddenSlugs(u); localStorage.setItem('admin_hidden', JSON.stringify(u)); deleteEquipmentApi(slug).catch(() => {}); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
+                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setSavedItems(savedItems.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -480,9 +464,8 @@ export default function AdminPage() {
                     const res = await apiSavePartner({ name: partnerName, url: partnerUrl, image: partnerImg })
                     updated = [...partners, { name: partnerName, src: partnerImg, url: partnerUrl, _default: false, _id: res?.id }]
                   }
-                  setPartners(updated)
-                  localStorage.setItem('admin_partners', JSON.stringify(updated.filter(p => !p._default)))
-                  setPartnerEditIdx(null)
+                    setPartners(updated)
+                    setPartnerEditIdx(null)
                   setPartnerName(''); setPartnerUrl(''); setPartnerImg(null)
                 }} className="btn-lum-primary text-xs px-5 py-3">{partnerEditIdx !== null ? 'Update Partner' : 'Add Partner'}</button>
                 {partnerEditIdx !== null && (
@@ -498,7 +481,7 @@ export default function AdminPage() {
                 <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No partners added yet</p>
               ) : partners.map((p, i) => (
                 <div key={i} className="lum-card p-4 text-center relative cursor-pointer hover:border-lum-slate-light/20 transition-colors" onClick={() => { setPartnerName(p.name); setPartnerUrl(p.url); setPartnerImg(p.src); setPartnerEditIdx(i) }}>
-                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); localStorage.setItem('admin_partners', JSON.stringify(u.filter(p => !p._default))); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <img src={p.src} alt={p.name} className="h-16 mx-auto mb-2 object-contain" />

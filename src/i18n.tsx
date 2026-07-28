@@ -462,10 +462,7 @@ const I18nContext = createContext<I18nContextType>({
 })
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>(() => {
-    const saved = localStorage.getItem('app_lang') as Lang | null
-    return saved && ['en','uz','kk','ru','ko'].includes(saved) ? saved : 'en'
-  })
+  const [lang, setLang] = useState<Lang>('en')
   const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>(() => {
     const initial = (window as any).__INITIAL_DATA__
     return initial?.translations || {}
@@ -475,7 +472,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     if (dbVal) return dbVal
     return UI_STRINGS[lang]?.[key] ?? UI_STRINGS.en?.[key] ?? key
   }
-  const setLangPersist = (l: Lang) => { setLang(l); localStorage.setItem('app_lang', l) }
+  const setLangPersist = (l: Lang) => setLang(l)
   return (
     <I18nContext.Provider value={{ lang, setLang: setLangPersist, t }}>{children}</I18nContext.Provider>
   )

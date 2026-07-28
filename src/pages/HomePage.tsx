@@ -12,10 +12,6 @@ import { fetchEquipment as apiFetchEq } from '../api'
 
 const SCROLL_KEY = 'homeScrollY'
 
-function loadAdmin() { try { return JSON.parse(localStorage.getItem('admin_equipment') || '[]') } catch { return [] } }
-function loadOverrides() { try { return JSON.parse(localStorage.getItem('admin_static_overrides') || '{}') } catch { return {} } }
-function loadHidden() { try { return JSON.parse(localStorage.getItem('admin_hidden') || '[]') } catch { return [] } }
-
 export default function HomePage() {
   const { lang, t } = useI18n()
   const [query, setQuery] = useState('')
@@ -23,10 +19,9 @@ export default function HomePage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [highlightIdx, setHighlightIdx] = useState(-1)
   const [spinKey, setSpinKey] = useState(0)
-  const [adminItems, setAdminItems] = useState<any[]>(loadAdmin)
-  const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>(loadOverrides)
+  const [adminItems, setAdminItems] = useState<any[]>([])
+  const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
-  const [hiddenSlugs] = useState<string[]>(loadHidden)
   const [apiCount, setApiCount] = useState(0)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -59,8 +54,8 @@ export default function HomePage() {
 
   const mergedStatic = staticEquipments.map((eq: any) =>
     staticOverrides[eq.slug] ? { ...eq, ...staticOverrides[eq.slug] } : eq
-  ).filter((eq: any) => !hiddenSlugs.includes(eq.slug))
-  const allEquipments = useMemo(() => [...mergedStatic, ...adminItems.filter((eq: any) => !hiddenSlugs.includes(eq.slug))], [mergedStatic, adminItems, hiddenSlugs])
+  )
+  const allEquipments = useMemo(() => [...mergedStatic, ...adminItems], [mergedStatic, adminItems])
 
   const filtered = useMemo(() => {
     if (!query.trim()) return allEquipments
