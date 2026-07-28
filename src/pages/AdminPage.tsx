@@ -9,6 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
+import RichEditor from '../components/RichEditor'
 import { fetchEquipment as apiFetchEquipment, deleteEquipmentApi, savePartner as apiSavePartner } from '../api'
 
 const ADMIN_LOGIN = 'admin'
@@ -190,9 +191,9 @@ export default function AdminPage() {
         description: d.description || '',
         purpose: d.purpose || '',
         specifications: d.specifications || '',
-        safety: (d.safetyGuidelines || []).join('\n'),
-        procedure: (d.operatingProcedure || []).join('\n'),
-        maintenance: (d.maintenance || []).join('\n'),
+        safety: d.safety || '',
+        procedure: d.procedure || '',
+        maintenance: d.maintenance || '',
       }
     }
     setForm({
@@ -237,9 +238,9 @@ export default function AdminPage() {
         description: d.description || form.lang.en.description,
         purpose: d.purpose || form.lang.en.purpose || '',
         specifications: d.specifications || form.lang.en.specifications || '',
-        safetyGuidelines: (d.safety || form.lang.en.safety || '').split('\n').filter(Boolean),
-        operatingProcedure: (d.procedure || form.lang.en.procedure || '').split('\n').filter(Boolean),
-        maintenance: (d.maintenance || form.lang.en.maintenance || '').split('\n').filter(Boolean),
+        safety: d.safety || form.lang.en.safety || '',
+        procedure: d.procedure || form.lang.en.procedure || '',
+        maintenance: d.maintenance || form.lang.en.maintenance || '',
       }
     }
 
@@ -390,7 +391,7 @@ export default function AdminPage() {
                 <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})} placeholder={t('adminSlug')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <input value={form.lang.en?.name || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, name: e.target.value}}})} placeholder={t('adminName') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
               </div>
-              <textarea value={form.lang.en?.description || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, description: e.target.value}}})} rows={2} placeholder={t('adminDesc') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none mb-3" />
+              <RichEditor value={form.lang.en?.description || ''} onChange={html => setForm({...form, lang: {...form.lang, en: {...form.lang.en, description: html}}})} placeholder={t('adminDesc') + ' (en)'} minHeight={60} />
               <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
                 <Save className="w-3.5 h-3.5" /> Save
               </button>
@@ -505,17 +506,17 @@ export default function AdminPage() {
 
           <div className="mb-3">
             <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminDesc')} ({formLang}) *</label>
-            <textarea value={form.lang[formLang]?.description || ''} onChange={e => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], description: e.target.value}}})} rows={2} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none" />
+            <RichEditor value={form.lang[formLang]?.description || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], description: html}}})} placeholder={t('adminDesc') + ' (' + formLang + ')'} minHeight={80} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <div>
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('purpose')} ({formLang})</label>
-              <textarea value={form.lang[formLang]?.purpose || ''} onChange={e => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], purpose: e.target.value}}})} rows={2} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none" />
+              <RichEditor value={form.lang[formLang]?.purpose || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], purpose: html}}})} minHeight={80} />
             </div>
             <div>
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('specifications')} ({formLang})</label>
-              <textarea value={form.lang[formLang]?.specifications || ''} onChange={e => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], specifications: e.target.value}}})} rows={2} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none" />
+              <RichEditor value={form.lang[formLang]?.specifications || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], specifications: html}}})} minHeight={80} />
             </div>
           </div>
 
@@ -523,7 +524,7 @@ export default function AdminPage() {
             {['safety','procedure','maintenance'].map(f => (
               <div key={f}>
                 <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t(f)} ({formLang}) — {t('adminSafety')}</label>
-                <textarea value={(form.lang[formLang] as any)?.[f] || ''} onChange={e => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], [f]: e.target.value}}})} rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-none" />
+                <RichEditor value={(form.lang[formLang] as any)?.[f] || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], [f]: html}}})} minHeight={100} />
               </div>
             ))}
           </div>
