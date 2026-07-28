@@ -74,9 +74,6 @@ export default function CatalogPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/" className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
-              Equipment Guides
-            </Link>
             <ThemeToggle />
             <LanguageSwitcher />
           </div>
@@ -117,10 +114,11 @@ export default function CatalogPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs font-semibold text-lum-ivory truncate mb-1">{d.name}</p>
-                {eq.brand && eq.brand !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Brand: {eq.brand}</p>}
-                {eq.model && eq.model !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Model: {eq.model}</p>}
-                {eq.location && eq.location !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Room: {eq.location}</p>}
+                {eq.brand && eq.brand !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.brand}</p>}
+                {eq.model && eq.model !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.model}</p>}
+                {eq.quantity && eq.quantity !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Qty: {eq.quantity}</p>}
+                {eq.location && eq.location !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.location}</p>}
+                {eq.purchase_date && eq.purchase_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Purchased: {eq.purchase_date}</p>}
                 {eq.installation_date && eq.installation_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Installed: {eq.installation_date}</p>}
                 {eq.status && (
                   <span className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[8px] font-medium ${

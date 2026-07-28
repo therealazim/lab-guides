@@ -200,9 +200,6 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/catalog" className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
-              Catalog
-            </Link>
             <ThemeToggle />
             <LanguageSwitcher />
           </div>
@@ -425,6 +422,8 @@ export default function HomePage() {
               All information, media, and images on this site are credited to their respective owners. Use of materials is for educational purposes only.
             </p>
             <a href="/#/admin" className="inline-block mt-4 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Admin</a>
+            <span className="inline-block mt-4 text-[9px] text-lum-slate-warm/20 mx-2">|</span>
+            <Link to="/catalog" className="inline-block mt-4 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">Catalog</Link>
           </div>
         </div>
       </footer>
