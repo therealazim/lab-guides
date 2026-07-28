@@ -103,11 +103,6 @@ def get_partners():
     conn.close()
     return jsonify(rows)
 
-# ─── Test route ───
-@app.route('/ping')
-def ping():
-    return 'pong'
-
 # ─── Frontend ───
 @app.route('/', defaults={'path': None})
 @app.route('/<path:path>')
