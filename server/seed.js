@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import equipments from '../src/data/equipments.json' with { type: 'json' }
 
-const sql = neon('postgresql://neondb_owner:npg_hDg20lCiSJme@ep-silent-brook-asbj63i2.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require')
+const sql = neon('postgresql://neondb_owner:npg_hDg20lCiSJme@ep-silent-brook-asbj63i2-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
 
 async function seed() {
   // Create tables first
