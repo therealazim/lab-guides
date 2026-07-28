@@ -547,7 +547,7 @@ export default function AdminPage() {
                         placeholder={defaultVal}
                         className="w-full px-2 py-1.5 rounded-lg bg-lum-soft border border-lum-panel-border text-lum-ivory text-xs outline-none focus:border-lum-slate-light/20"
                       />
-                      <p className="text-[9px] text-lum-slate-warm/30 mt-0.5 truncate">default: {defaultVal}</p>
+                      <p className="text-[9px] text-lum-slate-warm/60 mt-0.5 truncate">default: {defaultVal}</p>
                     </div>
                   </div>
                 )
