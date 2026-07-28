@@ -79,41 +79,32 @@ app.post('/api/seed', async (req, res) => {
   res.json({ seeded: items.length })
 })
 
-// ─── Serve frontend with injected data ───
+// ─── Serve frontend ───
 const distPath = path.join(__dirname, '..', 'dist')
 
-app.get('*', async (req, res) => {
-  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' })
-
-  const filePath = path.join(distPath, req.path === '/' ? 'index.html' : req.path)
-
-  // Try to inject data into HTML pages
-  if (req.path === '/' || req.path.endsWith('.html')) {
-    try {
-      const [html, rows, partnerRows] = await Promise.all([
-        fs.readFile(path.join(distPath, 'index.html'), 'utf-8'),
-        sql`SELECT * FROM equipment WHERE hidden = false ORDER BY slug`,
-        sql`SELECT * FROM partners ORDER BY sort_order`,
-      ])
-      const equipment = rows.map(r => ({ slug: r.slug, ...r.data, _overridden: r.override }))
-      const inject = `<script>window.__INITIAL_DATA__ = ${JSON.stringify({ equipment, partners: partnerRows }).replace(/</g, '\\u003c')}<\/script>`
-      return res.send(html.replace('</head>', inject + '</head>'))
-    } catch (e) {
-      console.error('Injection failed, serving static:', e?.message)
-    }
-  }
-
-  // Serve static files
+// Inject data into index.html
+app.get('/', async (req, res) => {
   try {
-    const content = await fs.readFile(filePath)
-    const ext = path.extname(filePath)
-    const mime = { '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.json': 'application/json' }
-    res.setHeader('Content-Type', mime[ext] || 'application/octet-stream')
-    res.send(content)
+    const [html, rows, partnerRows] = await Promise.all([
+      fs.readFile(path.join(distPath, 'index.html'), 'utf-8'),
+      sql`SELECT * FROM equipment WHERE hidden = false ORDER BY slug`,
+      sql`SELECT * FROM partners ORDER BY sort_order`,
+    ])
+    const equipment = rows.map(r => ({ slug: r.slug, ...r.data, _overridden: r.override }))
+    const inject = `<script>window.__INITIAL_DATA__ = ${JSON.stringify({ equipment, partners: partnerRows }).replace(/</g, '\\u003c')}<\/script>`
+    res.send(html.replace('</head>', inject + '</head>'))
   } catch {
-    // Fallback to index.html for SPA routing
     res.sendFile(path.join(distPath, 'index.html'))
   }
+})
+
+// Serve static files
+app.use(express.static(distPath))
+
+// SPA fallback
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' })
+  res.sendFile(path.join(distPath, 'index.html'))
 })
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
