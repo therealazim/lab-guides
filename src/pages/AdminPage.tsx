@@ -353,25 +353,6 @@ export default function AdminPage() {
             <Link2 className="w-4 h-4 text-lum-slate-light" />
             Partners
           </button>
-          <button onClick={async () => {
-            setMenuOpen(false)
-            try {
-              const saved = localStorage.getItem('admin_equipment')
-              const items = saved ? JSON.parse(saved) : []
-              let synced = 0
-              for (const item of items) {
-                const r = await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
-                const result = await r.json()
-                if (result.ok) synced++
-              }
-              setToastMsg(`Synced ${synced}/${items.length} items`); setToastShow(true)
-            } catch (e: any) {
-              setToastMsg('Sync error: ' + (e?.message || 'unknown')); setToastShow(true)
-            }
-          }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm text-sm hover:bg-lum-soft transition-colors">
-            <Database className="w-4 h-4 text-lum-slate-light" />
-            Sync to DB
-          </button>
         </div>
       </motion.div>
 
