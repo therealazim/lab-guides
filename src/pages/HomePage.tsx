@@ -26,7 +26,7 @@ export default function HomePage() {
   const [adminItems, setAdminItems] = useState<any[]>(loadAdmin)
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>(loadOverrides)
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
-  const [hiddenSlugs] = useState<string[]>(loadHidden)
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(loadHidden)
   const [apiCount, setApiCount] = useState(0)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -87,25 +87,15 @@ export default function HomePage() {
         if (eqData) {
           const apiOverridden = eqData.filter((d: any) => d._overridden)
           setApiCount(eqData.length)
-          // Merge API items with localStorage items (localStorage takes precedence)
-          const localAdmin = loadAdmin()
-          const merged = [...localAdmin]
-          for (const apiItem of apiOverridden) {
-            if (!merged.find((m: any) => m.slug === apiItem.slug)) {
-              merged.push(apiItem)
-            }
-          }
-          setAdminItems(merged)
+          setAdminItems(apiOverridden)
           const ovs: Record<string, any> = {}
           eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
-          // Merge with localStorage overrides
-          const localOv = loadOverrides()
-          for (const slug of Object.keys(localOv)) { if (!ovs[slug]) ovs[slug] = localOv[slug] }
           setStaticOverrides(ovs)
+          setHiddenSlugs(eqData.filter((d: any) => d.hidden).map((d: any) => d.slug))
         } else {
-          // Fallback to localStorage
-          setAdminItems(loadAdmin())
-          setStaticOverrides(loadOverrides())
+          // No fallback to localStorage, rely solely on API
+          setAdminItems([])
+          setStaticOverrides({})
         }
         if (partnerData) {
           const defaults: {name:string;url:string;src:string}[] = [
