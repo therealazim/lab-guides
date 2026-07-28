@@ -339,7 +339,7 @@ export default function AdminPage() {
             <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            <a href="/#/admin" onClick={() => { setShowForm(false); setShowEquipList(false); setShowPartners(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
+            <a href="/#/admin" onClick={() => { setShowForm(false); setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
             <div className="hidden sm:block">
               <p className="text-sm font-bold text-lum-ivory">고려대학교 IEH</p>
               <p className="text-[10px] text-lum-slate-warm tracking-[0.15em] uppercase">{t('adminPanel')}</p>
@@ -366,11 +366,11 @@ export default function AdminPage() {
         className="fixed top-0 left-0 bottom-0 z-40 w-64 bg-lum-mid border-r border-lum-panel-border pt-20 px-4 overflow-y-auto shadow-2xl"
       >
         <div className="space-y-2">
-          <button onClick={() => { setShowEquipList(true); setShowPartners(false); setEditIdx(null); resetForm(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory font-medium text-sm hover:bg-lum-soft transition-colors">
+          <button onClick={() => { setShowEquipList(true); setShowPartners(false); setShowTranslations(false); setEditIdx(null); resetForm(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory font-medium text-sm hover:bg-lum-soft transition-colors">
             <List className="w-4 h-4 text-lum-slate-light" />
             {t('adminAllEq')}
           </button>
-          <button onClick={() => { setShowPartners(true); setShowEquipList(false); setEditIdx(null); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
+          <button onClick={() => { setShowPartners(true); setShowEquipList(false); setShowTranslations(false); setEditIdx(null); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
             <Link2 className="w-4 h-4 text-lum-slate-light" />
             Partners
           </button>
