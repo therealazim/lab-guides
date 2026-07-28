@@ -76,14 +76,23 @@ export default function HomePage() {
     })
   }, [query, lang])
 
-  // Load admin data on mount
+  // Load admin data from server-injected data or API
   useEffect(() => {
     async function load() {
+      // Check if server injected data
+      const initial = (window as any).__INITIAL_DATA__
+      if (initial?.equipment) {
+        const apiOverridden = initial.equipment.filter((d: any) => d._overridden)
+        setApiCount(initial.equipment.length)
+        setAdminItems(apiOverridden)
+        const ovs: Record<string, any> = {}
+        initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
+        setStaticOverrides(ovs)
+        return
+      }
+      // Fallback: fetch from API
       try {
-        const [eqData, partnerData] = await Promise.all([
-          apiFetchEq().catch(() => null),
-          apiFetchPartners().catch(() => null),
-        ])
+        const eqData = await apiFetchEq()
         if (eqData) {
           const apiOverridden = eqData.filter((d: any) => d._overridden)
           setApiCount(eqData.length)
@@ -91,30 +100,28 @@ export default function HomePage() {
           const ovs: Record<string, any> = {}
           eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
           setStaticOverrides(ovs)
-          setHiddenSlugs(eqData.filter((d: any) => d.hidden).map((d: any) => d.slug))
-        } else {
-          // No fallback to localStorage, rely solely on API
-          setAdminItems([])
-          setStaticOverrides({})
         }
-        if (partnerData) {
-          const defaults: {name:string;url:string;src:string}[] = [
-            { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
-            { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
-            { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
-            { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
-          ]
-          const apiPartners = partnerData.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
-          setAdminPartners([...defaults, ...apiPartners])
-        } else {
-          setAdminPartners(JSON.parse(localStorage.getItem('admin_partners') || '[]'))
-        }
-      } catch {
-        setAdminItems(loadAdmin())
-        setStaticOverrides(loadOverrides())
-      }
+      } catch {}
     }
     load()
+  }, [])
+
+  // Load partners from server-injected data
+  useEffect(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    if (initial?.partners) {
+      const defaults = [
+        { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
+        { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
+        { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
+        { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
+      ]
+      const apiPartners = initial.partners.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
+      setAdminPartners([...defaults, ...apiPartners])
+    } else {
+      setAdminPartners(JSON.parse(localStorage.getItem('admin_partners') || '[]'))
+    }
+  }, [])
   }, [])
 
   useEffect(() => {
