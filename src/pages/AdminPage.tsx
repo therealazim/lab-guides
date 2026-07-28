@@ -221,7 +221,7 @@ export default function AdminPage() {
     })
     setImage(item.image || null)
     setEditIdx(item.slug)
-    setEditIsStatic(!!item._overridden || staticEquipments.some(e => e.slug === item.slug))
+    setEditIsStatic(staticEquipments.some(e => e.slug === item.slug))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
