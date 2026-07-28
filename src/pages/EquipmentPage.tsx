@@ -207,7 +207,7 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('safety')}</h2>
           </div>
-          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).safety || '' }} />
+          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).safety || (Array.isArray((data as any).safetyGuidelines) ? (data as any).safetyGuidelines.join('<br>') : '') }} />
         </motion.section>
 
         {/* Procedure */}
@@ -224,7 +224,7 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('procedure')}</h2>
           </div>
-          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).procedure || '' }} />
+          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).procedure || (Array.isArray((data as any).operatingProcedure) ? (data as any).operatingProcedure.join('<br>') : '') }} />
         </motion.section>
 
         {/* Maintenance */}
@@ -241,7 +241,7 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('maintenance')}</h2>
           </div>
-          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).maintenance || '' }} />
+          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).maintenance || (Array.isArray((data as any).maintenance) ? (data as any).maintenance.join('<br>') : '') }} />
         </motion.section>
 
         {/* Video Tutorial */}
