@@ -8,7 +8,7 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://neondb_owner:npg_hDg20lCiSJme@ep-silent-brook-asbj63i2-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://neondb_owner:npg_8mictNG6Xkjx@ep-damp-salad-asqdcy6a-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require')
 
 def get_db():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
