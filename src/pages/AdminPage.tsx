@@ -109,7 +109,7 @@ export default function AdminPage() {
   useEffect(() => {
     apiFetchEquipment().then(data => {
       if (data && data.length) {
-        const admin = data.filter((d: any) => d._overridden)
+        const admin = data.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
         const ovs: Record<string, any> = {}
         data.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
         setSavedItems(admin)
