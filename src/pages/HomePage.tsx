@@ -75,7 +75,7 @@ export default function HomePage() {
   useEffect(() => {
     const initial = (window as any).__INITIAL_DATA__
     if (initial?.equipment) {
-      const apiOverridden = initial.equipment.filter((d: any) => d._overridden)
+      const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
       setApiCount(initial.equipment.length)
       setAdminItems(apiOverridden)
       const ovs: Record<string, any> = {}
@@ -86,7 +86,7 @@ export default function HomePage() {
       try {
         const eqData = await apiFetchEq()
         if (eqData) {
-          const apiOverridden = eqData.filter((d: any) => d._overridden)
+          const apiOverridden = eqData.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
           setApiCount(eqData.length)
           setAdminItems(apiOverridden)
           const ovs: Record<string, any> = {}

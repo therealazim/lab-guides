@@ -18,17 +18,17 @@ export default function CatalogPage() {
   useEffect(() => {
     const initial = (window as any).__INITIAL_DATA__
     if (initial?.equipment) {
-      const apiOverridden = initial.equipment.filter((d: any) => d._overridden)
-      setAdminItems(apiOverridden)
-      const ovs: Record<string, any> = {}
-      initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
-      setStaticOverrides(ovs)
-    }
-    async function load() {
-      try {
-        const eqData = await apiFetchEq()
-        if (eqData) {
-          const apiOverridden = eqData.filter((d: any) => d._overridden)
+      const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
+          setAdminItems(apiOverridden)
+          const ovs: Record<string, any> = {}
+          initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
+          setStaticOverrides(ovs)
+        }
+        async function load() {
+          try {
+            const eqData = await apiFetchEq()
+            if (eqData) {
+              const apiOverridden = eqData.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
           setAdminItems(apiOverridden)
           const ovs: Record<string, any> = {}
           eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
