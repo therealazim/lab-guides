@@ -107,6 +107,8 @@ export default function AdminPage() {
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([])
   const [manual, setManual] = useState<string | null>(null)
   const manualRef = useRef<HTMLInputElement>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveProgress, setSaveProgress] = useState(0)
 
   useEffect(() => {
     apiFetchEquipment().then(data => {
@@ -241,6 +243,8 @@ export default function AdminPage() {
       alert('English name and description are required')
       return
     }
+    setSaving(true)
+    setSaveProgress(10)
 
     const slug = form.slug || generateSlug(form.lang.en.name)
     const data: any = {
@@ -268,21 +272,30 @@ export default function AdminPage() {
       }
     }
 
-    if (editIdx !== null) {
-      if (editIsStatic) {
-        const ov = { ...overrides }
-        ov[editIdx] = data
-        await saveOverrides(ov)
+    setSaveProgress(30)
+    try {
+      if (editIdx !== null) {
+        if (editIsStatic) {
+          const ov = { ...overrides }
+          ov[editIdx] = data
+          await saveOverrides(ov)
+        } else {
+          const updated = [...savedItems]
+          const idx = savedItems.findIndex((it: any) => it.slug === editIdx)
+          if (idx >= 0) { updated[idx] = data; await save(updated) }
+          else { await save([...savedItems, data]) }
+        }
       } else {
-        const updated = [...savedItems]
-        const idx = savedItems.findIndex((it: any) => it.slug === editIdx)
-        if (idx >= 0) { updated[idx] = data; await save(updated) }
-        else { await save([...savedItems, data]) }
+        await save([...savedItems, data])
       }
-    } else {
-      await save([...savedItems, data])
+      setSaveProgress(100)
+      setToastMsg('Changes applied successfully!'); setToastShow(true)
+      setTimeout(() => { setSaving(false); setSaveProgress(0); resetForm() }, 1500)
+    } catch (e: any) {
+      setSaving(false)
+      setSaveProgress(0)
+      setToastMsg('Error: ' + (e?.message || 'Save failed')); setToastShow(true)
     }
-    resetForm()
   }
 
   // Login screen
@@ -686,12 +699,30 @@ export default function AdminPage() {
             )}
           </div>
 
+          {/* Saving progress */}
+          {saving ? (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-lum-slate-warm/70">Saving changes...</span>
+                <span className="text-xs font-medium text-lum-ivory">{saveProgress}%</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-lum-soft overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${saveProgress}%` }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="h-full rounded-full bg-gradient-to-r from-lum-slate-light/40 to-lum-slate-light"
+                />
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex items-center gap-3">
-            <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
+            <button onClick={handleSubmit} disabled={saving} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3 disabled:opacity-50">
               <Save className="w-3.5 h-3.5" />
               {editIdx !== null ? t('adminUpdate') : t('adminSave')}
             </button>
-            <button onClick={resetForm} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory hover:border-lum-slate-light/20 transition-colors text-xs">
+            <button onClick={resetForm} disabled={saving} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory hover:border-lum-slate-light/20 transition-colors text-xs disabled:opacity-50">
               {t('adminCancel')}
             </button>
           </div>
