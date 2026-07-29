@@ -105,6 +105,8 @@ export default function AdminPage() {
 
   const [overrides, setOverrides] = useState<Record<string, any>>({})
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([])
+  const [manual, setManual] = useState<string | null>(null)
+  const manualRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     apiFetchEquipment().then(data => {
@@ -188,10 +190,18 @@ export default function AdminPage() {
     reader.readAsDataURL(file)
   }
 
+  const handleManual = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setManual(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
   const generateSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-  const resetForm = () => { setForm(emptyForm); setImage(null); setEditIdx(null); setFormLang('en'); setShowForm(false) }
+  const resetForm = () => { setForm(emptyForm); setImage(null); setManual(null); setEditIdx(null); setFormLang('en'); setShowForm(false) }
 
   const editItem = (item: any) => {
     setShowForm(true)
@@ -220,6 +230,7 @@ export default function AdminPage() {
       status: item.status || 'AVAILABLE',
     })
     setImage(item.image || null)
+    setManual(item.manual || null)
     setEditIdx(item.slug)
     setEditIsStatic(staticEquipments.some(e => e.slug === item.slug))
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -242,6 +253,7 @@ export default function AdminPage() {
       installation_date: form.installation_date || '—',
       status: form.status || 'AVAILABLE',
       image: image,
+      manual: manual,
     }
     for (const l of LANGUAGES) {
       const d = form.lang[l.code]
@@ -422,7 +434,22 @@ export default function AdminPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-lum-ivory truncate">{item.en?.name || item.slug}</p>
                     <p className="text-[10px] text-lum-slate-warm truncate">{item.slug}</p>
-                  </div>
+          </div>
+
+          {/* Manual PDF */}
+          <div className="mb-4">
+            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">Manual (PDF)</label>
+            <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
+            <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+              <Upload className="w-4 h-4" /> {manual ? 'Change PDF' : 'Upload Manual PDF'}
+            </button>
+            {manual && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-[10px] text-lum-slate-warm/60">PDF uploaded</span>
+                <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
+              </div>
+            )}
+          </div>
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setSavedItems(savedItems.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
