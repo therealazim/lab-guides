@@ -17,7 +17,7 @@ def no_cache(response):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://neondb_owner:npg_8mictNG6Xkjx@ep-damp-salad-asqdcy6a-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require')
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 def get_db():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -86,6 +86,8 @@ def get_equipment_by_slug(slug):
 @app.route('/api/equipment', methods=['POST'])
 def save_equipment():
     body = request.get_json()
+    if not body:
+        return jsonify({'error': 'Invalid JSON'}), 400
     slug = body.pop('slug', None)
     if not slug:
         return jsonify({'error': 'No slug'}), 400
@@ -124,6 +126,8 @@ def get_partners():
 @app.route('/api/partners', methods=['POST'])
 def save_partner():
     body = request.get_json()
+    if not body:
+        return jsonify({'error': 'Invalid JSON'}), 400
     name = body.get('name', '')
     url = body.get('url', '')
     image = body.get('image', '')
@@ -171,6 +175,8 @@ def get_translations():
 @app.route('/api/translations', methods=['POST'])
 def save_translation():
     body = request.get_json()
+    if not body:
+        return jsonify({'error': 'Invalid JSON'}), 400
     key = body.get('key')
     lang = body.get('lang')
     value = body.get('value', '')

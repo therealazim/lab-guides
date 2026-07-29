@@ -26,6 +26,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     safety: 'Safety Guidelines',
     procedure: 'Operating Procedure',
     maintenance: 'Maintenance',
+    back: 'Back',
     specifications: 'Specifications',
     purpose: 'Purpose',
     brand: 'Manufacturer',
@@ -101,6 +102,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminAddedMsg: 'Equipment added!',
     adminDeleteConfirm: 'Delete this equipment?',
     adminSlugAuto: 'leave empty for auto',
+    back: 'Back',
     partners: 'Partners',
   },
   uz: {
@@ -187,6 +189,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminAddedMsg: "Jihoz qo'shildi!",
     adminDeleteConfirm: "Ushbu jihozni o'chirish?",
     adminSlugAuto: "bo'sh qoldiring",
+    back: "Orqaga",
     partners: "Hamkorlar",
   },
   kk: {
@@ -273,7 +276,8 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminAddedMsg: "Qurılma qosıldı!",
     adminDeleteConfirm: "Bul qurılmanı óshiriw?",
     adminSlugAuto: "bos qaldırıń",
-    partners: "Sherikler",
+    back: "Artqa",
+    partners: "Hamkorlar",
   },
   ru: {
     title: 'KMI - LUPIC Лаборатория',
@@ -359,7 +363,10 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminAddedMsg: "Оборудование добавлено!",
     adminDeleteConfirm: "Удалить это оборудование?",
     adminSlugAuto: "оставьте пустым",
+    back: "Назад",
     partners: "Партнеры",
+  },
+  ko: {
   },
   ko: {
     title: 'KMI - LUPIC 연구실',
@@ -445,6 +452,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminAddedMsg: "장비가 추가되었습니다!",
     adminDeleteConfirm: "이 장비를 삭제하시겠습니까?",
     adminSlugAuto: "비워두기",
+    back: "뒤로",
     partners: "파트너",
   },
 }

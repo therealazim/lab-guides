@@ -15,8 +15,7 @@ const findEquipment = (slug: string) => {
   if (fromStatic) return fromStatic
   return undefined
 }
-const getMeta = (slug: string) => {
-  const eq = findEquipment(slug) as any
+const getMeta = (eq: any) => {
   if (!eq) return { brand: '', model: '', location: '', quantity: '', purchase_date: '', installation_date: '', status: '' }
   return {
     brand: eq.brand || '',
@@ -57,9 +56,19 @@ export default function EquipmentPage() {
   }, [slug])
   
   const equipment = apiEquipment || findEquipment(slug || '')
-  const meta = getMeta(slug || '')
+  const meta = getMeta(equipment)
 
   if (!equipment) {
+    if (!findEquipment(slug || '') && !apiEquipment) {
+      return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-lum-slate-light/60 text-sm font-light">Loading...</p>
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
         <p className="text-lum-slate-light/60 text-lg font-light">{t('noResults')}</p>
