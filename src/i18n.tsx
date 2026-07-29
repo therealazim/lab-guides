@@ -83,7 +83,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminSafety: 'Safety (one per line)',
     adminProcedure: 'Procedure (one per line)',
     adminMaintenance: 'Maintenance (one per line)',
-    adminBrand: 'Brand',
+    adminBrand: 'Manufacturer',
     adminModel: 'Model',
     adminLocation: 'Location',
     adminQty: 'Quantity',
