@@ -55,10 +55,10 @@ export default function EquipmentCard({ equipment, index }: Props) {
           {/* Status badge */}
           {equipment.status && (
             <div className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-xl text-[9px] font-semibold tracking-[0.1em] uppercase ${
-              equipment.status === 'AVIABLE' ? 'bg-emerald-500/20 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/20 border border-red-500/20 text-red-400'
+              equipment.status === 'AVAILABLE' ? 'bg-emerald-500/20 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/20 border border-red-500/20 text-red-400'
             }`}>
               <span className={`w-2 h-2 rounded-full ${
-                equipment.status === 'AVIABLE' ? 'bg-emerald-400' : 'bg-red-400'
+                equipment.status === 'AVAILABLE' ? 'bg-emerald-400' : 'bg-red-400'
               }`} />
               {equipment.status}
             </div>

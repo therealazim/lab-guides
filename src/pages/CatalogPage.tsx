@@ -122,7 +122,7 @@ export default function CatalogPage() {
                 {eq.installation_date && eq.installation_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Installed: {eq.installation_date}</p>}
                 {eq.status && (
                   <span className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[8px] font-medium ${
-                    eq.status === 'AVIABLE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                    eq.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
                   }`}>
                     {eq.status}
                   </span>

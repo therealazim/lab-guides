@@ -93,7 +93,7 @@ export default function CatalogItemPage() {
             )}
             {equipment.status && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border col-span-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${equipment.status === 'AVIABLE' ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                <span className={`w-2.5 h-2.5 rounded-full ${equipment.status === 'AVAILABLE' ? 'bg-emerald-400' : 'bg-red-400'}`} />
                 <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Status</p><p className="text-xs font-medium text-lum-ivory">{equipment.status}</p></div>
               </div>
             )}

@@ -55,7 +55,7 @@ const emptyForm: EquipmentForm = {
   slug: '',
   lang: { en: emptyLangData(), uz: emptyLangData(), kk: emptyLangData(), ru: emptyLangData(), ko: emptyLangData() },
   brand: '', model: '', location: '', quantity: '',
-  purchase_date: '', installation_date: '', status: 'AVIABLE',
+  purchase_date: '', installation_date: '', status: 'AVAILABLE',
 }
 
 const DEFAULT_PARTNERS = [
@@ -217,7 +217,7 @@ export default function AdminPage() {
       quantity: item.quantity || '',
       purchase_date: item.purchase_date || '',
       installation_date: item.installation_date || '',
-      status: item.status || 'AVIABLE',
+      status: item.status || 'AVAILABLE',
     })
     setImage(item.image || null)
     setEditIdx(item.slug)
@@ -240,7 +240,7 @@ export default function AdminPage() {
       quantity: form.quantity || '1',
       purchase_date: form.purchase_date || '—',
       installation_date: form.installation_date || '—',
-      status: form.status || 'AVIABLE',
+      status: form.status || 'AVAILABLE',
       image: image,
     }
     for (const l of LANGUAGES) {
@@ -638,8 +638,8 @@ export default function AdminPage() {
             <div>
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('status')}</label>
               <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20">
-                <option value="AVIABLE">AVIABLE</option>
-                <option value="UNAVIABLE">UNAVIABLE</option>
+                <option value="AVAILABLE">AVAILABLE</option>
+                <option value="UNAVAILABLE">UNAVAILABLE</option>
               </select>
             </div>
           </div>
