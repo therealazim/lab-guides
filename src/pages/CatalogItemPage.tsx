@@ -11,7 +11,7 @@ import { fetchEquipmentBySlug as apiFetchEq } from '../api'
 
 export default function CatalogItemPage() {
   const { slug } = useParams<{ slug: string }>()
-  const { lang } = useI18n()
+  const { lang, t } = useI18n()
   const [apiEquipment, setApiEquipment] = useState<any>(null)
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function CatalogItemPage() {
             {equipment.brand && equipment.brand !== '—' && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
                 <Tag className="w-3.5 h-3.5 text-lum-slate-light flex-shrink-0" />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Brand</p><p className="text-xs font-medium text-lum-ivory">{equipment.brand}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('brand')}</p><p className="text-xs font-medium text-lum-ivory">{equipment.brand}</p></div>
               </div>
             )}
             {equipment.model && equipment.model !== '—' && (
