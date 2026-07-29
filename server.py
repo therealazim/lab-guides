@@ -63,6 +63,7 @@ def get_equipment():
         data = r['data'] if r['data'] else {}
         data['slug'] = r['slug']
         data['_overridden'] = r['override']
+        if data.get('status') == 'AVIABLE': data['status'] = 'AVAILABLE'
         result.append(data)
     return jsonify(result)
 
@@ -79,6 +80,7 @@ def get_equipment_by_slug(slug):
     data = r['data'] if r['data'] else {}
     data['slug'] = r['slug']
     data['_overridden'] = r['override']
+    if data.get('status') == 'AVIABLE': data['status'] = 'AVAILABLE'
     return jsonify(data)
 
 @app.route('/api/equipment', methods=['POST'])
@@ -87,6 +89,7 @@ def save_equipment():
     slug = body.pop('slug', None)
     if not slug:
         return jsonify({'error': 'No slug'}), 400
+    if body.get('status') == 'AVIABLE': body['status'] = 'AVAILABLE'
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
@@ -226,6 +229,7 @@ def serve_frontend(path):
             data = r['data'] if r['data'] else {}
             data['slug'] = r['slug']
             data['_overridden'] = r['override']
+            if data.get('status') == 'AVIABLE': data['status'] = 'AVAILABLE'
             equipment.append(data)
         
         translations = {}
