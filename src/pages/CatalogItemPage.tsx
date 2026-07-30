@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Tag, Info, MapPin, Hash, ShoppingCart, Package } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, Tag, Info, MapPin, Hash, ShoppingCart, Package, FileText } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -20,6 +20,20 @@ export default function CatalogItemPage() {
   }, [slug])
 
   const equipment = apiEquipment || staticEquipments.find((e: any) => e.slug === slug)
+
+  const manualBlobUrl = useMemo(() => {
+    if (!equipment?.manual) return null
+    const base64 = equipment.manual.split(',')[1] || ''
+    const binary = atob(base64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+  }, [equipment?.manual])
+
+  useEffect(() => {
+    return () => { if (manualBlobUrl) URL.revokeObjectURL(manualBlobUrl) }
+  }, [manualBlobUrl])
+
   if (!equipment) return null
 
   const d = equipment[lang as Lang] || equipment.en
@@ -99,15 +113,15 @@ export default function CatalogItemPage() {
             )}
           </div>
 
-          {equipment.manual && (
+          {equipment.manual && manualBlobUrl && (
             <div className="mt-6 text-center">
               <a
-                href={equipment.manual}
+                href={manualBlobUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-lum-slate-light/10 hover:bg-lum-slate-light/20 text-lum-ivory text-sm font-medium transition-colors border border-lum-panel-border"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <FileText className="w-4 h-4" />
                 View Manual
               </a>
             </div>
