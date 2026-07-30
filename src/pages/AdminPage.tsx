@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, FilePlus, List, Link2, Database, Image as ImageIcon, Languages } from 'lucide-react'
+import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
@@ -83,16 +83,14 @@ export default function AdminPage() {
   const [showPartners, setShowPartners] = useState(false)
   const [showTranslations, setShowTranslations] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [partners, setPartners] = useState<{name: string; src: string; url: string; _default?: boolean}[]>(DEFAULT_PARTNERS)
+  const [partners, setPartners] = useState<{name: string; src: string; url: string; _default?: boolean; _id?: number}[]>(DEFAULT_PARTNERS)
   const [partnerName, setPartnerName] = useState('')
   const [partnerUrl, setPartnerUrl] = useState('')
   const [partnerImg, setPartnerImg] = useState<string | null>(null)
   const [partnerEditIdx, setPartnerEditIdx] = useState<number | null>(null)
   const [translations, setTranslations] = useState<Record<string, Record<string, string>>>({})
   const [transKeys, setTransKeys] = useState<string[]>([])
-  const [transLang, setTransLang] = useState('ko')
-  const [transEditKey, setTransEditKey] = useState('')
-  const [transEditVal, setTransEditVal] = useState('')
+
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
   const [confirmMsg, setConfirmMsg] = useState('')
   const [toastMsg, setToastMsg] = useState('')
@@ -104,7 +102,7 @@ export default function AdminPage() {
   const pwRef = useRef<HTMLInputElement>(null)
 
   const [overrides, setOverrides] = useState<Record<string, any>>({})
-  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>([])
+  const [hiddenSlugs] = useState<string[]>([])
   const [manual, setManual] = useState<string | null>(null)
   const manualRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
@@ -536,7 +534,8 @@ export default function AdminPage() {
                 })
                 const ws = XLSX.utils.json_to_sheet(data)
                 const border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } }
-                const range = XLSX.utils.decode_range(ws['!ref'])
+                const ref = ws['!ref']
+                const range = ref ? XLSX.utils.decode_range(ref) : { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } }
                 for (let R = range.s.r; R <= range.e.r; R++) {
                   for (let C = range.s.c; C <= range.e.c; C++) {
                     const addr = XLSX.utils.encode_cell({ r: R, c: C })
@@ -670,34 +669,34 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Image */}
-          <div className="mb-4">
-            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminImage')}</label>
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
-            <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
-              <Upload className="w-4 h-4" /> {image ? t('adminChange') : t('adminUpload')}
-            </button>
-            {image && (
-              <div className="mt-2 relative inline-block">
-                <img src={image} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />
-                <button onClick={() => setImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">×</button>
-              </div>
-            )}
-          </div>
-
-          {/* Manual PDF */}
-          <div className="mb-4">
-            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">Manual (PDF)</label>
-            <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
-            <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
-              <Upload className="w-4 h-4" /> {manual ? 'Change PDF' : 'Upload Manual PDF'}
-            </button>
-            {manual && (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-[10px] text-lum-slate-warm/60">PDF uploaded</span>
-                <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
-              </div>
-            )}
+          {/* Image & Manual PDF */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminImage')}</label>
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
+              <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+                <Upload className="w-4 h-4" /> {image ? t('adminChange') : t('adminUpload')}
+              </button>
+              {image && (
+                <div className="mt-2 relative inline-block">
+                  <img src={image} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />
+                  <button onClick={() => setImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">×</button>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">Manual (PDF)</label>
+              <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
+              <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+                <Upload className="w-4 h-4" /> {manual ? 'Change PDF' : 'Upload Manual PDF'}
+              </button>
+              {manual && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-lum-slate-warm/60">PDF uploaded</span>
+                  <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Saving progress */}

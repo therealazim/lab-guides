@@ -102,7 +102,6 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     adminAddedMsg: 'Equipment added!',
     adminDeleteConfirm: 'Delete this equipment?',
     adminSlugAuto: 'leave empty for auto',
-    back: 'Back',
     partners: 'Partners',
   },
   uz: {
@@ -367,8 +366,6 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     partners: "Партнеры",
   },
   ko: {
-  },
-  ko: {
     title: 'KMI - LUPIC 연구실',
     subtitle: '장비 가이드 시스템',
     home: '홈',
@@ -471,7 +468,7 @@ const I18nContext = createContext<I18nContextType>({
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>('en')
-  const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>(() => {
+  const [overrides, _setOverrides] = useState<Record<string, Record<string, string>>>(() => {
     const initial = (window as any).__INITIAL_DATA__
     return initial?.translations || {}
   })
