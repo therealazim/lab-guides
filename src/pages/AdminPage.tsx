@@ -449,20 +449,6 @@ export default function AdminPage() {
                     <p className="text-[10px] text-lum-slate-warm truncate">{item.slug}</p>
           </div>
 
-          {/* Manual PDF */}
-          <div className="mb-4">
-            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">Manual (PDF)</label>
-            <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
-            <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
-              <Upload className="w-4 h-4" /> {manual ? 'Change PDF' : 'Upload Manual PDF'}
-            </button>
-            {manual && (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-[10px] text-lum-slate-warm/60">PDF uploaded</span>
-                <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
-              </div>
-            )}
-          </div>
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setSavedItems(savedItems.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
@@ -695,6 +681,21 @@ export default function AdminPage() {
               <div className="mt-2 relative inline-block">
                 <img src={image} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />
                 <button onClick={() => setImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">×</button>
+              </div>
+            )}
+          </div>
+
+          {/* Manual PDF */}
+          <div className="mb-4">
+            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">Manual (PDF)</label>
+            <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
+            <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+              <Upload className="w-4 h-4" /> {manual ? 'Change PDF' : 'Upload Manual PDF'}
+            </button>
+            {manual && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-[10px] text-lum-slate-warm/60">PDF uploaded</span>
+                <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
               </div>
             )}
           </div>
