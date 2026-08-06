@@ -484,7 +484,7 @@ export default function HomePage() {
         <p className="text-center text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm opacity-50 mb-8">
           Partners
         </p>
-        <div className="flex w-max animate-[tickerScroll_30s_linear_infinite] md:hover:[animation-play-state:paused]" style={{ willChange: 'transform' }}>
+        <div className="flex w-max animate-[tickerScroll_30s_linear_infinite]" style={{ willChange: 'transform' }}>
           {[...Array(3)].flatMap(() => [
             ...adminPartners,
           ]).map((item, i) => (
