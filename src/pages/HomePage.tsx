@@ -145,7 +145,7 @@ export default function HomePage() {
         setHighlightIdx(i => Math.max(i - 1, 0))
       } else if (e.key === 'Enter' && highlightIdx >= 0) {
         e.preventDefault()
-        navigate(`/equipment/${filtered[highlightIdx].slug}`)
+        navigate(`/catalog/${filtered[highlightIdx].slug}`)
         setShowDropdown(false)
         setQuery('')
       } else if (e.key === 'Escape') {
@@ -294,7 +294,7 @@ export default function HomePage() {
                       return (
                         <Link
                           key={eq.slug}
-                          to={`/equipment/${eq.slug}`}
+                          to={`/catalog/${eq.slug}`}
                           onClick={() => { setShowDropdown(false); setQuery('') }}
                           className={`flex items-center gap-3 px-5 py-3 text-left text-sm transition-colors ${
                             i === highlightIdx ? 'bg-lum-soft text-lum-ivory' : 'text-lum-slate-light active:bg-lum-soft/50 md:hover:bg-lum-soft/50'
