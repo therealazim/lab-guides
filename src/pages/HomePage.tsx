@@ -59,12 +59,12 @@ export default function HomePage() {
     if (!query.trim()) return allEquipments
     const q = query.toLowerCase()
     return allEquipments.filter((eq: any) => {
-      const d = eq[lang as Lang] || eq.en
+      const d = eq[lang as Lang] || eq.en || eq
       return (
-        d.name?.toLowerCase().includes(q) ||
-        d.description?.toLowerCase().includes(q) ||
+        (d.name || '').toLowerCase().includes(q) ||
+        (d.description || '').toLowerCase().includes(q) ||
         eq.slug?.includes(q) ||
-        eq.en?.name?.toLowerCase().includes(q)
+        (eq.en?.name || '').toLowerCase().includes(q)
       )
     })
   }, [query, lang, allEquipments])
