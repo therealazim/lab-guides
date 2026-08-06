@@ -375,13 +375,13 @@ export default function HomePage() {
 
       {/* ─── NEWS SLIDER ─── */}
       {newsItems.length > 0 && (
-        <section className="py-20 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
+        <section className="py-20 px-4 md:px-6 lg:px-8 border-t border-lum-panel-border">
           <h2 className="text-center text-[clamp(28px,3.5vw,40px)] font-light text-lum-ivory mb-12" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>
             KMI - LUPIC Today
           </h2>
 
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-4 md:gap-6">
+          <div className="w-full">
+            <div className="flex items-center gap-3 md:gap-4">
               {/* Prev button */}
               <button
                 onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
@@ -390,7 +390,7 @@ export default function HomePage() {
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
               </button>
 
-              <div className="flex-1 grid md:grid-cols-[1.15fr_1fr] gap-6 md:gap-8 items-center">
+              <div className="flex-1 grid md:grid-cols-[1.4fr_1fr] gap-6 md:gap-10 items-center">
                 {/* Mosaic image grid */}
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -399,7 +399,7 @@ export default function HomePage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.45 }}
-                    className="aspect-[16/9] rounded-md overflow-hidden"
+                    className="aspect-[4/3] md:aspect-[16/9] rounded-md overflow-hidden"
                   >
                     {(() => {
                       const imgs = newsItems[newsIdx]?.images || (newsItems[newsIdx]?.image ? [newsItems[newsIdx].image] : [])
