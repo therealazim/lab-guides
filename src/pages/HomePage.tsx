@@ -290,7 +290,7 @@ export default function HomePage() {
                     <div className="px-5 py-4 text-sm text-lum-slate-warm/60 text-center">{t('noResults')}</div>
                   ) : (
                     filtered.map((eq: any, i: number) => {
-                      const d = eq[lang as Lang] || eq.en
+                      const d = eq[lang as Lang] || eq.en || eq
                       return (
                         <Link
                           key={eq.slug}

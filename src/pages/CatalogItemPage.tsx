@@ -23,11 +23,15 @@ export default function CatalogItemPage() {
 
   const manualBlobUrl = useMemo(() => {
     if (!equipment?.manual) return null
-    const base64 = equipment.manual.split(',')[1] || ''
-    const binary = atob(base64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+    try {
+      const base64 = equipment.manual.split(',')[1] || ''
+      const binary = atob(base64)
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+      return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+    } catch {
+      return null
+    }
   }, [equipment?.manual])
 
   useEffect(() => {
@@ -36,7 +40,7 @@ export default function CatalogItemPage() {
 
   if (!equipment) return null
 
-  const d = equipment[lang as Lang] || equipment.en
+  const d = equipment[lang as Lang] || equipment.en || equipment
   const imgSrc = (imageMap as Record<string, string>)[slug || ''] || equipment.image || ''
 
   return (

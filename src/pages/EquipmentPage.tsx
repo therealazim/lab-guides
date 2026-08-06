@@ -76,7 +76,7 @@ export default function EquipmentPage() {
     )
   }
 
-  const data = equipment[lang as Lang] || equipment.en
+  const data = equipment[lang as Lang] || equipment.en || equipment
   const adminImg = (equipment as any)?.image || ''
   const imgSrc = (imageMap as Record<string, string>)[slug || ''] || adminImg || ''
   const videoUrlRaw = (youtubeVideos as Record<string, string>)[slug || ''] || ''

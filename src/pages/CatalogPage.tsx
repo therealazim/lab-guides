@@ -94,7 +94,7 @@ export default function CatalogPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {allEquipments.map((eq: any, i: number) => {
-            const d = eq[lang as Lang] || eq.en
+            const d = eq[lang as Lang] || eq.en || eq
             const imgSrc = (imageMap as Record<string, string>)[eq.slug] || eq.image || ''
             return (
               <motion.div
