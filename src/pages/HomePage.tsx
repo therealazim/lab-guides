@@ -433,11 +433,8 @@ export default function HomePage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.45 }}
-                    className="relative py-2"
+                    className="py-2"
                   >
-                    <span className="absolute -top-2 -left-1 text-5xl text-lum-slate-warm/20 leading-none" style={{ fontFamily: 'Georgia, serif' }}>&ldquo;</span>
-                    <span className="absolute top-10 right-0 text-5xl text-lum-slate-warm/20 leading-none" style={{ fontFamily: 'Georgia, serif' }}>&rdquo;</span>
-
                     <h3
                       className="text-[clamp(20px,2.2vw,28px)] font-medium text-lum-ivory leading-snug mb-4"
                       style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}
