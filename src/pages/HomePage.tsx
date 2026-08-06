@@ -23,6 +23,7 @@ export default function HomePage() {
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [newsIdx, setNewsIdx] = useState(0)
+  const [playing, setPlaying] = useState(true)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -138,14 +139,14 @@ export default function HomePage() {
     loadNews()
   }, [])
 
-  // Auto-slide news (only for carousel with 4+ items)
+  // Auto-slide news
   useEffect(() => {
-    if (newsItems.length <= 3) return
+    if (newsItems.length <= 1 || !playing) return
     const timer = setInterval(() => {
       setNewsIdx(i => (i + 1) % newsItems.length)
-    }, 5000)
+    }, 6000)
     return () => clearInterval(timer)
-  }, [newsItems.length])
+  }, [newsItems.length, playing])
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -375,117 +376,107 @@ export default function HomePage() {
       {/* ─── NEWS SLIDER ─── */}
       {newsItems.length > 0 && (
         <section className="py-20 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <p className="text-[9px] font-semibold tracking-[0.25em] uppercase text-lum-slate-warm mb-2">KMI - LUPIC Today</p>
-                <h2 className="text-2xl font-light text-lum-ivory tracking-[-0.03em]">News &amp; Events</h2>
-              </div>
-              {newsItems.length > 3 && (
-                <button
-                  onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
-                  className="text-[10px] font-medium tracking-[0.15em] uppercase text-lum-slate-warm hover:text-lum-ivory transition-colors"
-                >
-                  VIEW ALL &rarr;
-                </button>
-              )}
-            </div>
+          <h2 className="text-center text-[clamp(28px,3.5vw,40px)] font-light text-lum-ivory mb-12" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>
+            KMI - LUPIC Today
+          </h2>
 
-            <div className="relative group">
-              {/* Static grid for 1-3 items */}
-              {newsItems.length <= 3 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {newsItems.map((n: any) => (
-                    <div key={n.id} className="lum-card overflow-hidden group/card cursor-pointer hover:border-lum-slate-light/20 transition-all duration-500">
-                      <div className="relative aspect-[4/3] overflow-hidden">
-                        {n.image ? (
-                          <img src={n.image} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700" />
-                        ) : (
-                          <div className="w-full h-full bg-lum-soft flex items-center justify-center">
-                            <span className="text-4xl font-light text-lum-slate-warm/20">KMI</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-lum-deep/90 via-transparent to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                          <p className="text-[10px] text-lum-slate-warm/70 mb-1">
-                            {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
-                          </p>
-                          <h3 className="text-sm md:text-base font-semibold text-lum-ivory leading-snug line-clamp-2">{n.title}</h3>
-                          {n.description && (
-                            <p className="text-[11px] text-lum-slate-light/60 mt-1.5 line-clamp-2 leading-relaxed">{n.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  {/* Carousel for 4+ items */}
-                  <div className="overflow-hidden">
-                    <div
-                      className="flex gap-4 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                      style={{ transform: `translateX(-${newsIdx * (100 / 3)}%)` }}
-                    >
-                      {[...newsItems, ...newsItems].map((n: any, i: number) => (
-                        <div
-                          key={`${n.id}-${i}`}
-                          className="flex-shrink-0 w-[calc(100%/1-8px)] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-12px)]"
-                        >
-                          <div className="lum-card overflow-hidden h-full group/card cursor-pointer hover:border-lum-slate-light/20 transition-all duration-500">
-                            <div className="relative aspect-[4/3] overflow-hidden">
-                              {n.image ? (
-                                <img src={n.image} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700" />
-                              ) : (
-                                <div className="w-full h-full bg-lum-soft flex items-center justify-center">
-                                  <span className="text-4xl font-light text-lum-slate-warm/20">KMI</span>
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-lum-deep/90 via-transparent to-transparent" />
-                              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                                <p className="text-[10px] text-lum-slate-warm/70 mb-1">
-                                  {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
-                                </p>
-                                <h3 className="text-sm md:text-base font-semibold text-lum-ivory leading-snug line-clamp-2">{n.title}</h3>
-                                {n.description && (
-                                  <p className="text-[11px] text-lum-slate-light/60 mt-1.5 line-clamp-2 leading-relaxed">{n.description}</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-4 md:gap-6">
+              {/* Prev button */}
+              <button
+                onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
+                className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
 
-                  {/* Prev / Next arrows */}
-                  <button
-                    onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full bg-lum-mid/90 border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:bg-lum-soft transition-all opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-md"
+              <div className="flex-1 grid md:grid-cols-[1.15fr_1fr] gap-6 md:gap-8 items-center">
+                {/* Mosaic image grid */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={newsIdx}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.45 }}
+                    className="grid grid-cols-4 grid-rows-3 gap-1 aspect-[16/9] rounded-md overflow-hidden"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  </button>
-                  <button
-                    onClick={() => setNewsIdx(i => (i + 1) % newsItems.length)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 rounded-full bg-lum-mid/90 border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:bg-lum-soft transition-all opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-md"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-                  </button>
-
-                  {/* Dots */}
-                  <div className="flex justify-center gap-1.5 mt-6">
-                    {newsItems.map((_: any, i: number) => (
-                      <button
-                        key={i}
-                        onClick={() => setNewsIdx(i)}
-                        className={`h-1 rounded-full transition-all duration-500 ${
-                          i === newsIdx ? 'bg-lum-ivory w-6' : 'bg-lum-slate-warm/25 hover:bg-lum-slate-warm/40 w-2'
-                        }`}
-                      />
+                    {[
+                      'col-span-2 row-span-1',
+                      'col-span-2 row-span-1',
+                      'col-span-1 row-span-1',
+                      'col-span-1 row-span-2',
+                      'col-span-2 row-span-2',
+                      'col-span-1 row-span-1',
+                    ].map((cls, i) => (
+                      newsItems[newsIdx]?.image ? (
+                        <img
+                          key={i}
+                          src={newsItems[newsIdx].image}
+                          alt=""
+                          className={`${cls} w-full h-full object-cover bg-lum-soft`}
+                        />
+                      ) : (
+                        <div key={i} className={`${cls} bg-lum-soft flex items-center justify-center`}>
+                          <span className="text-xs text-lum-slate-warm/20">KMI</span>
+                        </div>
+                      )
                     ))}
-                  </div>
-                </>
-              )}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Text panel */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={newsIdx}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.45 }}
+                    className="relative py-2"
+                  >
+                    <span className="absolute -top-2 -left-1 text-5xl text-lum-slate-warm/20 leading-none" style={{ fontFamily: 'Georgia, serif' }}>&ldquo;</span>
+                    <span className="absolute top-10 right-0 text-5xl text-lum-slate-warm/20 leading-none" style={{ fontFamily: 'Georgia, serif' }}>&rdquo;</span>
+
+                    <h3
+                      className="text-[clamp(20px,2.2vw,28px)] font-medium text-lum-ivory leading-snug mb-4"
+                      style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}
+                    >
+                      {newsItems[newsIdx].title}
+                    </h3>
+                    {newsItems[newsIdx].description && (
+                      <p className="text-sm text-lum-slate-light/70 leading-relaxed line-clamp-3 mb-6">
+                        {newsItems[newsIdx].description}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setPlaying(!playing)}
+                        className="w-8 h-8 rounded-full border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory transition-colors"
+                        aria-label={playing ? 'Pause' : 'Play'}
+                      >
+                        {playing ? (
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M7 5l12 7-12 7V5z" fill="currentColor"/></svg>
+                        )}
+                      </button>
+                      <span className="text-xs text-lum-slate-warm/60">
+                        <b className="text-lum-ivory font-semibold">{newsIdx + 1}</b> / {newsItems.length}
+                      </span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Next button */}
+              <button
+                onClick={() => setNewsIdx(i => (i + 1) % newsItems.length)}
+                className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
             </div>
           </div>
         </section>
