@@ -5,39 +5,17 @@ import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Li
 import * as XLSX from 'xlsx'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
-import { useI18n } from '../i18n'
-import { UI_STRINGS } from '../i18n'
+import { useI18n, UI_STRINGS } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import RichEditor from '../components/RichEditor'
 import { fetchEquipment as apiFetchEquipment, deleteEquipmentApi, savePartner as apiSavePartner, deletePartnerApi } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'uz', label: "O'zbek" },
-  { code: 'kk', label: 'Qaraqalpaq' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'ko', label: '한국어' },
-]
-
-interface LangData {
-  name: string
-  description: string
-  purpose: string
-  specifications: string
-  safety: string
-  procedure: string
-  maintenance: string
-}
-
 interface EquipmentForm {
-  slug: string
-  lang: Record<string, LangData>
   brand: string
   model: string
   location: string
@@ -47,13 +25,7 @@ interface EquipmentForm {
   status: string
 }
 
-function emptyLangData(): LangData {
-  return { name: '', description: '', purpose: '', specifications: '', safety: '', procedure: '', maintenance: '' }
-}
-
 const emptyForm: EquipmentForm = {
-  slug: '',
-  lang: { en: emptyLangData(), uz: emptyLangData(), kk: emptyLangData(), ru: emptyLangData(), ko: emptyLangData() },
   brand: '', model: '', location: '', quantity: '',
   purchase_date: '', installation_date: '', status: 'AVAILABLE',
 }
@@ -75,10 +47,8 @@ export default function AdminPage() {
   const [form, setForm] = useState<EquipmentForm>(emptyForm)
   const [image, setImage] = useState<string | null>(null)
   const [savedItems, setSavedItems] = useState<any[]>([])
-  const [editIdx, setEditIdx] = useState<number | null>(null)
+  const [editIdx, setEditIdx] = useState<string | null>(null)
   const [editIsStatic, setEditIsStatic] = useState(false)
-  const [formLang, setFormLang] = useState('en')
-  const [showForm, setShowForm] = useState(false)
   const [showEquipList, setShowEquipList] = useState(false)
   const [showPartners, setShowPartners] = useState(false)
   const [showTranslations, setShowTranslations] = useState(false)
@@ -201,26 +171,10 @@ export default function AdminPage() {
   const generateSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-  const resetForm = () => { setForm(emptyForm); setImage(null); setManual(null); setEditIdx(null); setFormLang('en'); setShowForm(false) }
+  const resetForm = () => { setForm(emptyForm); setImage(null); setManual(null); setEditIdx(null) }
 
   const editItem = (item: any) => {
-    setShowForm(true)
-    const lang: Record<string, LangData> = {}
-    for (const l of LANGUAGES) {
-      const d = item[l.code] || item.en || {}
-      lang[l.code] = {
-        name: d.name || '',
-        description: d.description || '',
-        purpose: d.purpose || '',
-        specifications: d.specifications || '',
-        safety: d.safety || '',
-        procedure: d.procedure || '',
-        maintenance: d.maintenance || '',
-      }
-    }
     setForm({
-      slug: item.slug || '',
-      lang,
       brand: item.brand || '',
       model: item.model || '',
       location: item.location || '',
@@ -237,14 +191,10 @@ export default function AdminPage() {
   }
 
   const handleSubmit = async () => {
-    if (!form.lang.en?.name || !form.lang.en?.description) {
-      alert('English name and description are required')
-      return
-    }
     setSaving(true)
     setSaveProgress(10)
 
-    const slug = form.slug || generateSlug(form.lang.en.name)
+    const slug = generateSlug(form.brand + '-' + form.model)
     const data: any = {
       slug,
       brand: form.brand || '—',
@@ -256,18 +206,6 @@ export default function AdminPage() {
       status: form.status || 'AVAILABLE',
       image: image,
       manual: manual,
-    }
-    for (const l of LANGUAGES) {
-      const d = form.lang[l.code]
-      data[l.code] = {
-        name: d.name || form.lang.en.name,
-        description: d.description || form.lang.en.description,
-        purpose: d.purpose || form.lang.en.purpose || '',
-        specifications: d.specifications || form.lang.en.specifications || '',
-        safety: d.safety || form.lang.en.safety || '',
-        procedure: d.procedure || form.lang.en.procedure || '',
-        maintenance: d.maintenance || form.lang.en.maintenance || '',
-      }
     }
 
     setSaveProgress(30)
@@ -354,7 +292,7 @@ export default function AdminPage() {
             <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            <a href="/#/admin" onClick={() => { setShowForm(false); setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
+            <a href="/#/admin" onClick={() => { setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
             <div className="hidden sm:block">
               <p className="text-sm font-bold text-lum-ivory">고려대학교 IEH</p>
               <p className="text-[10px] text-lum-slate-warm tracking-[0.15em] uppercase">{t('adminPanel')}</p>
@@ -398,7 +336,7 @@ export default function AdminPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-6 relative">
         {/* Admin home - grid background with mouse spotlight */}
-        {!editIdx && !showEquipList && !showPartners && !showForm && !showTranslations && (
+        {!editIdx && !showEquipList && !showPartners && !showTranslations && (
           <>
             <div
               className="fixed inset-0 pointer-events-none"
@@ -427,10 +365,9 @@ export default function AdminPage() {
             <div className="lum-card p-4 md:p-6 mb-6">
               <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-4">{t('adminAddNew')}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})} placeholder={t('adminSlug')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-                <input value={form.lang.en?.name || ''} onChange={e => setForm({...form, lang: {...form.lang, en: {...form.lang.en, name: e.target.value}}})} placeholder={t('adminName') + ' (en)'} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} placeholder={t('adminBrand')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <input value={form.model} onChange={e => setForm({...form, model: e.target.value})} placeholder={t('adminModel')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
               </div>
-              <RichEditor value={form.lang.en?.description || ''} onChange={html => setForm({...form, lang: {...form.lang, en: {...form.lang.en, description: html}}})} placeholder={t('adminDesc') + ' (en)'} minHeight={60} />
               <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
                 <Save className="w-3.5 h-3.5" /> Save
               </button>
@@ -593,55 +530,8 @@ export default function AdminPage() {
         )}
 
         {/* Form */}
-        {(showForm || editIdx !== null) && (
+        {(editIdx !== null) && (
         <div className="lum-card p-4 md:p-6 mb-6">
-          {/* Language tabs */}
-          <div className="flex gap-1 mb-4 flex-wrap">
-            {LANGUAGES.map(l => (
-              <button key={l.code} onClick={() => setFormLang(l.code)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                  formLang === l.code ? 'bg-lum-slate-light/20 text-lum-ivory' : 'text-lum-slate-warm hover:text-lum-ivory'
-                }`}>
-                {l.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-            <div>
-              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminSlug')}</label>
-              <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-            </div>
-            <div>
-              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminName')} ({formLang}) *</label>
-              <input value={form.lang[formLang]?.name || ''} onChange={e => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], name: e.target.value}}})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminDesc')} ({formLang}) *</label>
-            <RichEditor value={form.lang[formLang]?.description || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], description: html}}})} placeholder={t('adminDesc') + ' (' + formLang + ')'} minHeight={80} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-            <div>
-              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('purpose')} ({formLang})</label>
-              <RichEditor value={form.lang[formLang]?.purpose || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], purpose: html}}})} minHeight={80} />
-            </div>
-            <div>
-              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('specifications')} ({formLang})</label>
-              <RichEditor value={form.lang[formLang]?.specifications || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], specifications: html}}})} minHeight={80} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-            {['safety','procedure','maintenance'].map(f => (
-              <div key={f}>
-                <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t(f)} ({formLang}) — {t('adminSafety')}</label>
-                <RichEditor value={(form.lang[formLang] as any)?.[f] || ''} onChange={html => setForm({...form, lang: {...form.lang, [formLang]: {...form.lang[formLang], [f]: html}}})} minHeight={100} />
-              </div>
-            ))}
-          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
             {['brand','model','location','quantity'].map(f => {
