@@ -301,11 +301,15 @@ export default function HomePage() {
                           }`}
                         >
                           <div className="w-10 h-10 rounded-lg bg-lum-mid flex items-center justify-center overflow-hidden flex-shrink-0 border border-lum-panel-border">
-                            <img
-                              src={(imageMap as Record<string, string>)[eq.slug] || ''}
-                              alt=""
-                              className="w-full h-full object-contain p-1"
-                            />
+                            {(eq.image || (imageMap as Record<string, string>)[eq.slug]) ? (
+                              <img
+                                src={eq.image || (imageMap as Record<string, string>)[eq.slug] || ''}
+                                alt=""
+                                className="w-full h-full object-contain p-1"
+                              />
+                            ) : (
+                              <span className="text-lg font-semibold text-lum-slate-warm/40">{d.name?.[0] || eq.slug?.[0] || '?'}</span>
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="font-medium truncate">{d.name}</div>

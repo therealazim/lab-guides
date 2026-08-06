@@ -16,6 +16,7 @@ const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
 
 interface EquipmentForm {
+  name: string
   brand: string
   model: string
   location: string
@@ -26,7 +27,7 @@ interface EquipmentForm {
 }
 
 const emptyForm: EquipmentForm = {
-  brand: '', model: '', location: '', quantity: '',
+  name: '', brand: '', model: '', location: '', quantity: '',
   purchase_date: '', installation_date: '', status: 'AVAILABLE',
 }
 
@@ -175,6 +176,7 @@ export default function AdminPage() {
 
   const editItem = (item: any) => {
     setForm({
+      name: item.en?.name || '',
       brand: item.brand || '',
       model: item.model || '',
       location: item.location || '',
@@ -197,6 +199,7 @@ export default function AdminPage() {
     const slug = generateSlug(form.brand + '-' + form.model)
     const data: any = {
       slug,
+      en: { name: form.name || form.brand + ' ' + form.model },
       brand: form.brand || '—',
       model: form.model || '—',
       location: form.location || '—',
@@ -364,7 +367,8 @@ export default function AdminPage() {
             {/* Inline add form */}
             <div className="lum-card p-4 md:p-6 mb-6">
               <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-4">{t('adminAddNew')}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder={t('adminName')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} placeholder={t('adminBrand')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <input value={form.model} onChange={e => setForm({...form, model: e.target.value})} placeholder={t('adminModel')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
               </div>
@@ -532,6 +536,11 @@ export default function AdminPage() {
         {/* Form */}
         {(editIdx !== null) && (
         <div className="lum-card p-4 md:p-6 mb-6">
+
+          <div className="mb-3">
+            <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminName')}</label>
+            <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
             {['brand','model','location','quantity'].map(f => {
