@@ -236,7 +236,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-            className="text-[clamp(2.8rem,6.5vw,5.5rem)] font-light tracking-[-0.05em] leading-[1] text-lum-ivory mb-12"
+            className="text-[clamp(2.8rem,6.5vw,5.5rem)] font-light tracking-[-0.05em] leading-[1] text-lum-ivory mb-24"
           >
             {t('title')}<br />
             <strong className="font-semibold bg-gradient-to-r from-lum-ivory via-lum-silver to-lum-slate-light bg-clip-text text-transparent">{t('heroTagline')}</strong>
