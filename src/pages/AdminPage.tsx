@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages } from 'lucide-react'
+import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages, Newspaper } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
@@ -53,6 +53,7 @@ export default function AdminPage() {
   const [showEquipList, setShowEquipList] = useState(false)
   const [showPartners, setShowPartners] = useState(false)
   const [showTranslations, setShowTranslations] = useState(false)
+  const [showNews, setShowNews] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [partners, setPartners] = useState<{name: string; src: string; url: string; _default?: boolean; _id?: number}[]>(DEFAULT_PARTNERS)
   const [partnerName, setPartnerName] = useState('')
@@ -79,6 +80,14 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [saveProgress, setSaveProgress] = useState(0)
 
+  // News state
+  const [newsItems, setNewsItems] = useState<any[]>([])
+  const [newsTitle, setNewsTitle] = useState('')
+  const [newsDesc, setNewsDesc] = useState('')
+  const [newsImg, setNewsImg] = useState<string | null>(null)
+  const [newsEditIdx, setNewsEditIdx] = useState<number | null>(null)
+  const newsImgRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     apiFetchEquipment().then(data => {
       if (data && data.length) {
@@ -96,6 +105,14 @@ export default function AdminPage() {
       }
     }).catch(() => {})
   }, [])
+
+  const loadNews = async () => {
+    try {
+      const r = await fetch('/api/news')
+      const data = await r.json()
+      if (data) setNewsItems(data)
+    } catch {}
+  }
 
   const loadTranslations = async () => {
     try {
@@ -286,6 +303,40 @@ export default function AdminPage() {
     )
   }
 
+  const saveNews = async () => {
+    if (!newsTitle.trim()) { alert('Title is required'); return }
+    const body: any = { title: newsTitle, description: newsDesc, image: newsImg, id: newsEditIdx ?? undefined }
+    try {
+      const r = await fetch('/api/news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const d = await r.json()
+      if (d.ok) {
+        setToastMsg('News saved!'); setToastShow(true)
+        setNewsTitle(''); setNewsDesc(''); setNewsImg(null); setNewsEditIdx(null)
+        loadNews()
+      }
+    } catch (e: any) {
+      setToastMsg('Error: ' + (e?.message || 'Save failed')); setToastShow(true)
+    }
+  }
+
+  const deleteNewsItem = async (id: number) => {
+    try {
+      await fetch('/api/news/' + id, { method: 'DELETE' })
+      setToastMsg('News deleted'); setToastShow(true)
+      loadNews()
+    } catch {}
+  }
+
+  const editNewsItem = (item: any) => {
+    setNewsTitle(item.title || '')
+    setNewsDesc(item.description || '')
+    setNewsImg(item.image || null)
+    setNewsEditIdx(item.id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const resetNewsForm = () => { setNewsTitle(''); setNewsDesc(''); setNewsImg(null); setNewsEditIdx(null) }
+
   return (
     <div className="min-h-screen bg-lum-deep">
       {/* Header */}
@@ -295,7 +346,7 @@ export default function AdminPage() {
             <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            <a href="/#/admin" onClick={() => { setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
+            <a href="/#/admin" onClick={() => { setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setShowNews(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
             <div className="hidden sm:block">
               <p className="text-sm font-bold text-lum-ivory">고려대학교 IEH</p>
               <p className="text-[10px] text-lum-slate-warm tracking-[0.15em] uppercase">{t('adminPanel')}</p>
@@ -330,16 +381,20 @@ export default function AdminPage() {
             <Link2 className="w-4 h-4 text-lum-slate-light" />
             Partners
           </button>
-          <button onClick={() => { setShowTranslations(true); setShowEquipList(false); setShowPartners(false); setEditIdx(null); loadTranslations(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
+          <button onClick={() => { setShowTranslations(true); setShowEquipList(false); setShowPartners(false); setShowNews(false); setEditIdx(null); loadTranslations(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
             <Languages className="w-4 h-4 text-lum-slate-light" />
             Translations
+          </button>
+          <button onClick={() => { setShowNews(true); setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setEditIdx(null); loadNews(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
+            <Newspaper className="w-4 h-4 text-lum-slate-light" />
+            Publish News
           </button>
         </div>
       </motion.div>
 
       <main className="max-w-6xl mx-auto px-4 py-6 relative">
         {/* Admin home - grid background with mouse spotlight */}
-        {!editIdx && !showEquipList && !showPartners && !showTranslations && (
+        {!editIdx && !showEquipList && !showPartners && !showTranslations && !showNews && (
           <>
             <div
               className="fixed inset-0 pointer-events-none"
@@ -529,6 +584,59 @@ export default function AdminPage() {
                   e.target.value = ''
                 }} />
               </label>
+            </div>
+          </div>
+        )}
+
+        {/* News management */}
+        {showNews && (
+          <div>
+            <h1 className="text-lg font-bold text-lum-ivory mb-2">Publish News</h1>
+            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Add news with title, description, and image — shows as animated slider on home page</p>
+
+            {/* Add / Edit news */}
+            <div className="lum-card p-4 mb-6">
+              <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">{newsEditIdx !== null ? 'Edit News' : 'Add News'}</p>
+              <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder="News title" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
+              <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder="News description / content" rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
+              <div className="flex items-center gap-3">
+                <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImg(r.result as string); r.readAsDataURL(f) } }} className="hidden" />
+                <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+                  <ImageIcon className="w-4 h-4" /> {newsImg ? 'Change Image' : 'Upload Image'}
+                </button>
+                {newsImg && <img src={newsImg} alt="" className="h-12 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button onClick={saveNews} className="btn-lum-primary text-xs px-5 py-3">{newsEditIdx !== null ? 'Update News' : 'Publish News'}</button>
+                {newsEditIdx !== null && (
+                  <button onClick={resetNewsForm} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">Cancel</button>
+                )}
+              </div>
+            </div>
+
+            {/* News list */}
+            <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">Published News ({newsItems.length})</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {newsItems.length === 0 ? (
+                <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No news published yet</p>
+              ) : newsItems.map((n: any) => (
+                <div key={n.id} className="lum-card p-4 flex items-center gap-4 hover:border-lum-slate-light/20 transition-colors">
+                  {n.image && <img src={n.image} alt="" className="h-16 w-24 rounded-lg object-cover bg-lum-mid border border-lum-panel-border flex-shrink-0" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-lum-ivory truncate">{n.title}</p>
+                    <p className="text-[10px] text-lum-slate-warm truncate mt-0.5">{n.description}</p>
+                    <p className="text-[8px] text-lum-slate-warm/40 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button onClick={() => editNewsItem(n)} className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">
+                      <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+                    </button>
+                    <button onClick={() => { setConfirmMsg('Delete this news?'); setConfirmAction(() => () => deleteNewsItem(n.id)) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

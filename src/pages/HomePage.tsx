@@ -21,6 +21,8 @@ export default function HomePage() {
   const [adminItems, setAdminItems] = useState<any[]>([])
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
+  const [newsItems, setNewsItems] = useState<any[]>([])
+  const [newsIdx, setNewsIdx] = useState(0)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -121,6 +123,29 @@ export default function HomePage() {
     }
     loadPartners()
   }, [])
+
+  // Load news
+  useEffect(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    if (initial?.news?.length) setNewsItems(initial.news)
+    async function loadNews() {
+      try {
+        const r = await fetch('/api/news')
+        const data = await r.json()
+        if (data?.length) setNewsItems(data)
+      } catch {}
+    }
+    loadNews()
+  }, [])
+
+  // Auto-slide news
+  useEffect(() => {
+    if (newsItems.length <= 1) return
+    const timer = setInterval(() => {
+      setNewsIdx(i => (i + 1) % newsItems.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [newsItems.length])
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -346,6 +371,65 @@ export default function HomePage() {
             ))}
           </motion.div>
       </section>
+
+      {/* ─── NEWS SLIDER ─── */}
+      {newsItems.length > 0 && (
+        <section className="py-16 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
+          <p className="text-center text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm opacity-50 mb-8">
+            KU Today
+          </p>
+          <div className="max-w-4xl mx-auto relative overflow-hidden rounded-2xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={newsIdx}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="lum-card overflow-hidden"
+              >
+                {newsItems[newsIdx]?.image && (
+                  <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden">
+                    <img
+                      src={newsItems[newsIdx].image}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-lum-deep via-lum-deep/60 to-transparent" />
+                  </div>
+                )}
+                <div className={`p-6 md:p-8 ${newsItems[newsIdx]?.image ? '-mt-20 relative z-10' : ''}`}>
+                  <h3 className="text-lg md:text-xl font-semibold text-lum-ivory mb-2">
+                    {newsItems[newsIdx].title}
+                  </h3>
+                  <p className="text-sm text-lum-slate-light/80 leading-relaxed">
+                    {newsItems[newsIdx].description}
+                  </p>
+                  {newsItems[newsIdx].created_at && (
+                    <p className="text-[10px] text-lum-slate-warm/50 mt-3">
+                      {new Date(newsItems[newsIdx].created_at).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+            {/* Nav dots */}
+            {newsItems.length > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                {newsItems.map((_: any, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setNewsIdx(i)}
+                    className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                      i === newsIdx ? 'bg-lum-ivory w-6' : 'bg-lum-slate-warm/30 hover:bg-lum-slate-warm/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ─── LOGO TICKER ─── */}
       <div className="py-16 px-8 md:px-12 lg:px-16 border-t border-b border-lum-panel-border overflow-hidden">

@@ -43,6 +43,16 @@ def init_db():
             PRIMARY KEY (key, lang)
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS news (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
+            image TEXT,
+            created_at TIMESTAMP DEFAULT NOW(),
+            sort_order INTEGER DEFAULT 0
+        )
+    ''')
     conn.commit()
     cur.close()
     conn.close()
@@ -193,6 +203,56 @@ def save_translation():
     conn.close()
     return jsonify({'ok': True})
 
+# ─── News API ───
+@app.route('/api/news', methods=['GET'])
+def get_news():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT * FROM news ORDER BY sort_order, created_at DESC')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify(rows)
+
+@app.route('/api/news', methods=['POST'])
+def save_news():
+    body = request.get_json()
+    if not body:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    news_id = body.get('id')
+    title = body.get('title', '')
+    description = body.get('description', '')
+    image = body.get('image', '')
+    if not title:
+        return jsonify({'error': 'No title'}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    if news_id:
+        cur.execute(
+            'UPDATE news SET title = %s, description = %s, image = %s WHERE id = %s',
+            (title, description, image, news_id)
+        )
+    else:
+        cur.execute(
+            'INSERT INTO news (title, description, image) VALUES (%s, %s, %s) RETURNING id',
+            (title, description, image)
+        )
+        news_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True, 'id': news_id})
+
+@app.route('/api/news/<int:news_id>', methods=['DELETE'])
+def delete_news(news_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM news WHERE id = %s', (news_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
 # ─── Frontend ───
 @app.route('/', defaults={'path': None})
 @app.route('/<path:path>')
@@ -227,6 +287,8 @@ def serve_frontend(path):
         partners = cur.fetchall()
         cur.execute('SELECT * FROM translations')
         translation_rows = cur.fetchall()
+        cur.execute('SELECT * FROM news ORDER BY sort_order, created_at DESC')
+        news_rows = cur.fetchall()
         cur.close()
         conn.close()
         
@@ -245,7 +307,7 @@ def serve_frontend(path):
                 translations[key] = {}
             translations[key][r['lang']] = r['value']
         
-        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners, "translations": translations})}</script>'
+        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners, "translations": translations, "news": news_rows})}</script>'
         html = html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Data injection error: {e}')
