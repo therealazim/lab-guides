@@ -378,7 +378,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="text-[9px] font-semibold tracking-[0.25em] uppercase text-lum-slate-warm mb-2">KU Today</p>
+                <p className="text-[9px] font-semibold tracking-[0.25em] uppercase text-lum-slate-warm mb-2">KMI - LUPIC Today</p>
                 <h2 className="text-2xl font-light text-lum-ivory tracking-[-0.03em]">News &amp; Events</h2>
               </div>
               {newsItems.length > 3 && (
