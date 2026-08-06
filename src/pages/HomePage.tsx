@@ -144,7 +144,7 @@ export default function HomePage() {
     if (newsItems.length <= 1 || !playing) return
     const timer = setInterval(() => {
       setNewsIdx(i => (i + 1) % newsItems.length)
-    }, 6000)
+    }, 3000)
     return () => clearInterval(timer)
   }, [newsItems.length, playing])
 
