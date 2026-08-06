@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useI18n, type Lang } from '../i18n'
 import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -67,6 +68,10 @@ export default function CatalogPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-1 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back
+            </Link>
             <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-12 w-auto" /></a>
             <div>
               <p className="text-xs font-bold text-lum-ivory">고려대학교 IEH</p>
