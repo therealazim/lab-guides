@@ -5,7 +5,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useI18n, type Lang } from '../i18n'
 import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
-import EquipmentCard from '../components/EquipmentCard'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq } from '../api'
@@ -22,7 +21,6 @@ export default function HomePage() {
   const [adminItems, setAdminItems] = useState<any[]>([])
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
-  const [apiCount, setApiCount] = useState(0)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -74,10 +72,9 @@ export default function HomePage() {
   // Load admin data from API (always fetches fresh, uses injected data as initial)
   useEffect(() => {
     const initial = (window as any).__INITIAL_DATA__
-    if (initial?.equipment) {
-      const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
-      setApiCount(initial.equipment.length)
-      setAdminItems(apiOverridden)
+      if (initial?.equipment) {
+        const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
+        setAdminItems(apiOverridden)
       const ovs: Record<string, any> = {}
       initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
       setStaticOverrides(ovs)
@@ -87,7 +84,6 @@ export default function HomePage() {
         const eqData = await apiFetchEq()
         if (eqData) {
           const apiOverridden = eqData.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
-          setApiCount(eqData.length)
           setAdminItems(apiOverridden)
           const ovs: Record<string, any> = {}
           eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
@@ -367,40 +363,6 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-
-      {/* ─── DIVIDER ─── */}
-      <div className="w-[100px] h-px mx-auto bg-gradient-to-r from-transparent via-lum-panel-border to-transparent" />
-
-      {/* ─── EQUIPMENT ─── */}
-      <section className="py-24 px-8 md:px-12 lg:px-16">
-        <div className="w-full">
-          <div className="text-center mb-16">
-            <p className="section-tag">{t('equipSectionTag')} {apiCount > 0 && <span className="text-lum-slate-warm/40 ml-2">(API: {apiCount})</span>}</p>
-            <h2 className="section-title">{t('allEquipment')} <strong>({filtered.length})</strong></h2>
-            <p className="section-body mx-auto">{t('equipSectionDesc')}</p>
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-lum-slate-light/60 text-lg font-light">{t('noResults')}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filtered.map((equipment: any, index: number) => (
-                <motion.div
-                  key={equipment.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                >
-                  <EquipmentCard equipment={equipment} index={index} />
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* ─── FOOTER ─── */}
       <footer className="py-16 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
