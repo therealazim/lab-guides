@@ -69,14 +69,14 @@ export default function CatalogPage() {
         <div className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-12 w-auto" /></a>
-            <Link to="/" className="flex items-center gap-1 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back
-            </Link>
             <div>
               <p className="text-xs font-bold text-lum-ivory">고려대학교 IEH</p>
               <span className="text-lum-ivory font-bold text-xs tracking-[0.2em] uppercase">KMI - LUPIC</span>
             </div>
+            <Link to="/" className="flex items-center gap-1 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
