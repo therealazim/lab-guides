@@ -374,59 +374,103 @@ export default function HomePage() {
 
       {/* ─── NEWS SLIDER ─── */}
       {newsItems.length > 0 && (
-        <section className="py-16 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
-          <p className="text-center text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm opacity-50 mb-8">
-            KU Today
-          </p>
-          <div className="max-w-4xl mx-auto relative overflow-hidden rounded-2xl">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={newsIdx}
-                initial={{ opacity: 0, x: 60 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="lum-card overflow-hidden"
-              >
-                {newsItems[newsIdx]?.image && (
-                  <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden">
-                    <img
-                      src={newsItems[newsIdx].image}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-lum-deep via-lum-deep/60 to-transparent" />
-                  </div>
-                )}
-                <div className={`p-6 md:p-8 ${newsItems[newsIdx]?.image ? '-mt-20 relative z-10' : ''}`}>
-                  <h3 className="text-lg md:text-xl font-semibold text-lum-ivory mb-2">
-                    {newsItems[newsIdx].title}
-                  </h3>
-                  <p className="text-sm text-lum-slate-light/80 leading-relaxed">
-                    {newsItems[newsIdx].description}
-                  </p>
-                  {newsItems[newsIdx].created_at && (
-                    <p className="text-[10px] text-lum-slate-warm/50 mt-3">
-                      {new Date(newsItems[newsIdx].created_at).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-            {/* Nav dots */}
-            {newsItems.length > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
-                {newsItems.map((_: any, i: number) => (
-                  <button
-                    key={i}
-                    onClick={() => setNewsIdx(i)}
-                    className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                      i === newsIdx ? 'bg-lum-ivory w-6' : 'bg-lum-slate-warm/30 hover:bg-lum-slate-warm/50'
-                    }`}
-                  />
-                ))}
+        <section className="py-20 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <p className="text-[9px] font-semibold tracking-[0.25em] uppercase text-lum-slate-warm mb-2">KU Today</p>
+                <h2 className="text-2xl font-light text-lum-ivory tracking-[-0.03em]">News &amp; Events</h2>
               </div>
-            )}
+              {newsItems.length > 3 && (
+                <button
+                  onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
+                  className="text-[10px] font-medium tracking-[0.15em] uppercase text-lum-slate-warm hover:text-lum-ivory transition-colors"
+                >
+                  VIEW ALL &rarr;
+                </button>
+              )}
+            </div>
+
+            <div className="relative group">
+              {/* Cards row */}
+              <div className="overflow-hidden">
+                <div
+                  className="flex gap-4 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  style={{ transform: `translateX(-${newsIdx * (100 / 3)}%)` }}
+                >
+                  {/* Duplicate items for seamless loop */}
+                  {[...newsItems, ...newsItems].map((n: any, i: number) => (
+                    <div
+                      key={`${n.id}-${i}`}
+                      className="flex-shrink-0 w-[calc(100%/1-8px)] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-12px)]"
+                    >
+                      <div className="lum-card overflow-hidden h-full group/card cursor-pointer hover:border-lum-slate-light/20 transition-all duration-500">
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                          {n.image ? (
+                            <img
+                              src={n.image}
+                              alt=""
+                              className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-lum-soft flex items-center justify-center">
+                              <span className="text-4xl font-light text-lum-slate-warm/20">KU</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-lum-deep/90 via-transparent to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                            <p className="text-[10px] text-lum-slate-warm/70 mb-1">
+                              {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                            </p>
+                            <h3 className="text-sm md:text-base font-semibold text-lum-ivory leading-snug line-clamp-2">
+                              {n.title}
+                            </h3>
+                            {n.description && (
+                              <p className="text-[11px] text-lum-slate-light/60 mt-1.5 line-clamp-2 leading-relaxed">
+                                {n.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prev / Next arrows */}
+              {newsItems.length > 3 && (
+                <>
+                  <button
+                    onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full bg-lum-mid/90 border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:bg-lum-soft transition-all opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-md"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <button
+                    onClick={() => setNewsIdx(i => (i + 1) % newsItems.length)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 rounded-full bg-lum-mid/90 border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:bg-lum-soft transition-all opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-md"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                </>
+              )}
+
+              {/* Dots */}
+              {newsItems.length > 1 && (
+                <div className="flex justify-center gap-1.5 mt-6">
+                  {newsItems.map((_: any, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => setNewsIdx(i)}
+                      className={`h-1 rounded-full transition-all duration-500 ${
+                        i === newsIdx ? 'bg-lum-ivory w-6' : 'bg-lum-slate-warm/25 hover:bg-lum-slate-warm/40 w-2'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
