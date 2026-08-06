@@ -138,9 +138,9 @@ export default function HomePage() {
     loadNews()
   }, [])
 
-  // Auto-slide news
+  // Auto-slide news (only for carousel with 4+ items)
   useEffect(() => {
-    if (newsItems.length <= 1) return
+    if (newsItems.length <= 3) return
     const timer = setInterval(() => {
       setNewsIdx(i => (i + 1) % newsItems.length)
     }, 5000)
@@ -392,55 +392,73 @@ export default function HomePage() {
             </div>
 
             <div className="relative group">
-              {/* Cards row */}
-              <div className="overflow-hidden">
-                <div
-                  className="flex gap-4 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                  style={{ transform: `translateX(-${newsIdx * (100 / 3)}%)` }}
-                >
-                  {/* Duplicate items for seamless loop */}
-                  {[...newsItems, ...newsItems].map((n: any, i: number) => (
-                    <div
-                      key={`${n.id}-${i}`}
-                      className="flex-shrink-0 w-[calc(100%/1-8px)] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-12px)]"
-                    >
-                      <div className="lum-card overflow-hidden h-full group/card cursor-pointer hover:border-lum-slate-light/20 transition-all duration-500">
-                        <div className="relative aspect-[4/3] overflow-hidden">
-                          {n.image ? (
-                            <img
-                              src={n.image}
-                              alt=""
-                              className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-lum-soft flex items-center justify-center">
-                              <span className="text-4xl font-light text-lum-slate-warm/20">KU</span>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-lum-deep/90 via-transparent to-transparent" />
-                          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                            <p className="text-[10px] text-lum-slate-warm/70 mb-1">
-                              {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
-                            </p>
-                            <h3 className="text-sm md:text-base font-semibold text-lum-ivory leading-snug line-clamp-2">
-                              {n.title}
-                            </h3>
-                            {n.description && (
-                              <p className="text-[11px] text-lum-slate-light/60 mt-1.5 line-clamp-2 leading-relaxed">
-                                {n.description}
-                              </p>
-                            )}
+              {/* Static grid for 1-3 items */}
+              {newsItems.length <= 3 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {newsItems.map((n: any) => (
+                    <div key={n.id} className="lum-card overflow-hidden group/card cursor-pointer hover:border-lum-slate-light/20 transition-all duration-500">
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        {n.image ? (
+                          <img src={n.image} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700" />
+                        ) : (
+                          <div className="w-full h-full bg-lum-soft flex items-center justify-center">
+                            <span className="text-4xl font-light text-lum-slate-warm/20">KMI</span>
                           </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-lum-deep/90 via-transparent to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                          <p className="text-[10px] text-lum-slate-warm/70 mb-1">
+                            {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                          </p>
+                          <h3 className="text-sm md:text-base font-semibold text-lum-ivory leading-snug line-clamp-2">{n.title}</h3>
+                          {n.description && (
+                            <p className="text-[11px] text-lum-slate-light/60 mt-1.5 line-clamp-2 leading-relaxed">{n.description}</p>
+                          )}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Prev / Next arrows */}
-              {newsItems.length > 3 && (
+              ) : (
                 <>
+                  {/* Carousel for 4+ items */}
+                  <div className="overflow-hidden">
+                    <div
+                      className="flex gap-4 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                      style={{ transform: `translateX(-${newsIdx * (100 / 3)}%)` }}
+                    >
+                      {[...newsItems, ...newsItems].map((n: any, i: number) => (
+                        <div
+                          key={`${n.id}-${i}`}
+                          className="flex-shrink-0 w-[calc(100%/1-8px)] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-12px)]"
+                        >
+                          <div className="lum-card overflow-hidden h-full group/card cursor-pointer hover:border-lum-slate-light/20 transition-all duration-500">
+                            <div className="relative aspect-[4/3] overflow-hidden">
+                              {n.image ? (
+                                <img src={n.image} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700" />
+                              ) : (
+                                <div className="w-full h-full bg-lum-soft flex items-center justify-center">
+                                  <span className="text-4xl font-light text-lum-slate-warm/20">KMI</span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-lum-deep/90 via-transparent to-transparent" />
+                              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                                <p className="text-[10px] text-lum-slate-warm/70 mb-1">
+                                  {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                                </p>
+                                <h3 className="text-sm md:text-base font-semibold text-lum-ivory leading-snug line-clamp-2">{n.title}</h3>
+                                {n.description && (
+                                  <p className="text-[11px] text-lum-slate-light/60 mt-1.5 line-clamp-2 leading-relaxed">{n.description}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Prev / Next arrows */}
                   <button
                     onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
                     className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full bg-lum-mid/90 border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:bg-lum-soft transition-all opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-md"
@@ -453,22 +471,20 @@ export default function HomePage() {
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
                   </button>
-                </>
-              )}
 
-              {/* Dots */}
-              {newsItems.length > 1 && (
-                <div className="flex justify-center gap-1.5 mt-6">
-                  {newsItems.map((_: any, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => setNewsIdx(i)}
-                      className={`h-1 rounded-full transition-all duration-500 ${
-                        i === newsIdx ? 'bg-lum-ivory w-6' : 'bg-lum-slate-warm/25 hover:bg-lum-slate-warm/40 w-2'
-                      }`}
-                    />
-                  ))}
-                </div>
+                  {/* Dots */}
+                  <div className="flex justify-center gap-1.5 mt-6">
+                    {newsItems.map((_: any, i: number) => (
+                      <button
+                        key={i}
+                        onClick={() => setNewsIdx(i)}
+                        className={`h-1 rounded-full transition-all duration-500 ${
+                          i === newsIdx ? 'bg-lum-ivory w-6' : 'bg-lum-slate-warm/25 hover:bg-lum-slate-warm/40 w-2'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>
