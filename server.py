@@ -212,7 +212,19 @@ def get_news():
     rows = cur.fetchall()
     cur.close()
     conn.close()
-    return jsonify(rows)
+    result = []
+    for r in rows:
+        item = dict(r)
+        if item.get('image'):
+            try:
+                item['images'] = json.loads(item['image'])
+                item['image'] = item['images'][0] if item['images'] else None
+            except:
+                pass
+        if item.get('created_at'):
+            item['created_at'] = item['created_at'].isoformat()
+        result.append(item)
+    return jsonify(result)
 
 @app.route('/api/news', methods=['POST'])
 def save_news():
@@ -222,20 +234,23 @@ def save_news():
     news_id = body.get('id')
     title = body.get('title', '')
     description = body.get('description', '')
-    image = body.get('image', '')
+    images = body.get('images', [])
+    image = body.get('image', None)
     if not title:
         return jsonify({'error': 'No title'}), 400
     conn = get_db()
     cur = conn.cursor()
+    # Store images as JSON array; also accept legacy single 'image'
+    stored_image = json.dumps(images) if images else (json.dumps([image]) if image else None)
     if news_id:
         cur.execute(
             'UPDATE news SET title = %s, description = %s, image = %s WHERE id = %s',
-            (title, description, image, news_id)
+            (title, description, stored_image, news_id)
         )
     else:
         cur.execute(
             'INSERT INTO news (title, description, image) VALUES (%s, %s, %s) RETURNING id',
-            (title, description, image)
+            (title, description, stored_image)
         )
         news_id = cur.fetchone()[0]
     conn.commit()

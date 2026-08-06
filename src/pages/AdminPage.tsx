@@ -84,7 +84,7 @@ export default function AdminPage() {
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [newsTitle, setNewsTitle] = useState('')
   const [newsDesc, setNewsDesc] = useState('')
-  const [newsImg, setNewsImg] = useState<string | null>(null)
+  const [newsImgs, setNewsImgs] = useState<string[]>([])
   const [newsEditIdx, setNewsEditIdx] = useState<number | null>(null)
   const newsImgRef = useRef<HTMLInputElement>(null)
 
@@ -305,13 +305,13 @@ export default function AdminPage() {
 
   const saveNews = async () => {
     if (!newsTitle.trim()) { alert('Title is required'); return }
-    const body: any = { title: newsTitle, description: newsDesc, image: newsImg, id: newsEditIdx ?? undefined }
+    const body: any = { title: newsTitle, description: newsDesc, images: newsImgs, id: newsEditIdx ?? undefined }
     try {
       const r = await fetch('/api/news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const d = await r.json()
       if (d.ok) {
         setToastMsg('News saved!'); setToastShow(true)
-        setNewsTitle(''); setNewsDesc(''); setNewsImg(null); setNewsEditIdx(null)
+        setNewsTitle(''); setNewsDesc(''); setNewsImgs([]); setNewsEditIdx(null)
         loadNews()
       }
     } catch (e: any) {
@@ -330,12 +330,12 @@ export default function AdminPage() {
   const editNewsItem = (item: any) => {
     setNewsTitle(item.title || '')
     setNewsDesc(item.description || '')
-    setNewsImg(item.image || null)
+    setNewsImgs(item.images || (item.image ? [item.image] : []))
     setNewsEditIdx(item.id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const resetNewsForm = () => { setNewsTitle(''); setNewsDesc(''); setNewsImg(null); setNewsEditIdx(null) }
+  const resetNewsForm = () => { setNewsTitle(''); setNewsDesc(''); setNewsImgs([]); setNewsEditIdx(null) }
 
   return (
     <div className="min-h-screen bg-lum-deep">
@@ -600,12 +600,24 @@ export default function AdminPage() {
               <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder="News title" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
               <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder="News description / content" rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
               <div className="flex items-center gap-3">
-                <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImg(r.result as string); r.readAsDataURL(f) } }} className="hidden" />
+                <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImgs(prev => [...prev, r.result as string]); r.readAsDataURL(f) } }} className="hidden" />
                 <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
-                  <ImageIcon className="w-4 h-4" /> {newsImg ? 'Change Image' : 'Upload Image'}
+                  <ImageIcon className="w-4 h-4" /> {newsImgs.length > 0 ? `Add Another (${newsImgs.length})` : 'Upload Image'}
                 </button>
-                {newsImg && <img src={newsImg} alt="" className="h-12 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />}
+                {newsImgs.length > 0 && (
+                  <button onClick={() => setNewsImgs([])} className="text-[10px] text-red-400 hover:text-red-300">Clear all</button>
+                )}
               </div>
+              {newsImgs.length > 0 && (
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  {newsImgs.map((img, i) => (
+                    <div key={i} className="relative">
+                      <img src={img} alt="" className="h-16 rounded-lg object-cover bg-lum-mid border border-lum-panel-border" />
+                      <button onClick={() => setNewsImgs(prev => prev.filter((_, x) => x !== i))} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">&times;</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2 mt-4">
                 <button onClick={saveNews} className="btn-lum-primary text-xs px-5 py-3">{newsEditIdx !== null ? 'Update News' : 'Publish News'}</button>
                 {newsEditIdx !== null && (
@@ -622,6 +634,7 @@ export default function AdminPage() {
               ) : newsItems.map((n: any) => (
                 <div key={n.id} className="lum-card p-4 flex items-center gap-4 hover:border-lum-slate-light/20 transition-colors">
                   {n.image && <img src={n.image} alt="" className="h-16 w-24 rounded-lg object-cover bg-lum-mid border border-lum-panel-border flex-shrink-0" />}
+                  {!n.image && n.images && n.images[0] && <img src={n.images[0]} alt="" className="h-16 w-24 rounded-lg object-cover bg-lum-mid border border-lum-panel-border flex-shrink-0" />}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-lum-ivory truncate">{n.title}</p>
                     <p className="text-[10px] text-lum-slate-warm truncate mt-0.5">{n.description}</p>

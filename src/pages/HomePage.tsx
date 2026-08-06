@@ -399,29 +399,29 @@ export default function HomePage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.45 }}
-                    className="grid grid-cols-4 grid-rows-3 gap-1 aspect-[16/9] rounded-md overflow-hidden"
+                    className="aspect-[16/9] rounded-md overflow-hidden"
                   >
-                    {[
-                      'col-span-2 row-span-1',
-                      'col-span-2 row-span-1',
-                      'col-span-1 row-span-1',
-                      'col-span-1 row-span-2',
-                      'col-span-2 row-span-2',
-                      'col-span-1 row-span-1',
-                    ].map((cls, i) => (
-                      newsItems[newsIdx]?.image ? (
-                        <img
-                          key={i}
-                          src={newsItems[newsIdx].image}
-                          alt=""
-                          className={`${cls} w-full h-full object-cover bg-lum-soft`}
-                        />
-                      ) : (
-                        <div key={i} className={`${cls} bg-lum-soft flex items-center justify-center`}>
-                          <span className="text-xs text-lum-slate-warm/20">KMI</span>
+                    {(() => {
+                      const imgs = newsItems[newsIdx]?.images || (newsItems[newsIdx]?.image ? [newsItems[newsIdx].image] : [])
+                      if (imgs.length === 0) {
+                        return <div className="w-full h-full bg-lum-soft flex items-center justify-center"><span className="text-lg text-lum-slate-warm/20">KMI</span></div>
+                      }
+                      if (imgs.length === 1) {
+                        return <img src={imgs[0]} alt="" className="w-full h-full object-cover bg-lum-soft" />
+                      }
+                      const tiles = [
+                        'col-span-2 row-span-1', 'col-span-2 row-span-1',
+                        'col-span-1 row-span-1', 'col-span-1 row-span-2',
+                        'col-span-2 row-span-2', 'col-span-1 row-span-1',
+                      ]
+                      return (
+                        <div className="grid grid-cols-4 grid-rows-3 gap-1 h-full">
+                          {tiles.slice(0, imgs.length).map((cls, i) => (
+                            <img key={i} src={imgs[i] || imgs[i % imgs.length]} alt="" className={`${cls} w-full h-full object-cover bg-lum-soft`} />
+                          ))}
                         </div>
                       )
-                    ))}
+                    })()}
                   </motion.div>
                 </AnimatePresence>
 
