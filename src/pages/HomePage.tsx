@@ -231,17 +231,6 @@ export default function HomePage() {
       {/* ─── HERO ─── */}
       <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20 overflow-visible">
 
-          {/* Hero badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-lum-panel-bg border border-lum-panel-border backdrop-blur-xl mb-10"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-lum-silver shadow-[0_0_8px_rgba(176,184,196,0.4)] animate-pulse" />
-            <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-lum-slate-light">{t('equipGuideSystem')}</span>
-          </motion.div>
-
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
