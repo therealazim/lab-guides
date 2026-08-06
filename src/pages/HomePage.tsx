@@ -242,15 +242,6 @@ export default function HomePage() {
             <strong className="font-semibold bg-gradient-to-r from-lum-ivory via-lum-silver to-lum-slate-light bg-clip-text text-transparent">{t('heroTagline')}</strong>
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
-            className="text-[clamp(0.85rem,1.2vw,1rem)] font-light leading-relaxed text-lum-slate-light max-w-[520px] mx-auto mb-12"
-          >
-            {t('subtitle')}
-          </motion.p>
-
           {/* Search */}
           <div
             className="max-w-lg mx-auto w-full relative"
