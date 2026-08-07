@@ -24,6 +24,7 @@ export default function HomePage() {
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [newsIdx, setNewsIdx] = useState(0)
   const [playing, setPlaying] = useState(true)
+  const [mosaicOpen, setMosaicOpen] = useState(false)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -139,7 +140,8 @@ export default function HomePage() {
     loadNews()
   }, [])
 
-  // Auto-slide news
+  // Reset mosaic when news slide changes
+  useEffect(() => { setMosaicOpen(false) }, [newsIdx])
   useEffect(() => {
     if (newsItems.length <= 1 || !playing) return
     const timer = setInterval(() => {
@@ -374,20 +376,33 @@ export default function HomePage() {
                 {/* Mosaic image grid */}
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={newsIdx}
+                    key={newsIdx + (mosaicOpen ? 1 : 0)}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.45 }}
-                    className="aspect-[4/3] md:aspect-[16/9] rounded-md overflow-hidden"
+                    className="aspect-[4/3] md:aspect-[16/9] rounded-md overflow-hidden cursor-pointer"
+                    onClick={() => {
+                      const imgs = newsItems[newsIdx]?.images || (newsItems[newsIdx]?.image ? [newsItems[newsIdx].image] : [])
+                      if (imgs.length > 1) setMosaicOpen(!mosaicOpen)
+                    }}
                   >
                     {(() => {
                       const imgs = newsItems[newsIdx]?.images || (newsItems[newsIdx]?.image ? [newsItems[newsIdx].image] : [])
                       if (imgs.length === 0) {
                         return <div className="w-full h-full bg-lum-soft flex items-center justify-center"><span className="text-lg text-lum-slate-warm/20">KMI</span></div>
                       }
-                      if (imgs.length === 1) {
-                        return <img src={imgs[0]} alt="" className="w-full h-full object-cover bg-lum-soft" />
+                      if (imgs.length === 1 || !mosaicOpen) {
+                        return (
+                          <div className="relative w-full h-full">
+                            <img src={imgs[0]} alt="" className="w-full h-full object-cover bg-lum-soft" />
+                            {imgs.length > 1 && (
+                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <span className="text-white text-sm font-medium bg-black/50 px-4 py-2 rounded-full">View all {imgs.length} photos</span>
+                              </div>
+                            )}
+                          </div>
+                        )
                       }
                       const tiles = [
                         'col-span-2 row-span-1', 'col-span-2 row-span-1',
@@ -395,10 +410,11 @@ export default function HomePage() {
                         'col-span-2 row-span-2', 'col-span-1 row-span-1',
                       ]
                       return (
-                        <div className="grid grid-cols-4 grid-rows-3 gap-1 h-full">
+                        <div className="grid grid-cols-4 grid-rows-3 gap-1 h-full relative">
                           {tiles.slice(0, imgs.length).map((cls, i) => (
                             <img key={i} src={imgs[i] || imgs[i % imgs.length]} alt="" className={`${cls} w-full h-full object-cover bg-lum-soft`} />
                           ))}
+                          <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">Click to collapse</div>
                         </div>
                       )
                     })()}
