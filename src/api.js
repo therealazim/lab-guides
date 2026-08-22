@@ -5,10 +5,13 @@ async function req(path, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   })
-  return r.json()
+  const data = await r.json()
+  if (!r.ok) throw new Error(data?.error || `Request failed with status ${r.status}`)
+  return data
 }
 
 export const fetchEquipment = () => req('/equipment')
+export const fetchHiddenEquipment = () => req('/hidden-equipment')
 export const fetchEquipmentBySlug = (slug) => req(`/equipment/${slug}`)
 export const saveEquipment = (item) => req('/equipment', { method: 'POST', body: JSON.stringify(item) })
 export const deleteEquipmentApi = (slug) => req(`/equipment/${slug}`, { method: 'DELETE' })

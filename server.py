@@ -77,6 +77,16 @@ def get_equipment():
         result.append(data)
     return jsonify(result)
 
+@app.route('/api/hidden-equipment', methods=['GET'])
+def get_hidden_equipment():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT slug FROM equipment WHERE hidden = true ORDER BY slug')
+    slugs = [row[0] for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(slugs)
+
 @app.route('/api/equipment/<slug>', methods=['GET'])
 def get_equipment_by_slug(slug):
     conn = get_db()
@@ -117,7 +127,15 @@ def save_equipment():
 def delete_equipment(slug):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('UPDATE equipment SET hidden = true WHERE slug = %s', (slug,))
+    # Keep a tombstone even for bundled static equipment that has no existing row.
+    cur.execute(
+        """
+        INSERT INTO equipment (slug, data, hidden, override)
+        VALUES (%s, '{}'::jsonb, true, false)
+        ON CONFLICT (slug) DO UPDATE SET hidden = true
+        """,
+        (slug,)
+    )
     conn.commit()
     cur.close()
     conn.close()
@@ -150,6 +168,32 @@ def save_partner():
         (name, url, image)
     )
     partner_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True, 'id': partner_id})
+
+@app.route('/api/partners/<int:partner_id>', methods=['PUT'])
+def update_partner(partner_id):
+    body = request.get_json()
+    if not body:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    name = body.get('name', '')
+    url = body.get('url', '')
+    image = body.get('image', '')
+    if not name:
+        return jsonify({'error': 'No name'}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'UPDATE partners SET name = %s, url = %s, image = %s WHERE id = %s',
+        (name, url, image, partner_id)
+    )
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Partner not found'}), 404
     conn.commit()
     cur.close()
     conn.close()
@@ -304,6 +348,8 @@ def serve_frontend(path):
         translation_rows = cur.fetchall()
         cur.execute('SELECT * FROM news ORDER BY sort_order, created_at DESC')
         news_rows = cur.fetchall()
+        cur.execute('SELECT slug FROM equipment WHERE hidden = true ORDER BY slug')
+        hidden_slugs = [r['slug'] for r in cur.fetchall()]
         cur.close()
         conn.close()
         
@@ -321,8 +367,21 @@ def serve_frontend(path):
             if key not in translations:
                 translations[key] = {}
             translations[key][r['lang']] = r['value']
-        
-        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners, "translations": translations, "news": news_rows})}</script>'
+
+        news = []
+        for r in news_rows:
+            item = dict(r)
+            if item.get('image'):
+                try:
+                    item['images'] = json.loads(item['image'])
+                    item['image'] = item['images'][0] if item['images'] else None
+                except (TypeError, json.JSONDecodeError):
+                    pass
+            if item.get('created_at'):
+                item['created_at'] = item['created_at'].isoformat()
+            news.append(item)
+
+        inject = f'<script>window.__INITIAL_DATA__ = {json.dumps({"equipment": equipment, "partners": partners, "translations": translations, "news": news, "hiddenEquipment": hidden_slugs})}</script>'
         html = html.replace('</head>', inject + '</head>')
     except Exception as e:
         print(f'Data injection error: {e}')

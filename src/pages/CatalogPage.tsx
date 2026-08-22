@@ -7,18 +7,23 @@ import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
-import { fetchEquipment as apiFetchEq } from '../api'
+import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
 
 export default function CatalogPage() {
   const { lang } = useI18n()
   const navigate = useNavigate()
   const [adminItems, setAdminItems] = useState<any[]>([])
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
+  })
   const [mouse, setMouse] = useState({ x: 50, y: 50 })
 
   useEffect(() => {
-    const initial = (window as any).__INITIAL_DATA__
-    if (initial?.equipment) {
+        const initial = (window as any).__INITIAL_DATA__
+      if (Array.isArray(initial?.hiddenEquipment)) setHiddenSlugs(initial.hiddenEquipment)
+      if (initial?.equipment) {
       const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
           setAdminItems(apiOverridden)
           const ovs: Record<string, any> = {}
@@ -38,6 +43,9 @@ export default function CatalogPage() {
       } catch {}
     }
     load()
+    fetchHiddenEquipment().then(data => {
+      if (Array.isArray(data)) setHiddenSlugs(data)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -47,11 +55,12 @@ export default function CatalogPage() {
   }, [])
 
   const allEquipments = useMemo(() => {
-    const merged = staticEquipments.map((eq: any) =>
-      staticOverrides[eq.slug] ? { ...eq, ...staticOverrides[eq.slug] } : eq
-    )
-    return [...merged, ...adminItems]
-  }, [staticOverrides, adminItems])
+    const merged = staticEquipments
+      .filter((eq: any) => !hiddenSlugs.includes(eq.slug))
+      .map((eq: any) => staticOverrides[eq.slug] ? { ...eq, ...staticOverrides[eq.slug] } : eq)
+    const visibleAdminItems = adminItems.filter((item: any) => !hiddenSlugs.includes(item.slug))
+    return [...merged, ...visibleAdminItems]
+  }, [staticOverrides, adminItems, hiddenSlugs])
 
   return (
     <div className="relative z-10 min-h-screen">

@@ -8,7 +8,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import youtubeVideos from '../data/youtube-videos.json'
-import { fetchEquipmentBySlug as apiFetchEq } from '../api'
+import { fetchEquipmentBySlug as apiFetchEq, fetchHiddenEquipment } from '../api'
 
 const findEquipment = (slug: string) => {
   const fromStatic = staticEquipments.find((eq: any) => eq.slug === slug)
@@ -46,6 +46,14 @@ export default function EquipmentPage() {
   const { slug } = useParams<{ slug: string }>()
   const { lang, t } = useI18n()
   const [apiEquipment, setApiEquipment] = useState<any>(null)
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
+  })
+  const [hiddenLoaded, setHiddenLoaded] = useState(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment)
+  })
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -53,22 +61,24 @@ export default function EquipmentPage() {
     if (slug) {
       apiFetchEq(slug).then(data => { if (data) setApiEquipment(data) }).catch(() => {})
     }
+    fetchHiddenEquipment().then(data => {
+      if (Array.isArray(data)) setHiddenSlugs(data)
+    }).catch(() => {}).finally(() => setHiddenLoaded(true))
   }, [slug])
-  
-  const equipment = apiEquipment || findEquipment(slug || '')
+
+  const isHidden = Boolean(slug && hiddenSlugs.includes(slug))
+  const equipment = hiddenLoaded && !isHidden ? (apiEquipment || findEquipment(slug || '')) : undefined
   const meta = getMeta(equipment)
 
+  if (!hiddenLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
+        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   if (!equipment) {
-    if (!findEquipment(slug || '') && !apiEquipment) {
-      return (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-lum-slate-light/60 text-sm font-light">Loading...</p>
-          </div>
-        </div>
-      )
-    }
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
         <p className="text-lum-slate-light/60 text-lg font-light">{t('noResults')}</p>

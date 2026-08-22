@@ -7,19 +7,31 @@ import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
-import { fetchEquipmentBySlug as apiFetchEq } from '../api'
+import { fetchEquipmentBySlug as apiFetchEq, fetchHiddenEquipment } from '../api'
 
 export default function CatalogItemPage() {
   const { slug } = useParams<{ slug: string }>()
   const { lang, t } = useI18n()
   const [apiEquipment, setApiEquipment] = useState<any>(null)
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
+  })
+  const [hiddenLoaded, setHiddenLoaded] = useState(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment)
+  })
 
   useEffect(() => {
     window.scrollTo(0, 0)
     if (slug) apiFetchEq(slug).then(d => { if (d) setApiEquipment(d) }).catch(() => {})
+    fetchHiddenEquipment().then(data => {
+      if (Array.isArray(data)) setHiddenSlugs(data)
+    }).catch(() => {}).finally(() => setHiddenLoaded(true))
   }, [slug])
 
-  const equipment = apiEquipment || staticEquipments.find((e: any) => e.slug === slug)
+  const isHidden = Boolean(slug && hiddenSlugs.includes(slug))
+  const equipment = hiddenLoaded && !isHidden ? (apiEquipment || staticEquipments.find((e: any) => e.slug === slug)) : undefined
 
   const manualBlobUrl = useMemo(() => {
     if (!equipment?.manual) return null
@@ -38,7 +50,21 @@ export default function CatalogItemPage() {
     return () => { if (manualBlobUrl) URL.revokeObjectURL(manualBlobUrl) }
   }, [manualBlobUrl])
 
-  if (!equipment) return null
+  if (!hiddenLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
+        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!equipment) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
+        <p className="text-lum-slate-light/60 text-lg font-light">{t('noResults')}</p>
+      </div>
+    )
+  }
 
   const d = equipment[lang as Lang] || equipment.en || equipment
   const imgSrc = (imageMap as Record<string, string>)[slug || ''] || equipment.image || ''

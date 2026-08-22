@@ -1,4 +1,5 @@
 export function fetchEquipment(): Promise<any[]>
+export function fetchHiddenEquipment(): Promise<string[]>
 export function fetchEquipmentBySlug(slug: string): Promise<any>
 export function saveEquipment(item: any): Promise<any>
 export function deleteEquipmentApi(slug: string): Promise<any>

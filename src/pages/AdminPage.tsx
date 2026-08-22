@@ -10,7 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, deleteEquipmentApi, savePartner as apiSavePartner, deletePartnerApi } from '../api'
+import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi } from '../api'
 
 const ADMIN_LOGIN = 'admin'
 const ADMIN_PASSWORD = 'admin123'
@@ -74,7 +74,10 @@ export default function AdminPage() {
   const pwRef = useRef<HTMLInputElement>(null)
 
   const [overrides, setOverrides] = useState<Record<string, any>>({})
-  const [hiddenSlugs] = useState<string[]>([])
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
+  })
   const [manual, setManual] = useState<string | null>(null)
   const manualRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
@@ -103,6 +106,11 @@ export default function AdminPage() {
         const apiPartners = data.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, src: p.image, url: p.url, _id: p.id, _default: false }))
         setPartners([...DEFAULT_PARTNERS, ...apiPartners])
       }
+    }).catch(() => {})
+    const initial = (window as any).__INITIAL_DATA__
+    if (Array.isArray(initial?.hiddenEquipment)) setHiddenSlugs(initial.hiddenEquipment)
+    fetchHiddenEquipment().then(data => {
+      if (Array.isArray(data)) setHiddenSlugs(data)
     }).catch(() => {})
   }, [])
 
@@ -444,7 +452,7 @@ export default function AdminPage() {
           </div>
 
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setSavedItems(savedItems.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
+                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setHiddenSlugs(current => current.includes(slug) ? current : [...current, slug]); setSavedItems(current => current.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -477,16 +485,25 @@ export default function AdminPage() {
                 <button onClick={async () => {
                   if (!partnerName || !partnerUrl || !partnerImg) { alert('Fill all fields'); return }
                   let updated: typeof partners
-                  if (partnerEditIdx !== null) {
-                    updated = [...partners]
-                    updated[partnerEditIdx] = { ...updated[partnerEditIdx], name: partnerName, src: partnerImg, url: partnerUrl, _default: false }
-                  } else {
-                    const res = await apiSavePartner({ name: partnerName, url: partnerUrl, image: partnerImg })
-                    updated = [...partners, { name: partnerName, src: partnerImg, url: partnerUrl, _default: false, _id: res?.id }]
-                  }
+                  try {
+                    if (partnerEditIdx !== null) {
+                      const current = partners[partnerEditIdx]
+                      if (current?._id) {
+                        await apiUpdatePartner(current._id, { name: partnerName, url: partnerUrl, image: partnerImg })
+                      }
+                      updated = [...partners]
+                      updated[partnerEditIdx] = { ...updated[partnerEditIdx], name: partnerName, src: partnerImg, url: partnerUrl, _default: updated[partnerEditIdx]._default }
+                    } else {
+                      const res = await apiSavePartner({ name: partnerName, url: partnerUrl, image: partnerImg })
+                      updated = [...partners, { name: partnerName, src: partnerImg, url: partnerUrl, _default: false, _id: res?.id }]
+                    }
                     setPartners(updated)
                     setPartnerEditIdx(null)
-                  setPartnerName(''); setPartnerUrl(''); setPartnerImg(null)
+                    setPartnerName(''); setPartnerUrl(''); setPartnerImg(null)
+                  } catch {
+                    setToastMsg('Unable to save partner')
+                    setToastShow(true)
+                  }
                 }} className="btn-lum-primary text-xs px-5 py-3">{partnerEditIdx !== null ? 'Update Partner' : 'Add Partner'}</button>
                 {partnerEditIdx !== null && (
                   <button onClick={() => { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">Cancel</button>
@@ -500,8 +517,8 @@ export default function AdminPage() {
               {partners.length === 0 ? (
                 <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No partners added yet</p>
               ) : partners.map((p, i) => (
-                <div key={i} className="lum-card p-4 text-center relative cursor-pointer hover:border-lum-slate-light/20 transition-colors" onClick={() => { setPartnerName(p.name); setPartnerUrl(p.url); setPartnerImg(p.src); setPartnerEditIdx(i) }}>
-                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                <div key={i} className="lum-card p-4 text-center relative cursor-pointer hover:border-lum-slate-light/20 transition-colors" onClick={() => { if (p._default) return; setPartnerName(p.name); setPartnerUrl(p.url); setPartnerImg(p.src); setPartnerEditIdx(i) }}>
+                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; if (partner._default) { setToastMsg('Default partners cannot be deleted'); setToastShow(true); return }; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <img src={p.src} alt={p.name} className="h-16 mx-auto mb-2 object-contain" />
@@ -578,7 +595,7 @@ export default function AdminPage() {
                     }
                     setTranslations(updated)
                     setToastMsg('Translations imported!'); setToastShow(true)
-                  } catch (err) {
+                  } catch {
                     setToastMsg('Invalid Excel file'); setToastShow(true)
                   }
                   e.target.value = ''

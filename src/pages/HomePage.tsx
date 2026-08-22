@@ -7,7 +7,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
-import { fetchEquipment as apiFetchEq } from '../api'
+import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
 
 const SCROLL_KEY = 'homeScrollY'
 
@@ -20,6 +20,10 @@ export default function HomePage() {
   const [spinKey, setSpinKey] = useState(0)
   const [adminItems, setAdminItems] = useState<any[]>([])
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
+  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
+    const initial = (window as any).__INITIAL_DATA__
+    return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
+  })
   const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [newsIdx, setNewsIdx] = useState(0)
@@ -54,10 +58,13 @@ export default function HomePage() {
     return () => document.removeEventListener('click', handler)
   }, [])
 
-  const mergedStatic = staticEquipments.map((eq: any) =>
-    staticOverrides[eq.slug] ? { ...eq, ...staticOverrides[eq.slug] } : eq
-  )
-  const allEquipments = useMemo(() => [...mergedStatic, ...adminItems], [mergedStatic, adminItems])
+  const allEquipments = useMemo(() => {
+    const mergedStatic = staticEquipments
+      .filter((eq: any) => !hiddenSlugs.includes(eq.slug))
+      .map((eq: any) => staticOverrides[eq.slug] ? { ...eq, ...staticOverrides[eq.slug] } : eq)
+    const visibleAdminItems = adminItems.filter((item: any) => !hiddenSlugs.includes(item.slug))
+    return [...mergedStatic, ...visibleAdminItems]
+  }, [staticOverrides, adminItems, hiddenSlugs])
 
   const filtered = useMemo(() => {
     if (!query.trim()) return allEquipments
@@ -76,6 +83,7 @@ export default function HomePage() {
   // Load admin data from API (always fetches fresh, uses injected data as initial)
   useEffect(() => {
     const initial = (window as any).__INITIAL_DATA__
+      if (Array.isArray(initial?.hiddenEquipment)) setHiddenSlugs(initial.hiddenEquipment)
       if (initial?.equipment) {
         const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
         setAdminItems(apiOverridden)
@@ -96,6 +104,9 @@ export default function HomePage() {
       } catch {}
     }
     load()
+    fetchHiddenEquipment().then(data => {
+      if (Array.isArray(data)) setHiddenSlugs(data)
+    }).catch(() => {})
   }, [])
 
   // Load partners from API
