@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages, Newspaper } from 'lucide-react'
+import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages, Newspaper, LayoutDashboard, ChevronRight, Plus, Settings2, Pencil } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
@@ -132,6 +132,22 @@ export default function AdminPage() {
       Object.keys(UI_STRINGS.en).forEach(k => allKeys.add(k))
       setTransKeys(Array.from(allKeys).sort())
     } catch {}
+  }
+
+  type AdminSection = 'home' | 'equipment' | 'partners' | 'translations' | 'news'
+  const activeSection: AdminSection = editIdx !== null || showEquipList ? 'equipment' : showPartners ? 'partners' : showTranslations ? 'translations' : showNews ? 'news' : 'home'
+
+  const openSection = (section: AdminSection) => {
+    setShowEquipList(section === 'equipment')
+    setShowPartners(section === 'partners')
+    setShowTranslations(section === 'translations')
+    setShowNews(section === 'news')
+    setEditIdx(null)
+    setEditIsStatic(false)
+    resetForm()
+    if (section === 'translations') loadTranslations()
+    if (section === 'news') loadNews()
+    setMenuOpen(false)
   }
 
   useEffect(() => {
@@ -335,6 +351,15 @@ export default function AdminPage() {
     } catch {}
   }
 
+  const sectionItems = [
+    { id: 'home' as AdminSection, label: 'Dashboard', description: 'Overview and shortcuts', icon: LayoutDashboard },
+    { id: 'equipment' as AdminSection, label: 'Equipment', description: 'Add, edit, or hide guides', icon: List },
+    { id: 'partners' as AdminSection, label: 'Partners', description: 'Manage logos and links', icon: Link2 },
+    { id: 'translations' as AdminSection, label: 'Translations', description: 'Import or export language text', icon: Languages },
+    { id: 'news' as AdminSection, label: 'News', description: 'Publish homepage updates', icon: Newspaper },
+  ]
+  const activeSectionMeta = sectionItems.find(item => item.id === activeSection) || sectionItems[0]
+
   const editNewsItem = (item: any) => {
     setNewsTitle(item.title || '')
     setNewsDesc(item.description || '')
@@ -351,13 +376,15 @@ export default function AdminPage() {
       <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-2 sm:px-4 py-2.5 flex items-center justify-between gap-1">
           <div className="flex items-center gap-1 sm:gap-3">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
+            <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close admin menu' : 'Open admin menu'} title={menuOpen ? 'Close admin menu' : 'Open admin menu'} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            <a href="/#/admin" onClick={() => { setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setShowNews(false); setEditIdx(null); setMenuOpen(false) }}><img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" /></a>
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold text-lum-ivory">고려대학교 IEH</p>
-              <p className="text-[10px] text-lum-slate-warm tracking-[0.15em] uppercase">{t('adminPanel')}</p>
+            <button type="button" onClick={() => openSection('home')} aria-label="Go to admin dashboard" className="flex-shrink-0">
+              <img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" />
+            </button>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-lum-ivory truncate">Admin workspace</p>
+              <p className="text-[10px] text-lum-slate-warm tracking-[0.12em] uppercase truncate">{activeSectionMeta.label}</p>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
@@ -374,35 +401,66 @@ export default function AdminPage() {
       </header>
 
       {/* Side panel */}
-      <motion.div
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.button
+            type="button"
+            aria-label="Close admin menu"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMenuOpen(false)}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+      <motion.aside
         initial={false}
         animate={{ x: menuOpen ? 0 : '-100%' }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 bottom-0 z-40 w-64 bg-lum-mid border-r border-lum-panel-border pt-20 px-4 overflow-y-auto shadow-2xl"
+        aria-label="Admin navigation"
+        className="fixed top-0 left-0 bottom-0 z-50 w-[min(20rem,88vw)] bg-lum-mid border-r border-lum-panel-border pt-20 px-4 overflow-y-auto shadow-2xl"
       >
-        <div className="space-y-2">
-          <button onClick={() => { setShowEquipList(true); setShowPartners(false); setShowTranslations(false); setEditIdx(null); resetForm(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory font-medium text-sm hover:bg-lum-soft transition-colors">
-            <List className="w-4 h-4 text-lum-slate-light" />
-            {t('adminAllEq')}
-          </button>
-          <button onClick={() => { setShowPartners(true); setShowEquipList(false); setShowTranslations(false); setEditIdx(null); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
-            <Link2 className="w-4 h-4 text-lum-slate-light" />
-            Partners
-          </button>
-          <button onClick={() => { setShowTranslations(true); setShowEquipList(false); setShowPartners(false); setShowNews(false); setEditIdx(null); loadTranslations(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
-            <Languages className="w-4 h-4 text-lum-slate-light" />
-            Translations
-          </button>
-          <button onClick={() => { setShowNews(true); setShowEquipList(false); setShowPartners(false); setShowTranslations(false); setEditIdx(null); loadNews(); setMenuOpen(false) }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light font-medium text-sm hover:bg-lum-soft transition-colors">
-            <Newspaper className="w-4 h-4 text-lum-slate-light" />
-            Publish News
+        <div className="flex items-center justify-between mb-5 px-1">
+          <div>
+            <p className="text-[9px] tracking-[0.2em] uppercase text-lum-slate-warm/60">Workspace</p>
+            <p className="text-sm font-semibold text-lum-ivory">Admin tools</p>
+          </div>
+          <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close admin menu" className="p-2 rounded-lg text-lum-slate-warm hover:text-lum-ivory hover:bg-lum-panel-bg transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
-      </motion.div>
+        <nav className="space-y-1.5">
+          {sectionItems.map(({ id, label, description, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => openSection(id)}
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border text-left transition-colors ${activeSection === id ? 'bg-lum-slate-light/10 border-lum-slate-light/30 text-lum-ivory' : 'bg-transparent border-transparent text-lum-slate-warm hover:bg-lum-panel-bg hover:text-lum-ivory'}`}
+            >
+              <span className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${activeSection === id ? 'bg-lum-slate-light/15 text-lum-slate-light' : 'bg-lum-panel-bg text-lum-slate-warm'}`}>
+                <Icon className="w-4 h-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">{label}</span>
+                <span className="block text-[10px] text-current/50 truncate mt-0.5">{description}</span>
+              </span>
+              {activeSection === id && <ChevronRight className="w-3.5 h-3.5 text-lum-slate-light" />}
+            </button>
+          ))}
+        </nav>
+        <div className="mt-8 p-3.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
+          <div className="flex items-center gap-2 text-lum-slate-light mb-2">
+            <Settings2 className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">Quick guide</span>
+          </div>
+          <p className="text-[10px] leading-relaxed text-lum-slate-warm/70">Start with Equipment to update guides. Use News for homepage updates, Partners for logos, and Translations for language text.</p>
+        </div>
+      </motion.aside>
 
       <main className="max-w-6xl mx-auto px-4 py-6 relative">
-        {/* Admin home - grid background with mouse spotlight */}
-        {!editIdx && !showEquipList && !showPartners && !showTranslations && !showNews && (
+        {/* Dashboard */}
+        {activeSection === 'home' && (
           <>
             <div
               className="fixed inset-0 pointer-events-none"
@@ -415,32 +473,91 @@ export default function AdminPage() {
                 maskComposite: 'add',
               }}
             />
+            <div className="relative py-8 md:py-12">
+              <div className="max-w-3xl mb-8">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lum-slate-light mb-3">Control center</p>
+                <h1 className="text-3xl md:text-4xl font-light tracking-[-0.04em] text-lum-ivory mb-3">What would you like to update?</h1>
+                <p className="text-sm leading-relaxed text-lum-slate-warm/80">Choose a workspace below. Each area handles one kind of content, so you can make changes without searching through a crowded screen.</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                {[
+                  { label: 'Visible equipment', value: staticEquipments.length + savedItems.length - hiddenSlugs.length },
+                  { label: 'Partners', value: partners.length },
+                  { label: 'News posts', value: newsItems.length },
+                  { label: 'Translation keys', value: transKeys.length || Object.keys(UI_STRINGS.en).length },
+                ].map(stat => (
+                  <div key={stat.label} className="lum-card p-4">
+                    <p className="text-2xl font-light text-lum-ivory">{stat.value}</p>
+                    <p className="text-[10px] text-lum-slate-warm/70 mt-1">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sectionItems.slice(1).map(({ id, label, description, icon: Icon }) => (
+                  <button key={id} type="button" onClick={() => openSection(id)} className="lum-card p-5 flex items-center gap-4 text-left hover:border-lum-slate-light/30 hover:bg-lum-panel-bg/60 transition-all group">
+                    <span className="w-11 h-11 rounded-xl bg-lum-slate-light/10 text-lum-slate-light flex items-center justify-center flex-shrink-0 group-hover:bg-lum-slate-light/20 transition-colors"><Icon className="w-5 h-5" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-medium text-lum-ivory">{label}</span>
+                      <span className="block text-xs text-lum-slate-warm/70 mt-1">{description}</span>
+                    </span>
+                    <Plus className="w-4 h-4 text-lum-slate-warm/60 group-hover:text-lum-slate-light transition-colors" />
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
 
-        {editIdx !== null ? (
-          <h1 className="text-lg font-bold text-lum-ivory mb-6">{t('adminEdit')}</h1>
-        ) : showEquipList ? (
-          <h1 className="text-lg font-bold text-lum-ivory mb-6">{t('adminAllEq')} ({staticEquipments.length + savedItems.length - hiddenSlugs.length})</h1>
-        ) : null}
+        {activeSection !== 'home' && (
+          <div className="flex items-start justify-between gap-4 mb-7">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lum-slate-light mb-2">{editIdx !== null ? 'Editing equipment' : activeSectionMeta.label}</p>
+              <h1 className="text-2xl md:text-3xl font-light tracking-[-0.04em] text-lum-ivory">{editIdx !== null ? t('adminEdit') : activeSectionMeta.label}</h1>
+              <p className="text-xs leading-relaxed text-lum-slate-warm/70 mt-2 max-w-2xl">{editIdx !== null ? 'Update the guide details below, then save your changes.' : activeSectionMeta.description}</p>
+            </div>
+            <button type="button" onClick={() => openSection('home')} className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full border border-lum-panel-border text-[10px] text-lum-slate-warm hover:text-lum-ivory hover:border-lum-slate-light/30 transition-colors flex-shrink-0">
+              <ArrowLeft className="w-3.5 h-3.5" /> Dashboard
+            </button>
+          </div>
+        )}
 
         {/* Add form + Equipment list (combined) */}
         {showEquipList && !editIdx && (
           <>
             {/* Inline add form */}
             <div className="lum-card p-4 md:p-6 mb-6">
-              <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-4">{t('adminAddNew')}</p>
+              <div className="flex items-start gap-3 mb-4">
+                <span className="w-9 h-9 rounded-lg bg-lum-slate-light/10 text-lum-slate-light flex items-center justify-center flex-shrink-0"><Plus className="w-4 h-4" /></span>
+                <div>
+                  <p className="text-sm font-medium text-lum-ivory">{t('adminAddNew')}</p>
+                  <p className="text-[10px] text-lum-slate-warm/70 mt-1">Start with the name, brand, and model. You can add more details after opening the guide.</p>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder={t('adminName')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-                <input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} placeholder={t('adminBrand')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-                <input value={form.model} onChange={e => setForm({...form, model: e.target.value})} placeholder={t('adminModel')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                {[
+                  { key: 'name', label: t('adminName') },
+                  { key: 'brand', label: t('adminBrand') },
+                  { key: 'model', label: t('adminModel') },
+                ].map(field => (
+                  <label key={field.key} className="block">
+                    <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">{field.label}</span>
+                    <input value={(form as any)[field.key]} onChange={e => setForm({...form, [field.key]: e.target.value})} placeholder={`Enter ${field.label.toLowerCase()}`} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/40 text-sm outline-none focus:border-lum-slate-light/20" />
+                  </label>
+                ))}
               </div>
               <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
-                <Save className="w-3.5 h-3.5" /> Save
+                <Save className="w-3.5 h-3.5" /> Add equipment
               </button>
             </div>
 
             {/* Equipment grid */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <p className="text-sm font-medium text-lum-ivory">Saved equipment</p>
+                <p className="text-[10px] text-lum-slate-warm/60 mt-1">Select a card to edit its guide. Use the trash icon to hide it from the public catalog.</p>
+              </div>
+              <span className="text-[10px] text-lum-slate-warm/60">{staticEquipments.length + savedItems.length - hiddenSlugs.length} visible</span>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
             {[...overriddenStatic, ...savedItems].filter((item: any) => !hiddenSlugs.includes(item.slug)).map((item: any) => (
               <div key={item.slug} className="lum-card p-4 flex items-center justify-between hover:border-lum-slate-light/20 transition-colors cursor-pointer" onClick={() => editItem(item)}>
@@ -452,7 +569,7 @@ export default function AdminPage() {
           </div>
 
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setHiddenSlugs(current => current.includes(slug) ? current : [...current, slug]); setSavedItems(current => current.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
+                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setHiddenSlugs(current => current.includes(slug) ? current : [...current, slug]); setSavedItems(current => current.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} title="Hide this equipment" aria-label="Hide this equipment" className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -463,13 +580,16 @@ export default function AdminPage() {
 
         {/* Partners management */}
         {showPartners && (
-          <div>
-            <h1 className="text-lg font-bold text-lum-ivory mb-2">{t('partners')}</h1>
-            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Upload 800×800px PNG with transparent background</p>
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <p className="text-xs text-lum-slate-warm/70">Add partner logos and website links shown on the public homepage.</p>
+                <span className="text-[10px] text-lum-slate-warm/60 flex-shrink-0">{partners.length} total</span>
+              </div>
+              <p className="text-[10px] text-lum-slate-warm/60 mb-4">Use a square PNG with a transparent background for the cleanest result.</p>
 
             {/* Add / Edit partner */}
             <div className="lum-card p-4 mb-6">
-              <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">{partnerEditIdx !== null ? 'Edit Partner' : 'Add Partner'}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{partnerEditIdx !== null ? 'Editing partner' : 'Add a partner'}</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                 <input value={partnerName} onChange={e => setPartnerName(e.target.value)} placeholder="Partner name" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <input value={partnerUrl} onChange={e => setPartnerUrl(e.target.value)} placeholder="Website URL (https://...)" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
@@ -512,7 +632,7 @@ export default function AdminPage() {
             </div>
 
             {/* Partner list */}
-            <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">{t('partners')} ({partners.length})</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-warm/70 mb-3">Saved partners ({partners.length})</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {partners.length === 0 ? (
                 <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No partners added yet</p>
@@ -533,8 +653,7 @@ export default function AdminPage() {
         {/* Translations editor */}
         {showTranslations && (
           <div>
-            <h1 className="text-lg font-bold text-lum-ivory mb-2">Translations</h1>
-            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Export to Excel, edit, and import back — all 5 languages included.</p>
+            <p className="text-xs leading-relaxed text-lum-slate-warm/70 mb-4 max-w-2xl">Export the language table, edit the five language columns in Excel, then import it to update the public interface.</p>
 
             <div className="flex gap-2 mb-4">
               <button onClick={() => {
@@ -608,12 +727,14 @@ export default function AdminPage() {
         {/* News management */}
         {showNews && (
           <div>
-            <h1 className="text-lg font-bold text-lum-ivory mb-2">Publish News</h1>
-            <p className="text-[10px] text-lum-slate-warm/60 mb-4">Add news with title, description, and image — shows as animated slider on home page</p>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className="text-xs leading-relaxed text-lum-slate-warm/70">Publish updates that appear in the animated slider on the public homepage.</p>
+              <span className="text-[10px] text-lum-slate-warm/60 flex-shrink-0">{newsItems.length} published</span>
+            </div>
 
             {/* Add / Edit news */}
             <div className="lum-card p-4 mb-6">
-              <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">{newsEditIdx !== null ? 'Edit News' : 'Add News'}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{newsEditIdx !== null ? 'Editing news post' : 'Create a news post'}</p>
               <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder="News title" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
               <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder="News description / content" rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
               <div className="flex items-center gap-3">
@@ -658,8 +779,8 @@ export default function AdminPage() {
                     <p className="text-[8px] text-lum-slate-warm/40 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => editNewsItem(n)} className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">
-                      <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+                    <button onClick={() => editNewsItem(n)} title="Edit this news post" aria-label="Edit this news post" className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">
+                      <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => { setConfirmMsg('Delete this news?'); setConfirmAction(() => () => deleteNewsItem(n.id)) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
