@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useI18n, type Lang } from '../i18n'
 import ThemeToggle from '../components/ThemeToggle'
@@ -28,10 +28,34 @@ export default function HomePage() {
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [newsIdx, setNewsIdx] = useState(0)
   const [playing, setPlaying] = useState(true)
-  const [mosaicOpen, setMosaicOpen] = useState(false)
+  const [newsViewer, setNewsViewer] = useState<{ images: string[]; index: number; title: string } | null>(null)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
+
+  const getNewsImages = (item: any): string[] => {
+    const images = Array.isArray(item?.images) ? item.images.filter(Boolean) : []
+    return images.length ? images : item?.image ? [item.image] : []
+  }
+
+  const openNewsViewer = (item: any, index = 0) => {
+    const images = getNewsImages(item)
+    if (!images.length) return
+    setPlaying(false)
+    setNewsViewer({ images, index: Math.max(0, Math.min(index, images.length - 1)), title: item?.title || 'News image' })
+  }
+
+  const closeNewsViewer = () => {
+    setNewsViewer(null)
+    setPlaying(true)
+  }
+
+  const moveNewsViewer = (direction: number) => {
+    setNewsViewer(current => {
+      if (!current || current.images.length < 2) return current
+      return { ...current, index: (current.index + direction + current.images.length) % current.images.length }
+    })
+  }
 
   // Save scroll on unmount, restore on mount
   // Save scroll when navigating to equipment page, restore on back
@@ -151,8 +175,25 @@ export default function HomePage() {
     loadNews()
   }, [])
 
-  // Reset mosaic when news slide changes
-  useEffect(() => { setMosaicOpen(false) }, [newsIdx])
+  // Close the viewer when the featured News slide changes.
+  useEffect(() => { setNewsViewer(null) }, [newsIdx])
+
+  // Keep the viewer focused and keyboard-navigable.
+  useEffect(() => {
+    if (!newsViewer) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeNewsViewer()
+      if (e.key === 'ArrowLeft') moveNewsViewer(-1)
+      if (e.key === 'ArrowRight') moveNewsViewer(1)
+    }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [newsViewer])
+
   useEffect(() => {
     if (newsItems.length <= 1 || !playing) return
     const timer = setInterval(() => {
@@ -384,49 +425,37 @@ export default function HomePage() {
               </button>
 
               <div className="flex-1 grid md:grid-cols-[1.4fr_1fr] gap-6 md:gap-10 items-center">
-                {/* Mosaic image grid */}
+                {/* Featured News image */}
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={newsIdx + (mosaicOpen ? 1 : 0)}
+                    key={newsIdx}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.45 }}
-                    className="aspect-[4/3] md:aspect-[16/9] rounded-md overflow-hidden cursor-pointer"
-                    onClick={() => {
-                      const imgs = newsItems[newsIdx]?.images || (newsItems[newsIdx]?.image ? [newsItems[newsIdx].image] : [])
-                      if (imgs.length > 1) setMosaicOpen(!mosaicOpen)
-                    }}
+                    className="aspect-[4/3] md:aspect-[16/9] rounded-md overflow-hidden cursor-pointer group relative bg-lum-soft"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open photos for ${newsItems[newsIdx]?.title || 'this news post'}`}
+                    onClick={() => openNewsViewer(newsItems[newsIdx])}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNewsViewer(newsItems[newsIdx]) } }}
                   >
                     {(() => {
-                      const imgs = newsItems[newsIdx]?.images || (newsItems[newsIdx]?.image ? [newsItems[newsIdx].image] : [])
+                      const imgs = getNewsImages(newsItems[newsIdx])
                       if (imgs.length === 0) {
-                        return <div className="w-full h-full bg-lum-soft flex items-center justify-center"><span className="text-lg text-lum-slate-warm/20">KMI</span></div>
+                        return <div className="w-full h-full flex items-center justify-center"><span className="text-lg text-lum-slate-warm/20">KMI</span></div>
                       }
-                      if (imgs.length === 1 || !mosaicOpen) {
-                        return (
-                          <div className="relative w-full h-full">
-                            <img src={imgs[0]} alt="" className="w-full h-full object-cover bg-lum-soft" />
-                            {imgs.length > 1 && (
-                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                <span className="text-white text-sm font-medium bg-black/50 px-4 py-2 rounded-full">View all {imgs.length} photos</span>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      }
-                      const tiles = [
-                        'col-span-2 row-span-1', 'col-span-2 row-span-1',
-                        'col-span-1 row-span-1', 'col-span-1 row-span-2',
-                        'col-span-2 row-span-2', 'col-span-1 row-span-1',
-                      ]
                       return (
-                        <div className="grid grid-cols-4 grid-rows-3 gap-1 h-full relative">
-                          {tiles.slice(0, imgs.length).map((cls, i) => (
-                            <img key={i} src={imgs[i] || imgs[i % imgs.length]} alt="" className={`${cls} w-full h-full object-cover bg-lum-soft`} />
-                          ))}
-                          <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">Click to collapse</div>
-                        </div>
+                        <>
+                          <img src={imgs[0]} alt={`${newsItems[newsIdx]?.title || 'News'} cover`} className="w-full h-full object-cover bg-lum-soft transition-transform duration-700 group-hover:scale-[1.02]" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/0 to-black/10" />
+                          <div className="absolute inset-x-0 bottom-0 p-4 md:p-5 flex items-end justify-between gap-3">
+                            <span className="inline-flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md border border-white/15 px-3 py-2 text-xs text-white">
+                              <Maximize2 className="w-3.5 h-3.5" /> View photo{imgs.length > 1 ? `s · ${imgs.length}` : ''}
+                            </span>
+                            {imgs.length > 1 && <span className="text-[10px] text-white/80">Click to open gallery</span>}
+                          </div>
+                        </>
                       )
                     })()}
                   </motion.div>
@@ -485,6 +514,77 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* News image viewer */}
+      <AnimatePresence>
+        {newsViewer && (
+          <motion.div
+            className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${newsViewer.title} image gallery`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeNewsViewer}
+          >
+            <motion.div
+              className="relative w-full max-w-6xl max-h-[92vh] flex flex-col items-center gap-4"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.25 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="w-full flex items-center justify-between gap-4 px-1">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">News gallery</p>
+                  <h3 className="text-base md:text-lg text-white font-medium truncate mt-1">{newsViewer.title}</h3>
+                </div>
+                <button type="button" onClick={closeNewsViewer} aria-label="Close image gallery" className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors flex-shrink-0">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="relative w-full flex items-center justify-center min-h-0">
+                {newsViewer.images.length > 1 && (
+                  <button type="button" onClick={() => moveNewsViewer(-1)} aria-label="Previous image" className="absolute left-2 md:left-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+                    <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+                )}
+                <motion.img
+                  key={newsViewer.images[newsViewer.index]}
+                  src={newsViewer.images[newsViewer.index]}
+                  alt={`${newsViewer.title}, image ${newsViewer.index + 1}`}
+                  className="max-h-[68vh] md:max-h-[72vh] max-w-full object-contain rounded-xl shadow-2xl border border-white/10"
+                  initial={{ opacity: 0.4, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                />
+                {newsViewer.images.length > 1 && (
+                  <button type="button" onClick={() => moveNewsViewer(1)} aria-label="Next image" className="absolute right-2 md:right-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 max-w-full">
+                <span className="text-xs text-white/70 tabular-nums min-w-[3.5rem] text-center">{newsViewer.index + 1} / {newsViewer.images.length}</span>
+                {newsViewer.images.length > 1 && (
+                  <div className="flex items-center gap-2 max-w-[min(70vw,32rem)] overflow-x-auto py-1 px-1">
+                    {newsViewer.images.map((image, index) => (
+                      <button key={`${image}-${index}`} type="button" onClick={() => setNewsViewer(current => current ? { ...current, index } : current)} aria-label={`Open image ${index + 1}`} className={`w-14 h-10 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all ${newsViewer.index === index ? 'border-white' : 'border-white/15 opacity-55 hover:opacity-100'}`}>
+                        <img src={image} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] text-white/40">Use the arrow keys to navigate · Press Esc to close</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── LOGO TICKER ─── */}
       <div className="py-16 px-8 md:px-12 lg:px-16 border-t border-b border-lum-panel-border overflow-hidden">
