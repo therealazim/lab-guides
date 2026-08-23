@@ -102,15 +102,15 @@ export default function CatalogPage() {
 
       <header className="fixed top-0 left-0 right-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-12 w-auto" /></a>
-            <div>
+          <div className="flex items-center gap-2 min-w-0">
+            <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-9 sm:h-12 w-auto" /></a>
+            <div className="hidden sm:block min-w-0">
               <p className="text-xs font-bold text-lum-ivory">고려대학교 IEH</p>
               <span className="text-lum-ivory font-bold text-xs tracking-[0.2em] uppercase">KMI - LUPIC</span>
             </div>
-            <Link to="/" className="flex items-center gap-1 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase">
+            <Link to="/" aria-label={t('back')} className="flex items-center gap-1 px-2.5 py-2.5 min-h-11 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase shrink-0">
               <ArrowLeft className="w-3.5 h-3.5" />
-              Back
+              <span className="hidden sm:inline">{t('back')}</span>
             </Link>
           </div>
           <div className="flex items-center gap-2">
@@ -120,7 +120,7 @@ export default function CatalogPage() {
         </div>
       </header>
 
-      <main className="pt-24 px-8 md:px-12 lg:px-16 pb-16">
+      <main className="pt-24 px-4 sm:px-8 md:px-12 lg:px-16 pb-12 sm:pb-16">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,7 +167,7 @@ export default function CatalogPage() {
             <button type="button" onClick={() => { setQuery(''); setStatusFilter('ALL') }} className="btn-lum-secondary mt-5">{t('resetFilters')}</button>
           </div>
         ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredEquipment.map((eq: any, i: number) => {
             const d = eq[lang as Lang] || eq.en || eq
             const imgSrc = (imageMap as Record<string, string>)[eq.slug] || eq.image || ''
@@ -191,15 +191,15 @@ export default function CatalogPage() {
                 </div>
                 {eq.brand && eq.brand !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.brand}</p>}
                 {eq.model && eq.model !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.model}</p>}
-                {eq.quantity && eq.quantity !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Qty: {eq.quantity}</p>}
+                {eq.quantity && eq.quantity !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{t('quantity')}: {eq.quantity}</p>}
                 {eq.location && eq.location !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.location}</p>}
-                {eq.purchase_date && eq.purchase_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Purchased: {eq.purchase_date}</p>}
-                {eq.installation_date && eq.installation_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">Installed: {eq.installation_date}</p>}
+                {eq.purchase_date && eq.purchase_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{t('purchaseDate')}: {eq.purchase_date}</p>}
+                {eq.installation_date && eq.installation_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{t('installationDate')}: {eq.installation_date}</p>}
                 {eq.status && (
                   <span className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[8px] font-medium ${
                     eq.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
                   }`}>
-                    {eq.status}
+                    {t(({ AVAILABLE: 'statusAvailable', IN_USE: 'statusInUse', MAINTENANCE: 'statusMaintenance', OUT_OF_SERVICE: 'statusOutOfService', UNAVAILABLE: 'statusUnavailable', UNKNOWN: 'statusUnknown' } as Record<string, string>)[String(eq.status).toUpperCase()] || 'statusUnknown')}
                   </span>
                 )}
               </motion.div>

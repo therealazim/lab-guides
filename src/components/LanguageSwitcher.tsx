@@ -25,14 +25,17 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2.5 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-all duration-500 backdrop-blur-xl text-xs tracking-[0.1em]"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={current.label}
+        className="flex items-center gap-2 px-3 py-2.5 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-all duration-500 backdrop-blur-xl text-xs tracking-[0.1em]"
       >
         {current.flag === 'kk' ? (
-          <img src="/flags/kk.svg" className="w-4 h-4 rounded-sm" />
+          <img src="/flags/kk.svg" alt={current.label} className="w-4 h-4 rounded-sm" />
         ) : (
           <span className={`fi fi-${current.flag} w-4 h-4`} />
         )}
-        <span className="text-[10px] font-medium">{current.label}</span>
+        <span className="language-current-label text-[10px] font-medium">{current.label}</span>
         <ChevronDown className={`w-3 h-3 transition-transform duration-500 ${open ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
@@ -42,14 +45,13 @@ export default function LanguageSwitcher() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute right-0 top-12 z-50 bg-lum-mid border border-lum-panel-border rounded-2xl overflow-hidden min-w-[160px] backdrop-blur-xl shadow-2xl"
+            className="absolute right-0 top-12 z-50 bg-lum-mid border border-lum-panel-border rounded-2xl overflow-hidden min-w-[160px] max-w-[calc(100vw-1.5rem)] backdrop-blur-xl shadow-2xl"
           >
             {LANGUAGES.map((l, i) => (
               <motion.button
                 key={l.code}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.1, x: 6 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => { setLang(l.code as Lang); setOpen(false) }}
@@ -57,7 +59,7 @@ export default function LanguageSwitcher() {
                   l.code === lang ? 'bg-lum-soft text-lum-ivory font-semibold' : 'text-lum-slate-warm'
                 }`}
               >
-                {l.flag === 'kk' ? <img src="/flags/kk.svg" className="w-4 h-4 rounded-sm" /> : <span className={`fi fi-${l.flag} w-4 h-4`} />}
+                {l.flag === 'kk' ? <img src="/flags/kk.svg" alt={l.label} className="w-4 h-4 rounded-sm" /> : <span aria-hidden="true" className={`fi fi-${l.flag} w-4 h-4`} />}
                 <span>{l.label}</span>
               </motion.button>
             ))}

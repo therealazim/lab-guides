@@ -279,7 +279,7 @@ export default function HomePage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-12 w-auto" /></a>
+            <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-9 sm:h-12 w-auto" /></a>
             <div>
               <p className="text-xs font-bold text-lum-ivory">고려대학교 IEH</p>
               <span className="text-lum-ivory font-bold text-xs tracking-[0.2em] uppercase">KMI - LUPIC</span>
@@ -301,7 +301,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-            className="text-[clamp(2.8rem,6.5vw,5.5rem)] font-light tracking-[-0.05em] leading-[1] text-lum-ivory mb-24"
+            className="text-[clamp(2.2rem,8.5vw,5.5rem)] font-light tracking-[-0.05em] leading-[1.05] text-lum-ivory mb-12 sm:mb-24 px-2"
           >
             {t('title')}<br />
             <strong className="font-semibold bg-gradient-to-r from-lum-ivory via-lum-silver to-lum-slate-light bg-clip-text text-transparent">{t('heroTagline')}</strong>
@@ -401,7 +401,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 1 }}
-            className="flex justify-center gap-6 sm:gap-10 md:gap-14 mt-20"
+            className="flex justify-center gap-4 sm:gap-10 md:gap-14 mt-16 sm:mt-20"
           >
             {[
               { value: filtered.length, label: t('heroStatEquipment') },
@@ -423,8 +423,8 @@ export default function HomePage() {
             transition={{ duration: 0.7, delay: 1.25, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-wrap items-center justify-center gap-3 mt-10"
           >
-            <Link to="/catalog" className="btn-lum-primary">{t('browseAllEquipment')}</Link>
-            <button type="button" onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="btn-lum-secondary">{t('latestUpdates')}</button>
+            <Link to="/catalog" className="btn-lum-primary w-full sm:w-auto justify-center">{t('browseAllEquipment')}</Link>
+            <button type="button" onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="btn-lum-secondary w-full sm:w-auto justify-center">{t('latestUpdates')}</button>
           </motion.div>
       </section>
 
@@ -565,7 +565,7 @@ export default function HomePage() {
             onClick={closeNewsViewer}
           >
             <motion.div
-              className="relative w-full max-w-6xl max-h-[92vh] flex flex-col items-center gap-4"
+              className="relative w-full max-w-6xl max-h-[92vh] flex flex-col items-center gap-3 sm:gap-4 px-1 sm:px-0"
               initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -575,16 +575,16 @@ export default function HomePage() {
               <div className="w-full flex items-center justify-between gap-4 px-1">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">{t('newsGallery')}</p>
-                  <h3 className="text-base md:text-lg text-white font-medium truncate mt-1">{newsViewer.title}</h3>
+                  <h3 className="text-base md:text-lg text-white font-medium line-clamp-2 mt-1">{newsViewer.title}</h3>
                 </div>
-                <button type="button" onClick={closeNewsViewer} aria-label={t('closeGallery')} className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors flex-shrink-0">
+                <button type="button" onClick={closeNewsViewer} aria-label={t('closeGallery')} className="w-11 h-11 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors flex-shrink-0 touch-manipulation">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="relative w-full flex items-center justify-center min-h-0">
                 {newsViewer.images.length > 1 && (
-                  <button type="button" onClick={() => moveNewsViewer(-1)} aria-label={t('previousImage')} className="absolute left-2 md:left-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <button type="button" onClick={() => moveNewsViewer(-1)} aria-label={t('previousImage')} className="absolute left-1 sm:left-2 md:left-4 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors touch-manipulation">
                     <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 )}
@@ -598,7 +598,7 @@ export default function HomePage() {
                   transition={{ duration: 0.2 }}
                 />
                 {newsViewer.images.length > 1 && (
-                  <button type="button" onClick={() => moveNewsViewer(1)} aria-label={t('nextImage')} className="absolute right-2 md:right-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <button type="button" onClick={() => moveNewsViewer(1)} aria-label={t('nextImage')} className="absolute right-1 sm:right-2 md:right-4 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors touch-manipulation">
                     <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 )}
@@ -609,7 +609,7 @@ export default function HomePage() {
                 {newsViewer.images.length > 1 && (
                   <div className="flex items-center gap-2 max-w-[min(70vw,32rem)] overflow-x-auto py-1 px-1">
                     {newsViewer.images.map((image, index) => (
-                      <button key={`${image}-${index}`} type="button" onClick={() => setNewsViewer(current => current ? { ...current, index } : current)} aria-label={`Open image ${index + 1}`} className={`w-14 h-10 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all ${newsViewer.index === index ? 'border-white' : 'border-white/15 opacity-55 hover:opacity-100'}`}>
+                      <button key={`${image}-${index}`} type="button" onClick={() => setNewsViewer(current => current ? { ...current, index } : current)} aria-label={`Open image ${index + 1}`} className={`w-16 h-11 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all ${newsViewer.index === index ? 'border-white' : 'border-white/15 opacity-55 hover:opacity-100'}`}>
                         <img src={image} alt="" className="w-full h-full object-cover" />
                       </button>
                     ))}
@@ -623,7 +623,7 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* ─── LOGO TICKER ─── */}
-      <div className="py-16 px-8 md:px-12 lg:px-16 border-t border-b border-lum-panel-border overflow-hidden">
+      <div className="py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 border-t border-b border-lum-panel-border overflow-hidden">
         <p className="text-center text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm opacity-50 mb-8">
           {t('partners')}
         </p>
@@ -644,11 +644,11 @@ export default function HomePage() {
       </div>
 
       {/* ─── FOOTER ─── */}
-      <footer className="py-16 px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
+      <footer className="py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
         <div className="w-full">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
             <div className="flex items-center gap-3">
-              <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-20 w-auto" /></a>
+              <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-14 sm:h-20 w-auto" /></a>
               <div>
                 <p className="text-xs font-bold text-lum-slate-light/70">고려대학교 IEH</p>
                 <span className="text-sm font-semibold tracking-[0.2em] uppercase text-lum-slate-light/70">KMI - LUPIC</span>

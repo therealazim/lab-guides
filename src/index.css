@@ -248,3 +248,43 @@ input:focus, textarea:focus, select:focus {
 .tiptap strong { font-weight: 600; }
 .tiptap em { font-style: italic; }
 .tiptap u { text-decoration: underline; }
+
+
+/* ── Mobile interaction defaults ── */
+@media (max-width: 639px) {
+  html { scroll-padding-top: 72px; }
+
+  .btn-lum-primary,
+  .btn-lum-secondary {
+    min-height: 44px;
+    padding-inline: 18px;
+    line-height: 1.25;
+  }
+
+  .lum-card:hover {
+    transform: none;
+  }
+
+  .nav-link {
+    padding-top: 12px;
+  }
+
+  .tiptap,
+  .prose {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Keep long scientific names and database content readable on narrow screens. */
+@media (max-width: 420px) {
+  h1, h2, h3, p, span, a, button, label {
+    overflow-wrap: anywhere;
+  }
+}
+
+
+@media (max-width: 420px) {
+  .language-current-label {
+    display: none;
+  }
+}

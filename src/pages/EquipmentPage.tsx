@@ -177,7 +177,7 @@ export default function EquipmentPage() {
         </div>
       </header>
 
-      <main className="w-full px-8 md:px-12 lg:px-16 py-12 pt-20">
+      <main className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-8 sm:py-12 pt-20">
         {/* ─── HERO ─── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -206,7 +206,7 @@ export default function EquipmentPage() {
               </p>
 
               {/* Meta badges */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 gap-2.5">
                 {meta.brand && <InfoBadge icon={Tag} label={t('brand')} value={meta.brand} />}
                 {meta.model && <InfoBadge icon={Info} label={t('model')} value={meta.model} />}
                 {meta.quantity && <InfoBadge icon={Hash} label={t('quantity')} value={meta.quantity} />}
@@ -224,7 +224,7 @@ export default function EquipmentPage() {
                     }`} />
                     <div className="min-w-0">
                       <p className="text-[9px] tracking-[0.15em] uppercase text-lum-slate-warm/70">{t('status')}</p>
-                      <p className="text-xs font-medium text-lum-ivory truncate">{meta.status}</p>
+                      <p className="text-xs font-medium text-lum-ivory truncate">{t(({ AVAILABLE: 'statusAvailable', IN_USE: 'statusInUse', MAINTENANCE: 'statusMaintenance', OUT_OF_SERVICE: 'statusOutOfService', UNAVAILABLE: 'statusUnavailable', UNKNOWN: 'statusUnknown' } as Record<string, string>)[String(meta.status).toUpperCase()] || 'statusUnknown')}</p>
                     </div>
                   </div>
                 )}
@@ -352,7 +352,7 @@ export default function EquipmentPage() {
           transition={{ duration: 1.2, ease: silkEase, delay: 0.6 }}
           className="lum-card p-4 md:p-6 lg:p-8 mb-6"
         >
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('manual')}</h2>
               <p className="text-sm font-light leading-relaxed text-lum-slate-warm/60 mt-2">{manualBlobUrl ? t('manualAvailable') : t('contentPending')}</p>
@@ -371,7 +371,7 @@ export default function EquipmentPage() {
             &copy; 2026 <span className="text-lum-slate-light font-semibold">KMI / LUPIC Laboratory</span>
           </p>
           <p className="text-[11px] text-lum-slate-warm/50 mt-3 max-w-2xl mx-auto leading-relaxed">
-            All information, media, and images on this site are credited to their respective owners. Use of materials is for educational purposes only.
+            {t('footerDisclaimer')}
           </p>
         </footer>
       </main>

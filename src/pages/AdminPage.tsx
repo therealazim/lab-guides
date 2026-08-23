@@ -436,24 +436,24 @@ export default function AdminPage() {
       <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-2 sm:px-4 py-2.5 flex items-center justify-between gap-1">
           <div className="flex items-center gap-1 sm:gap-3">
-            <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? t('adminCloseMenu') : t('adminOpenMenu')} title={menuOpen ? t('adminCloseMenu') : t('adminOpenMenu')} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
+            <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? t('adminCloseMenu') : t('adminOpenMenu')} title={menuOpen ? t('adminCloseMenu') : t('adminOpenMenu')} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-11 min-h-11 flex items-center justify-center touch-manipulation">
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
             <button type="button" onClick={() => openSection('home')} aria-label={t('adminGoDashboard')} className="flex-shrink-0">
               <img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" />
             </button>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-lum-ivory truncate">{t('adminWorkspace')}</p>
+            <div className="min-w-0 max-w-[7.5rem] sm:max-w-none">
+              <p className="hidden sm:block text-sm font-bold text-lum-ivory truncate">{t('adminWorkspace')}</p>
               <p className="text-[10px] text-lum-slate-warm tracking-[0.12em] uppercase truncate">{activeSectionMeta.label}</p>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
             <LanguageSwitcher />
-            <button onClick={() => navigate('/')} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
+            <button onClick={() => navigate('/')} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminBack')}</span>
             </button>
-            <button onClick={async () => { try { await logoutAdmin() } finally { setAuthed(false) } }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
+            <button onClick={async () => { try { await logoutAdmin() } finally { setAuthed(false) } }} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
               <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminLogout')}</span>
             </button>
           </div>
@@ -804,7 +804,7 @@ export default function AdminPage() {
               </label>
               <div className="flex items-center gap-3">
                 <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImgs(prev => [...prev, r.result as string]); r.readAsDataURL(f) } }} className="hidden" />
-                <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+                <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 min-h-11 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm touch-manipulation">
                   <ImageIcon className="w-4 h-4" /> {newsImgs.length > 0 ? `${t('adminAddAnother')} (${newsImgs.length})` : t('adminUploadImage')}
                 </button>
                 {newsImgs.length > 0 && (
@@ -883,7 +883,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
             {['brand','model','location','quantity'].map(f => {
               const labels: Record<string,string> = { brand: t('adminBrand'), model: t('adminModel'), location: t('adminLocation'), quantity: t('adminQty') }
               return (
@@ -918,20 +918,20 @@ export default function AdminPage() {
             <div>
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminImage')}</label>
               <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
-              <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+              <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 min-h-11 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm touch-manipulation">
                 <Upload className="w-4 h-4" /> {image ? t('adminChange') : t('adminUpload')}
               </button>
               {image && (
                 <div className="mt-2 relative inline-block">
                   <img src={image} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />
-                  <button onClick={() => setImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">×</button>
+                  <button onClick={() => setImage(null)} className="absolute -top-3 -right-3 w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center text-xs touch-manipulation">×</button>
                 </div>
               )}
             </div>
             <div>
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminManualPdf')}</label>
               <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
-              <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
+              <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 min-h-11 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm touch-manipulation">
                 <Upload className="w-4 h-4" /> {manual ? t('adminChangePdf') : t('adminUploadManualPdf')}
               </button>
               {manual && (
