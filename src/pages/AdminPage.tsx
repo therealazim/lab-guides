@@ -213,7 +213,7 @@ export default function AdminPage() {
       await loginAdmin(username, password)
       setLoginSuccess(true)
       setUsername(''); setPassword('')
-      setTimeout(() => { setAuthed(true); setLoginSuccess(false); setLoginBusy(false) }, 900)
+      setTimeout(() => { setAuthed(true); setLoginSuccess(false); setLoginBusy(false) }, 1500)
     } catch (e: any) {
       setLoginErrorMessage(e?.message || 'Unable to sign in. Check the server configuration.')
       setLoginError(true)
