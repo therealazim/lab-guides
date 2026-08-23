@@ -40,9 +40,9 @@ export default function HomePage() {
   const dropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    document.title = 'KMI - LUPIC Laboratory Equipment Guide'
-    document.querySelector('meta[name="description"]')?.setAttribute('content', 'KMI - LUPIC Laboratory Equipment Guide — multilingual equipment documentation for researchers and students.')
-  }, [])
+    document.title = t('title')
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t('subtitle'))
+  }, [lang, t])
 
   const getNewsImages = (item: any): string[] => {
     const images = Array.isArray(item?.images) ? item.images.filter(Boolean) : []
@@ -53,7 +53,7 @@ export default function HomePage() {
     const images = getNewsImages(item)
     if (!images.length) return
     setPlaying(false)
-    setNewsViewer({ images, index: Math.max(0, Math.min(index, images.length - 1)), title: item?.title || 'News image' })
+    setNewsViewer({ images, index: Math.max(0, Math.min(index, images.length - 1)), title: item?.title || t('newsImage') })
   }
 
   const closeNewsViewer = () => {
@@ -423,8 +423,8 @@ export default function HomePage() {
             transition={{ duration: 0.7, delay: 1.25, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-wrap items-center justify-center gap-3 mt-10"
           >
-            <Link to="/catalog" className="btn-lum-primary">Browse all equipment</Link>
-            <button type="button" onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="btn-lum-secondary">Latest updates</button>
+            <Link to="/catalog" className="btn-lum-primary">{t('browseAllEquipment')}</Link>
+            <button type="button" onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="btn-lum-secondary">{t('latestUpdates')}</button>
           </motion.div>
       </section>
 
@@ -433,7 +433,7 @@ export default function HomePage() {
         {newsItems.length > 0 ? (
           <>
           <h2 className="text-center text-[clamp(28px,3.5vw,40px)] font-light text-lum-ivory mb-12" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>
-            KMI - LUPIC Today
+            {t('newsToday')}
           </h2>
 
           <div className="w-full">
@@ -441,7 +441,7 @@ export default function HomePage() {
               {/* Prev button */}
               <button
                 onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
-                aria-label="Previous news post"
+                aria-label={t('previousNews')}
                 className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
@@ -470,13 +470,13 @@ export default function HomePage() {
                       }
                       return (
                         <>
-                          <img src={imgs[0]} alt={`${newsItems[newsIdx]?.title || 'News'} cover`} className="w-full h-full object-cover bg-lum-soft transition-transform duration-700 group-hover:scale-[1.02]" />
+                          <img src={imgs[0]} alt={`${newsItems[newsIdx]?.title || t('newsImage')} ${t('newsCover')}`} className="w-full h-full object-cover bg-lum-soft transition-transform duration-700 group-hover:scale-[1.02]" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/0 to-black/10" />
                           <div className="absolute inset-x-0 bottom-0 p-4 md:p-5 flex items-end justify-between gap-3">
                             <span className="inline-flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md border border-white/15 px-3 py-2 text-xs text-white">
-                              <Maximize2 className="w-3.5 h-3.5" /> View photo{imgs.length > 1 ? `s · ${imgs.length}` : ''}
+                              <Maximize2 className="w-3.5 h-3.5" /> {t('viewPhoto')}{imgs.length > 1 ? ` · ${imgs.length}` : ''}
                             </span>
-                            {imgs.length > 1 && <span className="text-[10px] text-white/80">Click to open gallery</span>}
+                            {imgs.length > 1 && <span className="text-[10px] text-white/80">{t('clickOpenGallery')}</span>}
                           </div>
                         </>
                       )
@@ -507,7 +507,7 @@ export default function HomePage() {
                     )}
                     {(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at) && (
                       <p className="text-[10px] uppercase tracking-[0.16em] text-lum-slate-warm/60 mb-6">
-                        Uploaded {formatNewsDate(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at)}
+                        {t('uploaded')} {formatNewsDate(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at)}
                       </p>
                     )}
 
@@ -534,7 +534,7 @@ export default function HomePage() {
               {/* Next button */}
               <button
                 onClick={() => setNewsIdx(i => (i + 1) % newsItems.length)}
-                aria-label="Next news post"
+                aria-label={t('nextNews')}
                 className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -544,9 +544,9 @@ export default function HomePage() {
           </>
         ) : (
           <div className="max-w-2xl mx-auto text-center py-8">
-            <p className="text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm/60 mb-4">KMI - LUPIC Today</p>
-            <h2 className="text-[clamp(24px,3.5vw,40px)] font-light text-lum-ivory" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>News updates are coming soon</h2>
-            <p className="text-sm text-lum-slate-light/60 leading-relaxed mt-4">The laboratory team will publish announcements, events, and equipment updates here.</p>
+            <p className="text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm/60 mb-4">{t('newsToday')}</p>
+            <h2 className="text-[clamp(24px,3.5vw,40px)] font-light text-lum-ivory" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>{t('newsUpdatesSoon')}</h2>
+            <p className="text-sm text-lum-slate-light/60 leading-relaxed mt-4">{t('newsUpdatesSoonDesc')}</p>
           </div>
         )}
       </section>
@@ -574,17 +574,17 @@ export default function HomePage() {
             >
               <div className="w-full flex items-center justify-between gap-4 px-1">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">News gallery</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">{t('newsGallery')}</p>
                   <h3 className="text-base md:text-lg text-white font-medium truncate mt-1">{newsViewer.title}</h3>
                 </div>
-                <button type="button" onClick={closeNewsViewer} aria-label="Close image gallery" className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors flex-shrink-0">
+                <button type="button" onClick={closeNewsViewer} aria-label={t('closeGallery')} className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors flex-shrink-0">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="relative w-full flex items-center justify-center min-h-0">
                 {newsViewer.images.length > 1 && (
-                  <button type="button" onClick={() => moveNewsViewer(-1)} aria-label="Previous image" className="absolute left-2 md:left-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <button type="button" onClick={() => moveNewsViewer(-1)} aria-label={t('previousImage')} className="absolute left-2 md:left-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
                     <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 )}
@@ -598,7 +598,7 @@ export default function HomePage() {
                   transition={{ duration: 0.2 }}
                 />
                 {newsViewer.images.length > 1 && (
-                  <button type="button" onClick={() => moveNewsViewer(1)} aria-label="Next image" className="absolute right-2 md:right-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <button type="button" onClick={() => moveNewsViewer(1)} aria-label={t('nextImage')} className="absolute right-2 md:right-4 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
                     <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 )}
@@ -616,7 +616,7 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              <p className="text-[10px] text-white/40">Use the arrow keys to navigate · Press Esc to close</p>
+              <p className="text-[10px] text-white/40">{t('galleryHelp')}</p>
             </motion.div>
           </motion.div>
         )}
@@ -625,7 +625,7 @@ export default function HomePage() {
       {/* ─── LOGO TICKER ─── */}
       <div className="py-16 px-8 md:px-12 lg:px-16 border-t border-b border-lum-panel-border overflow-hidden">
         <p className="text-center text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm opacity-50 mb-8">
-          Partners
+          {t('partners')}
         </p>
         <div className="flex w-max animate-[tickerScroll_30s_linear_infinite]" style={{ willChange: 'transform' }}>
           {[...Array(3)].flatMap(() => [
@@ -657,11 +657,11 @@ export default function HomePage() {
             <div className="flex items-center gap-4">
               <a href="/#/admin" className="inline-flex items-center gap-1.5 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Admin
+                {t('adminLink')}
               </a>
               <Link to="/catalog" className="inline-flex items-center gap-1.5 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                Catalog
+                {t('catalogLink')}
               </Link>
             </div>
           </div>
@@ -670,7 +670,7 @@ export default function HomePage() {
               &copy; 2026 <span className="text-lum-slate-light font-semibold">KMI / LUPIC Laboratory</span>
             </p>
             <p className="text-[11px] text-lum-slate-warm/50 mt-3 max-w-2xl mx-auto leading-relaxed">
-              All information, media, and images on this site are credited to their respective owners. Use of materials is for educational purposes only.
+              {t('footerDisclaimer')}
             </p>
           </div>
         </div>

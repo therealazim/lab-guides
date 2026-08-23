@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import { useI18n } from '../i18n'
 
 interface Props {
   open: boolean
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function ConfirmModal({ open, title, message, onConfirm, onCancel }: Props) {
+  const { t } = useI18n()
   return (
     <AnimatePresence>
       {open && (
@@ -31,8 +33,8 @@ export default function ConfirmModal({ open, title, message, onConfirm, onCancel
             <h3 className="text-base font-semibold text-lum-ivory mb-2">{title}</h3>
             <p className="text-sm text-lum-slate-light mb-6">{message}</p>
             <div className="flex gap-3 justify-end">
-              <button onClick={onCancel} className="px-4 py-2 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">Cancel</button>
-              <button onClick={() => { onConfirm(); onCancel() }} className="px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors text-xs font-medium">Delete</button>
+              <button onClick={onCancel} className="px-4 py-2 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">{t('adminCancel')}</button>
+              <button onClick={() => { onConfirm(); onCancel() }} className="px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors text-xs font-medium">{t('adminDelete')}</button>
             </div>
           </motion.div>
         </motion.div>

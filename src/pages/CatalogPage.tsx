@@ -10,7 +10,7 @@ import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
 
 export default function CatalogPage() {
-  const { lang } = useI18n()
+  const { lang, t } = useI18n()
   const navigate = useNavigate()
   const [adminItems, setAdminItems] = useState<any[]>([])
   const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
@@ -24,9 +24,10 @@ export default function CatalogPage() {
   const [sortBy, setSortBy] = useState('name')
 
   useEffect(() => {
-    document.title = 'Equipment Catalog | KMI - LUPIC'
-    return () => { document.title = 'KMI - LUPIC Laboratory Equipment Guide' }
-  }, [])
+    document.title = `${t('equipmentCatalog')} | ${t('title')}`
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t('subtitle'))
+    return () => { document.title = t('title') }
+  }, [lang, t])
 
   useEffect(() => {
         const initial = (window as any).__INITIAL_DATA__
@@ -125,45 +126,45 @@ export default function CatalogPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-lum-slate-warm/60 mb-3">Equipment Catalog</p>
+          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-lum-slate-warm/60 mb-3">{t('equipmentCatalog')}</p>
           <h1 className="text-[clamp(1.8rem,3.5vw,2.6rem)] font-light tracking-[-0.04em] text-lum-ivory">
-            All Equipment <strong className="font-semibold">({filteredEquipment.length})</strong>
+            {t('allEquipment')} <strong className="font-semibold">({filteredEquipment.length})</strong>
           </h1>
-          <p className="text-xs text-lum-slate-warm/60 mt-3">Showing {filteredEquipment.length} of {allEquipments.length} equipment guides</p>
+          <p className="text-xs text-lum-slate-warm/60 mt-3">{t('showing')} {filteredEquipment.length} {t('of')} {allEquipments.length} {t('equipmentGuides')}</p>
         </motion.div>
 
         <div className="lum-card p-3 md:p-4 mb-6 flex flex-col md:flex-row gap-3">
           <label className="relative flex-1">
-            <span className="sr-only">Search equipment</span>
+            <span className="sr-only">{t('search')}</span>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lum-slate-warm/50" />
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name, manufacturer, model, or room" className="w-full pl-10 pr-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/50 outline-none focus:border-lum-slate-light/30" />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('searchCatalog')} className="w-full pl-10 pr-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/50 outline-none focus:border-lum-slate-light/30" />
           </label>
           <label className="relative md:w-48">
-            <span className="sr-only">Filter by status</span>
+            <span className="sr-only">{t('filterByStatus')}</span>
             <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lum-slate-warm/50 pointer-events-none" />
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full pl-10 pr-3 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory outline-none">
-              <option value="ALL">All statuses</option>
-              <option value="AVAILABLE">Available</option>
-              <option value="IN_USE">In use</option>
-              <option value="MAINTENANCE">Maintenance</option>
-              <option value="OUT_OF_SERVICE">Out of service</option>
+              <option value="ALL">{t('allStatuses')}</option>
+              <option value="AVAILABLE">{t('statusAvailable')}</option>
+              <option value="IN_USE">{t('statusInUse')}</option>
+              <option value="MAINTENANCE">{t('statusMaintenance')}</option>
+              <option value="OUT_OF_SERVICE">{t('statusOutOfService')}</option>
             </select>
           </label>
           <label className="md:w-48">
-            <span className="sr-only">Sort equipment</span>
+            <span className="sr-only">{t('sortEquipment')}</span>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-full px-3 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory outline-none">
-              <option value="name">Sort: Name</option>
-              <option value="brand">Sort: Manufacturer</option>
-              <option value="status">Sort: Status</option>
+              <option value="name">{t('sortName')}</option>
+              <option value="brand">{t('sortManufacturer')}</option>
+              <option value="status">{t('sortStatus')}</option>
             </select>
           </label>
         </div>
 
         {filteredEquipment.length === 0 ? (
           <div className="lum-card p-10 text-center">
-            <p className="text-lum-ivory font-medium">No equipment matches these filters.</p>
-            <p className="text-sm text-lum-slate-warm/60 mt-2">Try a different search term or reset the status filter.</p>
-            <button type="button" onClick={() => { setQuery(''); setStatusFilter('ALL') }} className="btn-lum-secondary mt-5">Reset filters</button>
+            <p className="text-lum-ivory font-medium">{t('noEquipmentMatches')}</p>
+            <p className="text-sm text-lum-slate-warm/60 mt-2">{t('tryDifferentFilters')}</p>
+            <button type="button" onClick={() => { setQuery(''); setStatusFilter('ALL') }} className="btn-lum-secondary mt-5">{t('resetFilters')}</button>
           </div>
         ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

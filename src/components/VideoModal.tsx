@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 interface VideoModalProps {
   isOpen: boolean
@@ -9,6 +10,7 @@ interface VideoModalProps {
 }
 
 export default function VideoModal({ isOpen, onClose, videoUrl, title }: VideoModalProps) {
+  const { t } = useI18n()
   return (
     <AnimatePresence>
       {isOpen && (
@@ -29,6 +31,8 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title }: VideoMo
             {/* Close button */}
             <button
               onClick={onClose}
+              aria-label={t('close')}
+              title={t('close')}
               className="absolute top-4 right-4 z-10 p-2.5 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 backdrop-blur-sm"
             >
               <X className="w-6 h-6 text-white" />

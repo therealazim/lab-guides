@@ -10,6 +10,7 @@ import AdminPage from './pages/AdminPage'
 import CatalogPage from './pages/CatalogPage'
 
 function ScrollToTop() {
+  const { t } = useI18n()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -26,7 +27,7 @@ function ScrollToTop() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          aria-label="Scroll to top"
+          aria-label={t('scrollToTop')}
           className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-lum-slate-light/10 border border-lum-panel-border backdrop-blur-xl flex items-center justify-center shadow-2xl hover:bg-lum-slate-light/20 active:bg-lum-slate-light/30 transition-colors shadow-lum-slate-light/20 shadow-lg"
         >
           <ArrowUp className="w-5 h-5 text-lum-slate-light drop-shadow-[0_0_6px_rgba(176,184,196,0.5)]" />

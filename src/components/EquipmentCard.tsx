@@ -15,6 +15,9 @@ export default function EquipmentCard({ equipment, index }: Props) {
   const data = equipment[lang as Lang] || equipment.en
   const slug = equipment.slug
   const imgSrc = (imageMap as Record<string, string>)[slug] || equipment.image || ''
+  const status = String(equipment.status || '').toUpperCase()
+  const statusKey = ({ AVAILABLE: 'statusAvailable', IN_USE: 'statusInUse', MAINTENANCE: 'statusMaintenance', OUT_OF_SERVICE: 'statusOutOfService', UNAVAILABLE: 'statusUnavailable', UNKNOWN: 'statusUnknown' } as Record<string, string>)[status] || 'statusUnknown'
+  const isAvailable = status === 'AVAILABLE'
 
   return (
     <motion.div
@@ -55,12 +58,12 @@ export default function EquipmentCard({ equipment, index }: Props) {
           {/* Status badge */}
           {equipment.status && (
             <div className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-xl text-[9px] font-semibold tracking-[0.1em] uppercase ${
-              equipment.status === 'AVAILABLE' ? 'bg-emerald-500/20 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/20 border border-red-500/20 text-red-400'
+              isAvailable ? 'bg-emerald-500/20 border border-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 border border-amber-500/20 text-amber-300'
             }`}>
               <span className={`w-2 h-2 rounded-full ${
-                equipment.status === 'AVAILABLE' ? 'bg-emerald-400' : 'bg-red-400'
+                isAvailable ? 'bg-emerald-400' : 'bg-amber-300'
               }`} />
-              {equipment.status}
+              {t(statusKey)}
             </div>
           )}
         </div>

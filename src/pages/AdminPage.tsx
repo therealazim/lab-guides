@@ -215,7 +215,7 @@ export default function AdminPage() {
       setUsername(''); setPassword('')
       setTimeout(() => { setAuthed(true); setLoginSuccess(false); setLoginBusy(false) }, 1500)
     } catch (e: any) {
-      setLoginErrorMessage(e?.message || 'Unable to sign in. Check the server configuration.')
+      setLoginErrorMessage(e?.message || t('adminSignInFailed'))
       setLoginError(true)
       setLoginBusy(false)
       setTimeout(() => setLoginError(false), 2500)
@@ -316,12 +316,12 @@ export default function AdminPage() {
         await save([...savedItems, data])
       }
       setSaveProgress(100)
-      setToastMsg('Changes applied successfully!'); setToastShow(true)
+      setToastMsg(t('adminSaveSuccess')); setToastShow(true)
       setTimeout(() => { setSaving(false); setSaveProgress(0); resetForm() }, 1500)
     } catch (e: any) {
       setSaving(false)
       setSaveProgress(0)
-      setToastMsg('Error: ' + (e?.message || 'Save failed')); setToastShow(true)
+      setToastMsg(`${t('adminErrorPrefix')}: ${e?.message || t('adminSaveFailed')}`); setToastShow(true)
     }
   }
 
@@ -329,7 +329,7 @@ export default function AdminPage() {
   if (!authChecked) {
     return (
       <div className="min-h-screen bg-lum-deep flex items-center justify-center p-4">
-        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" aria-label="Checking authentication" />
+        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" aria-label={t('adminChecking')} />
       </div>
     )
   }
@@ -354,9 +354,9 @@ export default function AdminPage() {
               style={{ width: '180px', height: '180px', margin: '0 auto' }}
               autoplay
             ></dotlottie-wc>
-            <h1 className="text-lg font-semibold text-lum-ivory">Sign-in unsuccessful</h1>
-            <p className="text-sm text-lum-slate-warm/65 mt-2 leading-relaxed">{loginErrorMessage || 'Please check your credentials and try again.'}</p>
-            <button type="button" onClick={() => setLoginError(false)} className="btn-lum-secondary mt-5">Try again</button>
+            <h1 className="text-lg font-semibold text-lum-ivory">{t('adminSignInFailed')}</h1>
+            <p className="text-sm text-lum-slate-warm/65 mt-2 leading-relaxed">{loginErrorMessage || t('adminWrong')}</p>
+            <button type="button" onClick={() => setLoginError(false)} className="btn-lum-secondary mt-5">{t('adminTryAgain')}</button>
           </div>
         </div>
       )
@@ -366,7 +366,7 @@ export default function AdminPage() {
         <div className="lum-card p-8 max-w-sm w-full text-center">
           <img src="/korea-univ-logo.svg" alt="Korea University" className="h-16 sm:h-24 mx-auto mb-6" />
           <h1 className="text-lg font-bold text-lum-ivory mb-2">{t('adminPanel')}</h1>
-          <p className="text-[10px] text-lum-slate-warm mb-6 tracking-[0.15em] uppercase">KMI - LUPIC Laboratory</p>
+          <p className="text-[10px] text-lum-slate-warm mb-6 tracking-[0.15em] uppercase">{t('title')}</p>
           <input type="text" value={username} onChange={e => setUsername(e.target.value)}
             placeholder={t('adminUsername')}
             onKeyDown={e => { if (e.key === 'Enter') pwRef.current?.focus() }}
@@ -380,42 +380,42 @@ export default function AdminPage() {
               {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <button onClick={login} disabled={loginBusy} className="btn-lum-primary w-full justify-center disabled:opacity-50 disabled:cursor-wait">{loginBusy ? 'Checking…' : t('adminLoginBtn')}</button>
+          <button onClick={login} disabled={loginBusy} className="btn-lum-primary w-full justify-center disabled:opacity-50 disabled:cursor-wait">{loginBusy ? t('adminChecking') : t('adminLoginBtn')}</button>
         </div>
       </div>
     )
   }
 
   const saveNews = async () => {
-    if (!newsTitle.trim()) { alert('Title is required'); return }
+    if (!newsTitle.trim()) { setToastMsg(t('adminTitleRequired')); setToastShow(true); return }
     const body: any = { title: newsTitle, description: newsDesc, upload_date: newsDate || todayDate(), images: newsImgs, id: newsEditIdx ?? undefined }
     try {
       const r = await fetch('/api/news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const d = await r.json()
       if (d.ok) {
-        setToastMsg('News saved!'); setToastShow(true)
+        setToastMsg(t('adminNewsSaved')); setToastShow(true)
         setNewsTitle(''); setNewsDesc(''); setNewsDate(todayDate()); setNewsImgs([]); setNewsEditIdx(null)
         loadNews()
       }
     } catch (e: any) {
-      setToastMsg('Error: ' + (e?.message || 'Save failed')); setToastShow(true)
+      setToastMsg(`${t('adminErrorPrefix')}: ${e?.message || t('adminSaveFailed')}`); setToastShow(true)
     }
   }
 
   const deleteNewsItem = async (id: number) => {
     try {
       await fetch('/api/news/' + id, { method: 'DELETE' })
-      setToastMsg('News deleted'); setToastShow(true)
+      setToastMsg(t('adminNewsDeleted')); setToastShow(true)
       loadNews()
     } catch {}
   }
 
   const sectionItems = [
-    { id: 'home' as AdminSection, label: 'Dashboard', description: 'Overview and shortcuts', icon: LayoutDashboard },
-    { id: 'equipment' as AdminSection, label: 'Equipment', description: 'Add, edit, or hide guides', icon: List },
-    { id: 'partners' as AdminSection, label: 'Partners', description: 'Manage logos and links', icon: Link2 },
-    { id: 'translations' as AdminSection, label: 'Translations', description: 'Import or export language text', icon: Languages },
-    { id: 'news' as AdminSection, label: 'News', description: 'Publish homepage updates', icon: Newspaper },
+    { id: 'home' as AdminSection, label: t('adminDashboard'), description: t('adminOverview'), icon: LayoutDashboard },
+    { id: 'equipment' as AdminSection, label: t('allEquipment'), description: t('adminEquipmentDesc'), icon: List },
+    { id: 'partners' as AdminSection, label: t('partners'), description: t('adminPartnersDesc'), icon: Link2 },
+    { id: 'translations' as AdminSection, label: t('adminTranslations'), description: t('adminTranslationsDesc'), icon: Languages },
+    { id: 'news' as AdminSection, label: t('news'), description: t('adminNewsDesc'), icon: Newspaper },
   ]
   const activeSectionMeta = sectionItems.find(item => item.id === activeSection) || sectionItems[0]
 
@@ -436,14 +436,14 @@ export default function AdminPage() {
       <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-2 sm:px-4 py-2.5 flex items-center justify-between gap-1">
           <div className="flex items-center gap-1 sm:gap-3">
-            <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close admin menu' : 'Open admin menu'} title={menuOpen ? 'Close admin menu' : 'Open admin menu'} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
+            <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? t('adminCloseMenu') : t('adminOpenMenu')} title={menuOpen ? t('adminCloseMenu') : t('adminOpenMenu')} className="p-2 rounded-lg bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            <button type="button" onClick={() => openSection('home')} aria-label="Go to admin dashboard" className="flex-shrink-0">
+            <button type="button" onClick={() => openSection('home')} aria-label={t('adminGoDashboard')} className="flex-shrink-0">
               <img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 sm:h-12 w-auto" />
             </button>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-lum-ivory truncate">Admin workspace</p>
+              <p className="text-sm font-bold text-lum-ivory truncate">{t('adminWorkspace')}</p>
               <p className="text-[10px] text-lum-slate-warm tracking-[0.12em] uppercase truncate">{activeSectionMeta.label}</p>
             </div>
           </div>
@@ -465,7 +465,7 @@ export default function AdminPage() {
         {menuOpen && (
           <motion.button
             type="button"
-            aria-label="Close admin menu"
+            aria-label={t('adminCloseMenu')}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -478,15 +478,15 @@ export default function AdminPage() {
         initial={false}
         animate={{ x: menuOpen ? 0 : '-100%' }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        aria-label="Admin navigation"
+        aria-label={t('adminNavigation')}
         className="fixed top-0 left-0 bottom-0 z-50 w-[min(20rem,88vw)] bg-lum-mid border-r border-lum-panel-border pt-20 px-4 overflow-y-auto shadow-2xl"
       >
         <div className="flex items-center justify-between mb-5 px-1">
           <div>
-            <p className="text-[9px] tracking-[0.2em] uppercase text-lum-slate-warm/60">Workspace</p>
-            <p className="text-sm font-semibold text-lum-ivory">Admin tools</p>
+            <p className="text-[9px] tracking-[0.2em] uppercase text-lum-slate-warm/60">{t('workspace')}</p>
+            <p className="text-sm font-semibold text-lum-ivory">{t('adminTools')}</p>
           </div>
-          <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close admin menu" className="p-2 rounded-lg text-lum-slate-warm hover:text-lum-ivory hover:bg-lum-panel-bg transition-colors">
+          <button type="button" onClick={() => setMenuOpen(false)} aria-label={t('adminCloseMenu')} className="p-2 rounded-lg text-lum-slate-warm hover:text-lum-ivory hover:bg-lum-panel-bg transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -512,9 +512,9 @@ export default function AdminPage() {
         <div className="mt-8 p-3.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
           <div className="flex items-center gap-2 text-lum-slate-light mb-2">
             <Settings2 className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">Quick guide</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">{t('adminQuickGuide')}</span>
           </div>
-          <p className="text-[10px] leading-relaxed text-lum-slate-warm/70">Start with Equipment to update guides. Use News for homepage updates, Partners for logos, and Translations for language text.</p>
+          <p className="text-[10px] leading-relaxed text-lum-slate-warm/70">{t('adminQuickGuideText')}</p>
         </div>
       </motion.aside>
 
@@ -535,16 +535,16 @@ export default function AdminPage() {
             />
             <div className="relative py-8 md:py-12">
               <div className="max-w-3xl mb-8">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lum-slate-light mb-3">Control center</p>
-                <h1 className="text-3xl md:text-4xl font-light tracking-[-0.04em] text-lum-ivory mb-3">What would you like to update?</h1>
-                <p className="text-sm leading-relaxed text-lum-slate-warm/80">Choose a workspace below. Each area handles one kind of content, so you can make changes without searching through a crowded screen.</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lum-slate-light mb-3">{t('adminControlCenter')}</p>
+                <h1 className="text-3xl md:text-4xl font-light tracking-[-0.04em] text-lum-ivory mb-3">{t('adminWhatUpdate')}</h1>
+                <p className="text-sm leading-relaxed text-lum-slate-warm/80">{t('adminChooseWorkspace')}</p>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                 {[
-                  { label: 'Visible equipment', value: staticEquipments.length + savedItems.length - hiddenSlugs.length },
-                  { label: 'Partners', value: partners.length },
-                  { label: 'News posts', value: newsItems.length },
-                  { label: 'Translation keys', value: transKeys.length || Object.keys(UI_STRINGS.en).length },
+                  { label: t('adminVisibleEquipment'), value: staticEquipments.length + savedItems.length - hiddenSlugs.length },
+                  { label: t('partners'), value: partners.length },
+                  { label: t('adminNewsPosts'), value: newsItems.length },
+                  { label: t('adminTranslationKeys'), value: transKeys.length || Object.keys(UI_STRINGS.en).length },
                 ].map(stat => (
                   <div key={stat.label} className="lum-card p-4">
                     <p className="text-2xl font-light text-lum-ivory">{stat.value}</p>
@@ -571,12 +571,12 @@ export default function AdminPage() {
         {activeSection !== 'home' && (
           <div className="flex items-start justify-between gap-4 mb-7">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lum-slate-light mb-2">{editIdx !== null ? 'Editing equipment' : activeSectionMeta.label}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lum-slate-light mb-2">{editIdx !== null ? t('adminEditingEquipment') : activeSectionMeta.label}</p>
               <h1 className="text-2xl md:text-3xl font-light tracking-[-0.04em] text-lum-ivory">{editIdx !== null ? t('adminEdit') : activeSectionMeta.label}</h1>
-              <p className="text-xs leading-relaxed text-lum-slate-warm/70 mt-2 max-w-2xl">{editIdx !== null ? 'Update the guide details below, then save your changes.' : activeSectionMeta.description}</p>
+              <p className="text-xs leading-relaxed text-lum-slate-warm/70 mt-2 max-w-2xl">{editIdx !== null ? t('adminUpdateGuide') : activeSectionMeta.description}</p>
             </div>
             <button type="button" onClick={() => openSection('home')} className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full border border-lum-panel-border text-[10px] text-lum-slate-warm hover:text-lum-ivory hover:border-lum-slate-light/30 transition-colors flex-shrink-0">
-              <ArrowLeft className="w-3.5 h-3.5" /> Dashboard
+              <ArrowLeft className="w-3.5 h-3.5" /> {t('adminDashboard')}
             </button>
           </div>
         )}
@@ -590,7 +590,7 @@ export default function AdminPage() {
                 <span className="w-9 h-9 rounded-lg bg-lum-slate-light/10 text-lum-slate-light flex items-center justify-center flex-shrink-0"><Plus className="w-4 h-4" /></span>
                 <div>
                   <p className="text-sm font-medium text-lum-ivory">{t('adminAddNew')}</p>
-                  <p className="text-[10px] text-lum-slate-warm/70 mt-1">Start with the name, brand, and model. You can add more details after opening the guide.</p>
+                  <p className="text-[10px] text-lum-slate-warm/70 mt-1">{t('adminStartEquipment')}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
@@ -601,22 +601,22 @@ export default function AdminPage() {
                 ].map(field => (
                   <label key={field.key} className="block">
                     <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">{field.label}</span>
-                    <input value={(form as any)[field.key]} onChange={e => setForm({...form, [field.key]: e.target.value})} placeholder={`Enter ${field.label.toLowerCase()}`} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/40 text-sm outline-none focus:border-lum-slate-light/20" />
+                    <input value={(form as any)[field.key]} onChange={e => setForm({...form, [field.key]: e.target.value})} placeholder={`${t('adminEnter')} ${field.label.toLowerCase()}`} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/40 text-sm outline-none focus:border-lum-slate-light/20" />
                   </label>
                 ))}
               </div>
               <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
-                <Save className="w-3.5 h-3.5" /> Add equipment
+                <Save className="w-3.5 h-3.5" /> {t('adminAddEquipment')}
               </button>
             </div>
 
             {/* Equipment grid */}
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <p className="text-sm font-medium text-lum-ivory">Saved equipment</p>
-                <p className="text-[10px] text-lum-slate-warm/60 mt-1">Select a card to edit its guide. Use the trash icon to hide it from the public catalog.</p>
+                <p className="text-sm font-medium text-lum-ivory">{t('adminSavedEquipment')}</p>
+                <p className="text-[10px] text-lum-slate-warm/60 mt-1">{t('adminSavedEquipmentHelp')}</p>
               </div>
-              <span className="text-[10px] text-lum-slate-warm/60">{staticEquipments.length + savedItems.length - hiddenSlugs.length} visible</span>
+              <span className="text-[10px] text-lum-slate-warm/60">{staticEquipments.length + savedItems.length - hiddenSlugs.length} {t('adminVisible')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
             {[...overriddenStatic, ...savedItems].filter((item: any) => !hiddenSlugs.includes(item.slug)).map((item: any) => (
@@ -629,7 +629,7 @@ export default function AdminPage() {
           </div>
 
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg('Hide this equipment? It won\'t appear on the site.'); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setHiddenSlugs(current => current.includes(slug) ? current : [...current, slug]); setSavedItems(current => current.filter((s: any) => s.slug !== slug)); setToastMsg('Equipment hidden'); setToastShow(true) }) }} title="Hide this equipment" aria-label="Hide this equipment" className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
+                <button onClick={(e) => { e.stopPropagation(); const slug = item.slug; setConfirmMsg(t('adminHideEquipmentConfirm')); setConfirmAction(() => () => { deleteEquipmentApi(slug).catch(() => {}); setHiddenSlugs(current => current.includes(slug) ? current : [...current, slug]); setSavedItems(current => current.filter((s: any) => s.slug !== slug)); setToastMsg(t('adminEquipmentHidden')); setToastShow(true) }) }} title={t('adminHideEquipment')} aria-label={t('adminHideEquipment')} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex-shrink-0 ml-2">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -642,28 +642,28 @@ export default function AdminPage() {
         {showPartners && (
             <div>
               <div className="flex items-center justify-between gap-3 mb-4">
-                <p className="text-xs text-lum-slate-warm/70">Add partner logos and website links shown on the public homepage.</p>
-                <span className="text-[10px] text-lum-slate-warm/60 flex-shrink-0">{partners.length} total</span>
+                <p className="text-xs text-lum-slate-warm/70">{t('adminPartnersHelp')}</p>
+                <span className="text-[10px] text-lum-slate-warm/60 flex-shrink-0">{partners.length} {t('adminTotal')}</span>
               </div>
-              <p className="text-[10px] text-lum-slate-warm/60 mb-4">Use a square PNG with a transparent background for the cleanest result.</p>
+              <p className="text-[10px] text-lum-slate-warm/60 mb-4">{t('adminSquarePng')}</p>
 
             {/* Add / Edit partner */}
             <div className="lum-card p-4 mb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{partnerEditIdx !== null ? 'Editing partner' : 'Add a partner'}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{partnerEditIdx !== null ? t('adminEditingPartner') : t('adminAddPartner')}</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                <input value={partnerName} onChange={e => setPartnerName(e.target.value)} placeholder="Partner name" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-                <input value={partnerUrl} onChange={e => setPartnerUrl(e.target.value)} placeholder="Website URL (https://...)" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <input value={partnerName} onChange={e => setPartnerName(e.target.value)} placeholder={t('adminPartnerName')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <input value={partnerUrl} onChange={e => setPartnerUrl(e.target.value)} placeholder={t('adminWebsiteUrl')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <div className="flex gap-2">
                   <input ref={fileRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setPartnerImg(r.result as string); r.readAsDataURL(f) } }} className="hidden" />
                   <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm flex-1">
-                    <ImageIcon className="w-4 h-4" /> {partnerImg ? 'Change' : 'Upload 800×800'}
+                    <ImageIcon className="w-4 h-4" /> {partnerImg ? t('adminChange') : t('adminUploadSquare')}
                   </button>
                 </div>
               </div>
               {partnerImg && <img src={partnerImg} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border mb-3" />}
               <div className="flex gap-2">
                 <button onClick={async () => {
-                  if (!partnerName || !partnerUrl || !partnerImg) { alert('Fill all fields'); return }
+                  if (!partnerName || !partnerUrl || !partnerImg) { setToastMsg(t('adminFillFields')); setToastShow(true); return }
                   let updated: typeof partners
                   try {
                     if (partnerEditIdx !== null) {
@@ -681,24 +681,24 @@ export default function AdminPage() {
                     setPartnerEditIdx(null)
                     setPartnerName(''); setPartnerUrl(''); setPartnerImg(null)
                   } catch {
-                    setToastMsg('Unable to save partner')
+                    setToastMsg(t('adminUnableSavePartner'))
                     setToastShow(true)
                   }
-                }} className="btn-lum-primary text-xs px-5 py-3">{partnerEditIdx !== null ? 'Update Partner' : 'Add Partner'}</button>
+                }} className="btn-lum-primary text-xs px-5 py-3">{partnerEditIdx !== null ? t('adminUpdatePartner') : t('adminAddPartner')}</button>
                 {partnerEditIdx !== null && (
-                  <button onClick={() => { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">Cancel</button>
+                  <button onClick={() => { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">{t('adminCancel')}</button>
                 )}
               </div>
             </div>
 
             {/* Partner list */}
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-warm/70 mb-3">Saved partners ({partners.length})</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-warm/70 mb-3">{t('adminSavedPartners')} ({partners.length})</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {partners.length === 0 ? (
-                <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No partners added yet</p>
+                <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">{t('adminNoPartners')}</p>
               ) : partners.map((p, i) => (
                 <div key={i} className="lum-card p-4 text-center relative cursor-pointer hover:border-lum-slate-light/20 transition-colors" onClick={() => { if (p._default) return; setPartnerName(p.name); setPartnerUrl(p.url); setPartnerImg(p.src); setPartnerEditIdx(i) }}>
-                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; if (partner._default) { setToastMsg('Default partners cannot be deleted'); setToastShow(true); return }; setConfirmMsg('Delete this partner?'); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg('Partner deleted'); setToastShow(true) }) }} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; if (partner._default) { setToastMsg(t('adminDefaultCannotDelete')); setToastShow(true); return }; setConfirmMsg(t('adminDeletePartnerConfirm')); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg(t('adminPartnerDeleted')); setToastShow(true) }) }} aria-label={t('adminDelete')} title={t('adminDelete')} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <img src={p.src} alt={p.name} className="h-16 mx-auto mb-2 object-contain" />
@@ -713,7 +713,7 @@ export default function AdminPage() {
         {/* Translations editor */}
         {showTranslations && (
           <div>
-            <p className="text-xs leading-relaxed text-lum-slate-warm/70 mb-4 max-w-2xl">Export the language table, edit the five language columns in Excel, then import it to update the public interface.</p>
+            <p className="text-xs leading-relaxed text-lum-slate-warm/70 mb-4 max-w-2xl">{t('adminTranslationsHelp')}</p>
 
             <div className="flex gap-2 mb-4">
               <button onClick={() => {
@@ -742,10 +742,10 @@ export default function AdminPage() {
                 XLSX.utils.book_append_sheet(wb, ws, 'Translations')
                 XLSX.writeFile(wb, 'translations.xlsx')
               }} className="px-5 py-3 rounded-xl text-xs font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors">
-                Export Excel
+                {t('adminExportExcel')}
               </button>
               <label className="px-5 py-3 rounded-xl text-xs font-medium bg-lum-slate-light/10 text-lum-ivory hover:bg-lum-slate-light/20 transition-colors cursor-pointer">
-                Import Excel
+                {t('adminImportExcel')}
                 <input type="file" accept=".xlsx,.xls" className="hidden" onChange={async e => {
                   const f = e.target.files?.[0]
                   if (!f) return
@@ -773,9 +773,9 @@ export default function AdminPage() {
                       }
                     }
                     setTranslations(updated)
-                    setToastMsg('Translations imported!'); setToastShow(true)
+                    setToastMsg(t('adminTranslationsImported')); setToastShow(true)
                   } catch {
-                    setToastMsg('Invalid Excel file'); setToastShow(true)
+                    setToastMsg(t('adminInvalidExcel')); setToastShow(true)
                   }
                   e.target.value = ''
                 }} />
@@ -788,27 +788,27 @@ export default function AdminPage() {
         {showNews && (
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
-              <p className="text-xs leading-relaxed text-lum-slate-warm/70">Publish updates that appear in the animated slider on the public homepage.</p>
-              <span className="text-[10px] text-lum-slate-warm/60 flex-shrink-0">{newsItems.length} published</span>
+              <p className="text-xs leading-relaxed text-lum-slate-warm/70">{t('adminNewsHelp')}</p>
+              <span className="text-[10px] text-lum-slate-warm/60 flex-shrink-0">{newsItems.length} {t('adminPublished')}</span>
             </div>
 
             {/* Add / Edit news */}
             <div className="lum-card p-4 mb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{newsEditIdx !== null ? 'Editing news post' : 'Create a news post'}</p>
-              <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder="News title" aria-label="News title" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
-              <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder="News description / content" aria-label="News description" rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{newsEditIdx !== null ? t('adminEditingNews') : t('adminCreateNews')}</p>
+              <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder={t('adminNewsTitle')} aria-label={t('adminNewsTitle')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
+              <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder={t('adminNewsDescription')} aria-label={t('adminNewsDescription')} rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
               <label className="block mb-3">
-                <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">Upload date</span>
-                <input type="date" value={newsDate} onChange={e => setNewsDate(e.target.value)} aria-label="News upload date" className="w-full sm:w-56 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
-                <span className="block text-[10px] text-lum-slate-warm/55 mt-1.5">This date appears on the public News section.</span>
+                <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">{t('uploadDate')}</span>
+                <input type="date" value={newsDate} onChange={e => setNewsDate(e.target.value)} aria-label={t('uploadDate')} className="w-full sm:w-56 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <span className="block text-[10px] text-lum-slate-warm/55 mt-1.5">{t('adminNewsUploadHelp')}</span>
               </label>
               <div className="flex items-center gap-3">
                 <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImgs(prev => [...prev, r.result as string]); r.readAsDataURL(f) } }} className="hidden" />
                 <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
-                  <ImageIcon className="w-4 h-4" /> {newsImgs.length > 0 ? `Add Another (${newsImgs.length})` : 'Upload Image'}
+                  <ImageIcon className="w-4 h-4" /> {newsImgs.length > 0 ? `${t('adminAddAnother')} (${newsImgs.length})` : t('adminUploadImage')}
                 </button>
                 {newsImgs.length > 0 && (
-                  <button onClick={() => setNewsImgs([])} className="text-[10px] text-red-400 hover:text-red-300">Clear all</button>
+                  <button onClick={() => setNewsImgs([])} className="text-[10px] text-red-400 hover:text-red-300">{t('adminClearAll')}</button>
                 )}
               </div>
               {newsImgs.length > 0 && (
@@ -816,24 +816,24 @@ export default function AdminPage() {
                   {newsImgs.map((img, i) => (
                     <div key={i} className="relative">
                       <img src={img} alt="" className="h-16 rounded-lg object-cover bg-lum-mid border border-lum-panel-border" />
-                      <button onClick={() => setNewsImgs(prev => prev.filter((_, x) => x !== i))} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">&times;</button>
+                      <button onClick={() => setNewsImgs(prev => prev.filter((_, x) => x !== i))} aria-label={t('adminRemove')} title={t('adminRemove')} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">&times;</button>
                     </div>
                   ))}
                 </div>
               )}
               <div className="flex gap-2 mt-4">
-                <button onClick={saveNews} className="btn-lum-primary text-xs px-5 py-3">{newsEditIdx !== null ? 'Update News' : 'Publish News'}</button>
+                <button onClick={saveNews} className="btn-lum-primary text-xs px-5 py-3">{newsEditIdx !== null ? t('adminUpdateNews') : t('adminPublishNews')}</button>
                 {newsEditIdx !== null && (
-                  <button onClick={resetNewsForm} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">Cancel</button>
+                  <button onClick={resetNewsForm} className="px-5 py-3 rounded-full border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs">{t('adminCancel')}</button>
                 )}
               </div>
             </div>
 
             {/* News list */}
-            <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">Published News ({newsItems.length})</p>
+            <p className="text-[9px] text-lum-slate-warm/50 tracking-[0.15em] uppercase mb-3">{t('adminPublishedNews')} ({newsItems.length})</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {newsItems.length === 0 ? (
-                <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">No news published yet</p>
+                <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">{t('adminNoNews')}</p>
               ) : newsItems.map((n: any) => (
                 <div key={n.id} className="lum-card p-4 flex items-center gap-4 hover:border-lum-slate-light/20 transition-colors">
                   {n.image && <img src={n.image} alt="" className="h-16 w-24 rounded-lg object-cover bg-lum-mid border border-lum-panel-border flex-shrink-0" />}
@@ -841,13 +841,13 @@ export default function AdminPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-lum-ivory truncate">{n.title}</p>
                     <p className="text-[10px] text-lum-slate-warm truncate mt-0.5">{n.description}</p>
-                    <p className="text-[9px] text-lum-slate-warm/55 mt-1">Uploaded {formatNewsDate(n.upload_date || n.created_at)}</p>
+                    <p className="text-[9px] text-lum-slate-warm/55 mt-1">{t('uploaded')} {formatNewsDate(n.upload_date || n.created_at)}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => editNewsItem(n)} title="Edit this news post" aria-label="Edit this news post" className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">
+                    <button onClick={() => editNewsItem(n)} title={t('adminEdit')} aria-label={t('adminEdit')} className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => { setConfirmMsg('Delete this news?'); setConfirmAction(() => () => deleteNewsItem(n.id)) }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                    <button onClick={() => { setConfirmMsg(t('adminDeleteNewsConfirm')); setConfirmAction(() => () => deleteNewsItem(n.id)) }} aria-label={t('adminDelete')} title={t('adminDelete')} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -867,8 +867,8 @@ export default function AdminPage() {
           </div>
 
           <div className="mb-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-1">Guide content</p>
-            <p className="text-xs text-lum-slate-warm/60 mb-3">Use laboratory-approved wording. Leave a section blank only when it is not yet reviewed.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-1">{t('adminGuideContent')}</p>
+            <p className="text-xs text-lum-slate-warm/60 mb-3">{t('adminGuideContentHelp')}</p>
             <label className="block mb-3">
               <span className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminDesc')} *</span>
               <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-y" />
@@ -877,7 +877,7 @@ export default function AdminPage() {
               {(['purpose', 'specifications', 'safety', 'procedure', 'maintenance'] as const).map(field => (
                 <label key={field} className="block">
                   <span className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t(field)}</span>
-                  <textarea value={form[field]} onChange={e => setForm({...form, [field]: e.target.value})} rows={4} placeholder={field === 'safety' || field === 'procedure' ? 'Add official laboratory-reviewed guidance' : ''} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-y" />
+                  <textarea value={form[field]} onChange={e => setForm({...form, [field]: e.target.value})} rows={4} placeholder={field === 'safety' || field === 'procedure' ? t('adminOfficialGuidancePlaceholder') : ''} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-y" />
                 </label>
               ))}
             </div>
@@ -903,12 +903,12 @@ export default function AdminPage() {
             <div>
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('status')}</label>
               <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20">
-                <option value="AVAILABLE">AVAILABLE</option>
-                <option value="IN_USE">IN USE</option>
-                <option value="MAINTENANCE">MAINTENANCE</option>
-                <option value="OUT_OF_SERVICE">OUT OF SERVICE</option>
-                <option value="UNKNOWN">UNKNOWN / VERIFY</option>
-                <option value="UNAVAILABLE">UNAVAILABLE</option>
+                <option value="AVAILABLE">{t('statusAvailable')}</option>
+                <option value="IN_USE">{t('statusInUse')}</option>
+                <option value="MAINTENANCE">{t('statusMaintenance')}</option>
+                <option value="OUT_OF_SERVICE">{t('statusOutOfService')}</option>
+                <option value="UNKNOWN">{t('statusUnknown')}</option>
+                <option value="UNAVAILABLE">{t('statusUnavailable')}</option>
               </select>
             </div>
           </div>
@@ -929,15 +929,15 @@ export default function AdminPage() {
               )}
             </div>
             <div>
-              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">Manual (PDF)</label>
+              <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminManualPdf')}</label>
               <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
               <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
-                <Upload className="w-4 h-4" /> {manual ? 'Change PDF' : 'Upload Manual PDF'}
+                <Upload className="w-4 h-4" /> {manual ? t('adminChangePdf') : t('adminUploadManualPdf')}
               </button>
               {manual && (
                 <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[10px] text-lum-slate-warm/60">PDF uploaded</span>
-                  <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
+                  <span className="text-[10px] text-lum-slate-warm/60">{t('adminPdfUploaded')}</span>
+                  <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">{t('adminRemove')}</button>
                 </div>
               )}
             </div>
@@ -947,7 +947,7 @@ export default function AdminPage() {
           {saving ? (
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-lum-slate-warm/70">Saving changes...</span>
+                <span className="text-xs text-lum-slate-warm/70">{t('adminSavingChanges')}</span>
                 <span className="text-xs font-medium text-lum-ivory">{saveProgress}%</span>
               </div>
               <div className="w-full h-2 rounded-full bg-lum-soft overflow-hidden">
@@ -973,7 +973,7 @@ export default function AdminPage() {
         </div>
         )}
 
-        <ConfirmModal open={!!confirmAction} title="Confirm" message={confirmMsg} onConfirm={confirmAction || (() => {})} onCancel={() => setConfirmAction(null)} />
+        <ConfirmModal open={!!confirmAction} title={t('adminConfirm')} message={confirmMsg} onConfirm={confirmAction || (() => {})} onCancel={() => setConfirmAction(null)} />
         <Toast show={toastShow} message={toastMsg} onDone={() => setToastShow(false)} />
 
       </main>

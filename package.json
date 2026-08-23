@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "i18n:check": "python3 scripts/check-translations.py",
+    "build": "pnpm run i18n:check && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
