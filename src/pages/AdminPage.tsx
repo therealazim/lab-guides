@@ -38,6 +38,13 @@ const DEFAULT_PARTNERS = [
   { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg', _default: true },
 ]
 
+const todayDate = () => new Date().toISOString().slice(0, 10)
+const formatNewsDate = (value?: string) => {
+  if (!value) return ''
+  const parsed = new Date(`${value.slice(0, 10)}T00:00:00`)
+  return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsed)
+}
+
 export default function AdminPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -87,6 +94,7 @@ export default function AdminPage() {
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [newsTitle, setNewsTitle] = useState('')
   const [newsDesc, setNewsDesc] = useState('')
+  const [newsDate, setNewsDate] = useState(todayDate)
   const [newsImgs, setNewsImgs] = useState<string[]>([])
   const [newsEditIdx, setNewsEditIdx] = useState<number | null>(null)
   const newsImgRef = useRef<HTMLInputElement>(null)
@@ -329,13 +337,13 @@ export default function AdminPage() {
 
   const saveNews = async () => {
     if (!newsTitle.trim()) { alert('Title is required'); return }
-    const body: any = { title: newsTitle, description: newsDesc, images: newsImgs, id: newsEditIdx ?? undefined }
+    const body: any = { title: newsTitle, description: newsDesc, upload_date: newsDate || todayDate(), images: newsImgs, id: newsEditIdx ?? undefined }
     try {
       const r = await fetch('/api/news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const d = await r.json()
       if (d.ok) {
         setToastMsg('News saved!'); setToastShow(true)
-        setNewsTitle(''); setNewsDesc(''); setNewsImgs([]); setNewsEditIdx(null)
+        setNewsTitle(''); setNewsDesc(''); setNewsDate(todayDate()); setNewsImgs([]); setNewsEditIdx(null)
         loadNews()
       }
     } catch (e: any) {
@@ -363,12 +371,13 @@ export default function AdminPage() {
   const editNewsItem = (item: any) => {
     setNewsTitle(item.title || '')
     setNewsDesc(item.description || '')
+    setNewsDate(item.upload_date || (item.created_at ? item.created_at.slice(0, 10) : todayDate()))
     setNewsImgs(item.images || (item.image ? [item.image] : []))
     setNewsEditIdx(item.id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const resetNewsForm = () => { setNewsTitle(''); setNewsDesc(''); setNewsImgs([]); setNewsEditIdx(null) }
+  const resetNewsForm = () => { setNewsTitle(''); setNewsDesc(''); setNewsDate(todayDate()); setNewsImgs([]); setNewsEditIdx(null) }
 
   return (
     <div className="min-h-screen bg-lum-deep">
@@ -735,8 +744,13 @@ export default function AdminPage() {
             {/* Add / Edit news */}
             <div className="lum-card p-4 mb-6">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-3">{newsEditIdx !== null ? 'Editing news post' : 'Create a news post'}</p>
-              <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder="News title" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
-              <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder="News description / content" rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
+              <input value={newsTitle} onChange={e => setNewsTitle(e.target.value)} placeholder="News title" aria-label="News title" className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3" />
+              <textarea value={newsDesc} onChange={e => setNewsDesc(e.target.value)} placeholder="News description / content" aria-label="News description" rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 mb-3 resize-none" />
+              <label className="block mb-3">
+                <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">Upload date</span>
+                <input type="date" value={newsDate} onChange={e => setNewsDate(e.target.value)} aria-label="News upload date" className="w-full sm:w-56 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+                <span className="block text-[10px] text-lum-slate-warm/55 mt-1.5">This date appears on the public News section.</span>
+              </label>
               <div className="flex items-center gap-3">
                 <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImgs(prev => [...prev, r.result as string]); r.readAsDataURL(f) } }} className="hidden" />
                 <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm">
@@ -776,7 +790,7 @@ export default function AdminPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-lum-ivory truncate">{n.title}</p>
                     <p className="text-[10px] text-lum-slate-warm truncate mt-0.5">{n.description}</p>
-                    <p className="text-[8px] text-lum-slate-warm/40 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                    <p className="text-[9px] text-lum-slate-warm/55 mt-1">Uploaded {formatNewsDate(n.upload_date || n.created_at)}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <button onClick={() => editNewsItem(n)} title="Edit this news post" aria-label="Edit this news post" className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">

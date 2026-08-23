@@ -11,6 +11,12 @@ import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
 
 const SCROLL_KEY = 'homeScrollY'
 
+const formatNewsDate = (value?: string) => {
+  if (!value) return ''
+  const parsed = new Date(`${value.slice(0, 10)}T00:00:00`)
+  return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsed)
+}
+
 export default function HomePage() {
   const { lang, t } = useI18n()
   const [query, setQuery] = useState('')
@@ -478,8 +484,13 @@ export default function HomePage() {
                       {newsItems[newsIdx].title}
                     </h3>
                     {newsItems[newsIdx].description && (
-                      <p className="text-sm text-lum-slate-light/70 leading-relaxed line-clamp-3 mb-6">
+                      <p className="text-sm text-lum-slate-light/70 leading-relaxed line-clamp-3 mb-4">
                         {newsItems[newsIdx].description}
+                      </p>
+                    )}
+                    {(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at) && (
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-lum-slate-warm/60 mb-6">
+                        Uploaded {formatNewsDate(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at)}
                       </p>
                     )}
 

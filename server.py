@@ -1,6 +1,7 @@
 import os
 import json
 import mimetypes
+from datetime import date
 from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -49,10 +50,13 @@ def init_db():
             title TEXT NOT NULL DEFAULT '',
             description TEXT NOT NULL DEFAULT '',
             image TEXT,
+            upload_date DATE,
             created_at TIMESTAMP DEFAULT NOW(),
             sort_order INTEGER DEFAULT 0
         )
     ''')
+    cur.execute('ALTER TABLE news ADD COLUMN IF NOT EXISTS upload_date DATE')
+    cur.execute('UPDATE news SET upload_date = created_at::date WHERE upload_date IS NULL')
     conn.commit()
     cur.close()
     conn.close()
@@ -265,6 +269,8 @@ def get_news():
                 item['image'] = item['images'][0] if item['images'] else None
             except:
                 pass
+        if item.get('upload_date'):
+            item['upload_date'] = item['upload_date'].isoformat()
         if item.get('created_at'):
             item['created_at'] = item['created_at'].isoformat()
         result.append(item)
@@ -280,21 +286,27 @@ def save_news():
     description = body.get('description', '')
     images = body.get('images', [])
     image = body.get('image', None)
+    upload_date = body.get('upload_date') or None
     if not title:
         return jsonify({'error': 'No title'}), 400
+    if upload_date:
+        try:
+            date.fromisoformat(upload_date)
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Invalid upload date; expected YYYY-MM-DD'}), 400
     conn = get_db()
     cur = conn.cursor()
     # Store images as JSON array; also accept legacy single 'image'
     stored_image = json.dumps(images) if images else (json.dumps([image]) if image else None)
     if news_id:
         cur.execute(
-            'UPDATE news SET title = %s, description = %s, image = %s WHERE id = %s',
-            (title, description, stored_image, news_id)
+            'UPDATE news SET title = %s, description = %s, image = %s, upload_date = %s WHERE id = %s',
+            (title, description, stored_image, upload_date, news_id)
         )
     else:
         cur.execute(
-            'INSERT INTO news (title, description, image) VALUES (%s, %s, %s) RETURNING id',
-            (title, description, stored_image)
+            'INSERT INTO news (title, description, image, upload_date) VALUES (%s, %s, %s, %s) RETURNING id',
+            (title, description, stored_image, upload_date)
         )
         news_id = cur.fetchone()[0]
     conn.commit()
@@ -377,6 +389,8 @@ def serve_frontend(path):
                     item['image'] = item['images'][0] if item['images'] else None
                 except (TypeError, json.JSONDecodeError):
                     pass
+            if item.get('upload_date'):
+                item['upload_date'] = item['upload_date'].isoformat()
             if item.get('created_at'):
                 item['created_at'] = item['created_at'].isoformat()
             news.append(item)
