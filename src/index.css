@@ -160,6 +160,24 @@ body {
   outline: 2px solid #B0B8C4; outline-offset: 3px;
 }
 
+button, a, select, input, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button:active, .btn-lum-primary:active, .btn-lum-secondary:active {
+  transform: scale(0.97);
+  transition-duration: 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ── Input styling ── */
 input, textarea, select {
   background: rgba(22, 26, 32, 0.55) !important;

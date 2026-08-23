@@ -15,6 +15,7 @@ export default function ThemeToggle() {
         borderColor: isDark ? 'rgba(156,163,175,0.08)' : 'rgba(0,0,0,0.12)',
       }}
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
     >
       {/* Icons */}
       <Sun className="absolute left-[7px] top-1/2 -translate-y-1/2 w-3 h-3 text-amber-400 z-10" />

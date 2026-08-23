@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Search, SlidersHorizontal } from 'lucide-react'
 import { useI18n, type Lang } from '../i18n'
 import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -19,6 +19,14 @@ export default function CatalogPage() {
     return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
   })
   const [mouse, setMouse] = useState({ x: 50, y: 50 })
+  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [sortBy, setSortBy] = useState('name')
+
+  useEffect(() => {
+    document.title = 'Equipment Catalog | KMI - LUPIC'
+    return () => { document.title = 'KMI - LUPIC Laboratory Equipment Guide' }
+  }, [])
 
   useEffect(() => {
         const initial = (window as any).__INITIAL_DATA__
@@ -62,6 +70,23 @@ export default function CatalogPage() {
     return [...merged, ...visibleAdminItems]
   }, [staticOverrides, adminItems, hiddenSlugs])
 
+  const filteredEquipment = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return [...allEquipments]
+      .filter((eq: any) => {
+        const d = eq[lang as Lang] || eq.en || eq
+        const searchable = [d.name, d.description, eq.brand, eq.model, eq.location, eq.slug].filter(Boolean).join(' ').toLowerCase()
+        return (!q || searchable.includes(q)) && (statusFilter === 'ALL' || (eq.status || '').toUpperCase() === statusFilter)
+      })
+      .sort((a: any, b: any) => {
+        const aData = a[lang as Lang] || a.en || a
+        const bData = b[lang as Lang] || b.en || b
+        if (sortBy === 'brand') return String(a.brand || '').localeCompare(String(b.brand || ''))
+        if (sortBy === 'status') return String(a.status || '').localeCompare(String(b.status || '')) || String(aData.name || '').localeCompare(String(bData.name || ''))
+        return String(aData.name || '').localeCompare(String(bData.name || ''))
+      })
+  }, [allEquipments, lang, query, sortBy, statusFilter])
+
   return (
     <div className="relative z-10 min-h-screen">
       <div
@@ -102,12 +127,47 @@ export default function CatalogPage() {
         >
           <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-lum-slate-warm/60 mb-3">Equipment Catalog</p>
           <h1 className="text-[clamp(1.8rem,3.5vw,2.6rem)] font-light tracking-[-0.04em] text-lum-ivory">
-            All Equipment <strong className="font-semibold">({allEquipments.length})</strong>
+            All Equipment <strong className="font-semibold">({filteredEquipment.length})</strong>
           </h1>
+          <p className="text-xs text-lum-slate-warm/60 mt-3">Showing {filteredEquipment.length} of {allEquipments.length} equipment guides</p>
         </motion.div>
 
+        <div className="lum-card p-3 md:p-4 mb-6 flex flex-col md:flex-row gap-3">
+          <label className="relative flex-1">
+            <span className="sr-only">Search equipment</span>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lum-slate-warm/50" />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name, manufacturer, model, or room" className="w-full pl-10 pr-4 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/50 outline-none focus:border-lum-slate-light/30" />
+          </label>
+          <label className="relative md:w-48">
+            <span className="sr-only">Filter by status</span>
+            <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lum-slate-warm/50 pointer-events-none" />
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full pl-10 pr-3 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory outline-none">
+              <option value="ALL">All statuses</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="IN_USE">In use</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="OUT_OF_SERVICE">Out of service</option>
+            </select>
+          </label>
+          <label className="md:w-48">
+            <span className="sr-only">Sort equipment</span>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-full px-3 py-3 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory outline-none">
+              <option value="name">Sort: Name</option>
+              <option value="brand">Sort: Manufacturer</option>
+              <option value="status">Sort: Status</option>
+            </select>
+          </label>
+        </div>
+
+        {filteredEquipment.length === 0 ? (
+          <div className="lum-card p-10 text-center">
+            <p className="text-lum-ivory font-medium">No equipment matches these filters.</p>
+            <p className="text-sm text-lum-slate-warm/60 mt-2">Try a different search term or reset the status filter.</p>
+            <button type="button" onClick={() => { setQuery(''); setStatusFilter('ALL') }} className="btn-lum-secondary mt-5">Reset filters</button>
+          </div>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {allEquipments.map((eq: any, i: number) => {
+          {filteredEquipment.map((eq: any, i: number) => {
             const d = eq[lang as Lang] || eq.en || eq
             const imgSrc = (imageMap as Record<string, string>)[eq.slug] || eq.image || ''
             return (
@@ -145,6 +205,7 @@ export default function CatalogPage() {
             )
           })}
         </div>
+        )}
       </main>
     </div>
   )

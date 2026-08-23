@@ -3,6 +3,7 @@ const API = '/api'
 async function req(path, options = {}) {
   const r = await fetch(`${API}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
     ...options,
   })
   const data = await r.json()
@@ -19,4 +20,7 @@ export const fetchPartners = () => req('/partners')
 export const savePartner = (partner) => req('/partners', { method: 'POST', body: JSON.stringify(partner) })
 export const updatePartner = (id, partner) => req(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(partner) })
 export const deletePartnerApi = (id) => req(`/partners/${id}`, { method: 'DELETE' })
+export const getAdminSession = () => req('/auth/session')
+export const loginAdmin = (username, password) => req('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) })
+export const logoutAdmin = () => req('/auth/logout', { method: 'POST' })
 export const seedDatabase = (data) => req('/seed', { method: 'POST', body: JSON.stringify(data) })

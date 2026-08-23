@@ -10,13 +10,16 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi } from '../api'
-
-const ADMIN_LOGIN = 'admin'
-const ADMIN_PASSWORD = 'admin123'
+import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
 
 interface EquipmentForm {
   name: string
+  description: string
+  purpose: string
+  specifications: string
+  safety: string
+  procedure: string
+  maintenance: string
   brand: string
   model: string
   location: string
@@ -27,7 +30,8 @@ interface EquipmentForm {
 }
 
 const emptyForm: EquipmentForm = {
-  name: '', brand: '', model: '', location: '', quantity: '',
+  name: '', description: '', purpose: '', specifications: '', safety: '', procedure: '', maintenance: '',
+  brand: '', model: '', location: '', quantity: '',
   purchase_date: '', installation_date: '', status: 'AVAILABLE',
 }
 
@@ -48,7 +52,9 @@ const formatNewsDate = (value?: string) => {
 export default function AdminPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const [authed, setAuthed] = useState(() => localStorage.getItem('admin_auth') === 'true')
+  const [authed, setAuthed] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+  const [loginBusy, setLoginBusy] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -77,8 +83,16 @@ export default function AdminPage() {
   const [mouse, setMouse] = useState({ x: 50, y: 50 })
   const [loginSuccess, setLoginSuccess] = useState(false)
   const [loginError, setLoginError] = useState(false)
+  const [loginErrorMessage, setLoginErrorMessage] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const pwRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    getAdminSession()
+      .then(data => setAuthed(Boolean(data?.authenticated)))
+      .catch(() => setAuthed(false))
+      .finally(() => setAuthChecked(true))
+  }, [])
 
   const [overrides, setOverrides] = useState<Record<string, any>>({})
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
@@ -100,6 +114,7 @@ export default function AdminPage() {
   const newsImgRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (!authed) return
     apiFetchEquipment().then(data => {
       if (data && data.length) {
         const admin = data.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
@@ -120,7 +135,7 @@ export default function AdminPage() {
     fetchHiddenEquipment().then(data => {
       if (Array.isArray(data)) setHiddenSlugs(data)
     }).catch(() => {})
-  }, [])
+  }, [authed])
 
   const loadNews = async () => {
     try {
@@ -165,25 +180,25 @@ export default function AdminPage() {
   }, [])
 
   const save = async (items: any[]) => {
-    setSavedItems(items)
     for (const item of items) {
-      try {
-        await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
-      } catch (e) {
-        console.error('DB save failed', e)
+      const response = await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(item) })
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error?.error || `Equipment save failed (${response.status})`)
       }
     }
+    setSavedItems(items)
   }
 
   const saveOverrides = async (ov: Record<string, any>) => {
-    setOverrides({...ov})
     for (const [slug, data] of Object.entries(ov)) {
-      try {
-        await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, ...data as any }) })
-      } catch (e) {
-        console.error('DB override save failed', e)
+      const response = await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ slug, ...data as any }) })
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error?.error || `Equipment update failed (${response.status})`)
       }
     }
+    setOverrides({...ov})
   }
 
   const overriddenStatic = staticEquipments.map(eq => {
@@ -191,13 +206,18 @@ export default function AdminPage() {
     return ov ? { ...eq, ...ov, _overridden: true } : eq
   })
 
-  const login = () => {
-    if (username === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
+  const login = async () => {
+    if (loginBusy) return
+    setLoginBusy(true)
+    try {
+      await loginAdmin(username, password)
       setLoginSuccess(true)
-      setTimeout(() => { setAuthed(true); localStorage.setItem('admin_auth', 'true'); setLoginSuccess(false) }, 2500)
       setUsername(''); setPassword('')
-    } else {
+      setTimeout(() => { setAuthed(true); setLoginSuccess(false); setLoginBusy(false) }, 900)
+    } catch (e: any) {
+      setLoginErrorMessage(e?.message || 'Unable to sign in. Check the server configuration.')
       setLoginError(true)
+      setLoginBusy(false)
       setTimeout(() => setLoginError(false), 2500)
     }
   }
@@ -224,8 +244,15 @@ export default function AdminPage() {
   const resetForm = () => { setForm(emptyForm); setImage(null); setManual(null); setEditIdx(null) }
 
   const editItem = (item: any) => {
+    const localized = item.en || {}
     setForm({
-      name: item.en?.name || '',
+      name: localized.name || '',
+      description: localized.description || '',
+      purpose: localized.purpose || '',
+      specifications: localized.specifications || '',
+      safety: localized.safety || '',
+      procedure: localized.procedure || '',
+      maintenance: localized.maintenance || '',
       brand: item.brand || '',
       model: item.model || '',
       location: item.location || '',
@@ -242,13 +269,25 @@ export default function AdminPage() {
   }
 
   const handleSubmit = async () => {
+    if (!form.name.trim() || !form.description.trim()) {
+      setToastMsg(t('adminRequired')); setToastShow(true)
+      return
+    }
     setSaving(true)
     setSaveProgress(10)
 
     const slug = generateSlug(form.brand + '-' + form.model)
     const data: any = {
       slug,
-      en: { name: form.name || form.brand + ' ' + form.model },
+      en: {
+        name: form.name || form.brand + ' ' + form.model,
+        description: form.description,
+        purpose: form.purpose,
+        specifications: form.specifications,
+        safety: form.safety,
+        procedure: form.procedure,
+        maintenance: form.maintenance,
+      },
       brand: form.brand || '—',
       model: form.model || '—',
       location: form.location || '—',
@@ -286,7 +325,14 @@ export default function AdminPage() {
     }
   }
 
-  // Login screen
+  // Authentication check and login screen
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-lum-deep flex items-center justify-center p-4">
+        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" aria-label="Checking authentication" />
+      </div>
+    )
+  }
   if (!authed) {
     if (loginSuccess) {
       return (
@@ -302,11 +348,16 @@ export default function AdminPage() {
     if (loginError) {
       return (
         <div className="min-h-screen bg-lum-deep flex items-center justify-center p-4">
-          <dotlottie-wc
-            src="https://lottie.host/a4d516a2-3683-4702-bec4-f5ff25c70dc2/KxnaCqRQk2.lottie"
-            style={{ width: '300px', height: '300px' }}
-            autoplay
-          ></dotlottie-wc>
+          <div className="lum-card p-8 max-w-sm w-full text-center">
+            <dotlottie-wc
+              src="https://lottie.host/a4d516a2-3683-4702-bec4-f5ff25c70dc2/KxnaCqRQk2.lottie"
+              style={{ width: '180px', height: '180px', margin: '0 auto' }}
+              autoplay
+            ></dotlottie-wc>
+            <h1 className="text-lg font-semibold text-lum-ivory">Sign-in unsuccessful</h1>
+            <p className="text-sm text-lum-slate-warm/65 mt-2 leading-relaxed">{loginErrorMessage || 'Please check your credentials and try again.'}</p>
+            <button type="button" onClick={() => setLoginError(false)} className="btn-lum-secondary mt-5">Try again</button>
+          </div>
         </div>
       )
     }
@@ -329,7 +380,7 @@ export default function AdminPage() {
               {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <button onClick={login} className="btn-lum-primary w-full justify-center">{t('adminLoginBtn')}</button>
+          <button onClick={login} disabled={loginBusy} className="btn-lum-primary w-full justify-center disabled:opacity-50 disabled:cursor-wait">{loginBusy ? 'Checking…' : t('adminLoginBtn')}</button>
         </div>
       </div>
     )
@@ -402,7 +453,7 @@ export default function AdminPage() {
             <button onClick={() => navigate('/')} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminBack')}</span>
             </button>
-            <button onClick={() => { setAuthed(false); localStorage.removeItem('admin_auth') }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
+            <button onClick={async () => { try { await logoutAdmin() } finally { setAuthed(false) } }} className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px]">
               <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminLogout')}</span>
             </button>
           </div>
@@ -810,9 +861,26 @@ export default function AdminPage() {
         {(editIdx !== null) && (
         <div className="lum-card p-4 md:p-6 mb-6">
 
-          <div className="mb-3">
+          <div className="mb-4">
             <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminName')}</label>
             <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
+          </div>
+
+          <div className="mb-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lum-slate-light mb-1">Guide content</p>
+            <p className="text-xs text-lum-slate-warm/60 mb-3">Use laboratory-approved wording. Leave a section blank only when it is not yet reviewed.</p>
+            <label className="block mb-3">
+              <span className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminDesc')} *</span>
+              <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-y" />
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(['purpose', 'specifications', 'safety', 'procedure', 'maintenance'] as const).map(field => (
+                <label key={field} className="block">
+                  <span className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t(field)}</span>
+                  <textarea value={form[field]} onChange={e => setForm({...form, [field]: e.target.value})} rows={4} placeholder={field === 'safety' || field === 'procedure' ? 'Add official laboratory-reviewed guidance' : ''} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20 resize-y" />
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
@@ -836,6 +904,10 @@ export default function AdminPage() {
               <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('status')}</label>
               <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20">
                 <option value="AVAILABLE">AVAILABLE</option>
+                <option value="IN_USE">IN USE</option>
+                <option value="MAINTENANCE">MAINTENANCE</option>
+                <option value="OUT_OF_SERVICE">OUT OF SERVICE</option>
+                <option value="UNKNOWN">UNKNOWN / VERIFY</option>
                 <option value="UNAVAILABLE">UNAVAILABLE</option>
               </select>
             </div>

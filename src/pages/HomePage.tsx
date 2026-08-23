@@ -39,6 +39,11 @@ export default function HomePage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    document.title = 'KMI - LUPIC Laboratory Equipment Guide'
+    document.querySelector('meta[name="description"]')?.setAttribute('content', 'KMI - LUPIC Laboratory Equipment Guide — multilingual equipment documentation for researchers and students.')
+  }, [])
+
   const getNewsImages = (item: any): string[] => {
     const images = Array.isArray(item?.images) ? item.images.filter(Boolean) : []
     return images.length ? images : item?.image ? [item.image] : []
@@ -411,11 +416,22 @@ export default function HomePage() {
               </div>
             ))}
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1.25, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-wrap items-center justify-center gap-3 mt-10"
+          >
+            <Link to="/catalog" className="btn-lum-primary">Browse all equipment</Link>
+            <button type="button" onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="btn-lum-secondary">Latest updates</button>
+          </motion.div>
       </section>
 
       {/* ─── NEWS SLIDER ─── */}
-      {newsItems.length > 0 && (
-        <section className="py-20 px-4 md:px-6 lg:px-8 border-t border-lum-panel-border">
+      <section id="news" className="py-20 px-4 md:px-6 lg:px-8 border-t border-lum-panel-border">
+        {newsItems.length > 0 ? (
+          <>
           <h2 className="text-center text-[clamp(28px,3.5vw,40px)] font-light text-lum-ivory mb-12" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>
             KMI - LUPIC Today
           </h2>
@@ -425,6 +441,7 @@ export default function HomePage() {
               {/* Prev button */}
               <button
                 onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
+                aria-label="Previous news post"
                 className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
@@ -517,14 +534,22 @@ export default function HomePage() {
               {/* Next button */}
               <button
                 onClick={() => setNewsIdx(i => (i + 1) % newsItems.length)}
+                aria-label="Next news post"
                 className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
               </button>
             </div>
           </div>
-        </section>
-      )}
+          </>
+        ) : (
+          <div className="max-w-2xl mx-auto text-center py-8">
+            <p className="text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm/60 mb-4">KMI - LUPIC Today</p>
+            <h2 className="text-[clamp(24px,3.5vw,40px)] font-light text-lum-ivory" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>News updates are coming soon</h2>
+            <p className="text-sm text-lum-slate-light/60 leading-relaxed mt-4">The laboratory team will publish announcements, events, and equipment updates here.</p>
+          </div>
+        )}
+      </section>
 
       {/* News image viewer */}
       <AnimatePresence>
@@ -609,7 +634,7 @@ export default function HomePage() {
             <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center mx-3 sm:mx-6 md:mx-8 lg:mx-12">
               <img
                 src={item.src}
-                alt="partner logo"
+                alt={item.name}
                 className="h-24 sm:h-32 md:h-40 lg:h-56 w-auto object-contain opacity-60 hover:opacity-100 active:opacity-100 transition-opacity duration-500"
               />
               <span className="w-1 h-1 rounded-full bg-lum-slate-warm opacity-20 ml-3 sm:ml-6 md:ml-8 lg:ml-12" />

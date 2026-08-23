@@ -1,12 +1,45 @@
 import os
 import json
 import mimetypes
+import hmac
+import time
 from datetime import date
-from flask import Flask, request, jsonify
+from functools import wraps
+from flask import Flask, request, jsonify, session
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
+app.config.update(
+    SECRET_KEY=os.environ.get('FLASK_SECRET_KEY') or os.environ.get('SESSION_SECRET') or os.urandom(32),
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true',
+)
+
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', '')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+LOGIN_WINDOW_SECONDS = 600
+LOGIN_MAX_ATTEMPTS = 5
+failed_logins = {}
+VALID_STATUSES = {'AVAILABLE', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'UNKNOWN', 'UNAVAILABLE'}
+
+
+def normalize_status(value):
+    status = str(value or 'UNKNOWN').strip().upper().replace(' ', '_')
+    if status == 'AVIABLE':
+        status = 'AVAILABLE'
+    return status if status in VALID_STATUSES else 'UNKNOWN'
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get('admin_authenticated'):
+            return jsonify({'error': 'Authentication required'}), 401
+        return view(*args, **kwargs)
+    return wrapped
+
 
 @app.after_request
 def no_cache(response):
@@ -64,6 +97,40 @@ def init_db():
 init_db()
 
 # ─── API Routes ───
+@app.route('/api/auth/session', methods=['GET'])
+def auth_session():
+    return jsonify({'authenticated': bool(session.get('admin_authenticated'))})
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def auth_login():
+    body = request.get_json(silent=True) or {}
+    username = str(body.get('username', ''))
+    password = str(body.get('password', ''))
+    now = time.time()
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
+    attempts = [stamp for stamp in failed_logins.get(ip, []) if now - stamp < LOGIN_WINDOW_SECONDS]
+    if len(attempts) >= LOGIN_MAX_ATTEMPTS:
+        return jsonify({'error': 'Too many login attempts. Try again later.'}), 429
+    if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+        return jsonify({'error': 'Admin authentication is not configured on the server'}), 503
+    valid = hmac.compare_digest(username, ADMIN_USERNAME) and hmac.compare_digest(password, ADMIN_PASSWORD)
+    if not valid:
+        attempts.append(now)
+        failed_logins[ip] = attempts
+        return jsonify({'error': 'Invalid username or password'}), 401
+    failed_logins.pop(ip, None)
+    session.clear()
+    session['admin_authenticated'] = True
+    return jsonify({'ok': True})
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+def auth_logout():
+    session.clear()
+    return jsonify({'ok': True})
+
+
 @app.route('/api/equipment', methods=['GET'])
 def get_equipment():
     conn = get_db()
@@ -77,7 +144,7 @@ def get_equipment():
         data = r['data'] if r['data'] else {}
         data['slug'] = r['slug']
         data['_overridden'] = r['override']
-        if data.get('status') == 'AVIABLE': data['status'] = 'AVAILABLE'
+        data['status'] = normalize_status(data.get('status'))
         result.append(data)
     return jsonify(result)
 
@@ -104,10 +171,11 @@ def get_equipment_by_slug(slug):
     data = r['data'] if r['data'] else {}
     data['slug'] = r['slug']
     data['_overridden'] = r['override']
-    if data.get('status') == 'AVIABLE': data['status'] = 'AVAILABLE'
+    data['status'] = normalize_status(data.get('status'))
     return jsonify(data)
 
 @app.route('/api/equipment', methods=['POST'])
+@admin_required
 def save_equipment():
     body = request.get_json()
     if not body:
@@ -115,7 +183,7 @@ def save_equipment():
     slug = body.pop('slug', None)
     if not slug:
         return jsonify({'error': 'No slug'}), 400
-    if body.get('status') == 'AVIABLE': body['status'] = 'AVAILABLE'
+    body['status'] = normalize_status(body.get('status'))
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
@@ -128,6 +196,7 @@ def save_equipment():
     return jsonify({'ok': True})
 
 @app.route('/api/equipment/<slug>', methods=['DELETE'])
+@admin_required
 def delete_equipment(slug):
     conn = get_db()
     cur = conn.cursor()
@@ -156,6 +225,7 @@ def get_partners():
     return jsonify(rows)
 
 @app.route('/api/partners', methods=['POST'])
+@admin_required
 def save_partner():
     body = request.get_json()
     if not body:
@@ -178,6 +248,7 @@ def save_partner():
     return jsonify({'ok': True, 'id': partner_id})
 
 @app.route('/api/partners/<int:partner_id>', methods=['PUT'])
+@admin_required
 def update_partner(partner_id):
     body = request.get_json()
     if not body:
@@ -204,6 +275,7 @@ def update_partner(partner_id):
     return jsonify({'ok': True, 'id': partner_id})
 
 @app.route('/api/partners/<int:partner_id>', methods=['DELETE'])
+@admin_required
 def delete_partner(partner_id):
     conn = get_db()
     cur = conn.cursor()
@@ -231,6 +303,7 @@ def get_translations():
     return jsonify(result)
 
 @app.route('/api/translations', methods=['POST'])
+@admin_required
 def save_translation():
     body = request.get_json()
     if not body:
@@ -277,6 +350,7 @@ def get_news():
     return jsonify(result)
 
 @app.route('/api/news', methods=['POST'])
+@admin_required
 def save_news():
     body = request.get_json()
     if not body:
@@ -315,6 +389,7 @@ def save_news():
     return jsonify({'ok': True, 'id': news_id})
 
 @app.route('/api/news/<int:news_id>', methods=['DELETE'])
+@admin_required
 def delete_news(news_id):
     conn = get_db()
     cur = conn.cursor()
@@ -370,7 +445,7 @@ def serve_frontend(path):
             data = r['data'] if r['data'] else {}
             data['slug'] = r['slug']
             data['_overridden'] = r['override']
-            if data.get('status') == 'AVIABLE': data['status'] = 'AVAILABLE'
+            data['status'] = normalize_status(data.get('status'))
             equipment.append(data)
         
         translations = {}

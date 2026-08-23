@@ -1,7 +1,7 @@
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Shield, ListOrdered, Wrench, Info, MapPin, Hash, Tag, ShoppingCart, Package, BookOpen } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, Shield, ListOrdered, Wrench, Info, MapPin, Hash, Tag, ShoppingCart, Package, BookOpen, FileText } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import ThemeToggle from '../components/ThemeToggle'
@@ -29,6 +29,22 @@ const getMeta = (eq: any) => {
 }
 
 const silkEase = [0.16, 1, 0.3, 1] as const
+const SITE_TITLE = 'KMI - LUPIC Laboratory Equipment Guide'
+const SITE_DESCRIPTION = 'KMI - LUPIC Laboratory Equipment Guide — multilingual equipment documentation for researchers and students.'
+
+const sanitizeHtml = (value: unknown) => {
+  if (!value || typeof value !== 'string') return ''
+  const template = document.createElement('template')
+  template.innerHTML = value
+  template.content.querySelectorAll('script, style, iframe, object, embed, form').forEach(node => node.remove())
+  template.content.querySelectorAll('*').forEach(node => {
+    Array.from(node.attributes).forEach(attribute => {
+      if (attribute.name.toLowerCase().startsWith('on')) node.removeAttribute(attribute.name)
+      if ((attribute.name === 'href' || attribute.name === 'src') && /^(javascript|data):/i.test(attribute.value.trim())) node.removeAttribute(attribute.name)
+    })
+  })
+  return template.innerHTML
+}
 
 function InfoBadge({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -44,6 +60,8 @@ function InfoBadge({ icon: Icon, label, value }: { icon: any; label: string; val
 
 export default function EquipmentPage() {
   const { slug } = useParams<{ slug: string }>()
+  const location = useLocation()
+  const fromCatalog = location.pathname.startsWith('/catalog/')
   const { lang, t } = useI18n()
   const [apiEquipment, setApiEquipment] = useState<any>(null)
   const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
@@ -69,6 +87,30 @@ export default function EquipmentPage() {
   const isHidden = Boolean(slug && hiddenSlugs.includes(slug))
   const equipment = hiddenLoaded && !isHidden ? (apiEquipment || findEquipment(slug || '')) : undefined
   const meta = getMeta(equipment)
+  const manualBlobUrl = useMemo(() => {
+    if (!equipment?.manual) return null
+    try {
+      const base64 = equipment.manual.split(',')[1] || ''
+      const binary = atob(base64)
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+      return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+    } catch { return null }
+  }, [equipment?.manual])
+
+  useEffect(() => () => { if (manualBlobUrl) URL.revokeObjectURL(manualBlobUrl) }, [manualBlobUrl])
+
+  useEffect(() => {
+    if (!equipment) return
+    const localized = equipment[lang as Lang] || equipment.en || equipment
+    const description = document.querySelector('meta[name="description"]')
+    document.title = `${localized.name || 'Equipment'} | KMI - LUPIC`
+    description?.setAttribute('content', localized.description || SITE_DESCRIPTION)
+    return () => {
+      document.title = SITE_TITLE
+      description?.setAttribute('content', SITE_DESCRIPTION)
+    }
+  }, [equipment, lang])
 
   if (!hiddenLoaded) {
     return (
@@ -91,6 +133,7 @@ export default function EquipmentPage() {
   const imgSrc = (imageMap as Record<string, string>)[slug || ''] || adminImg || ''
   const videoUrlRaw = (youtubeVideos as Record<string, string>)[slug || ''] || ''
   const videoUrl = videoUrlRaw.includes('/embed/') ? videoUrlRaw.split('/embed/')[1] : videoUrlRaw
+  const maintenanceContent = Array.isArray((data as any).maintenance) ? (data as any).maintenance.join('<br>') : (data as any).maintenance
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -99,13 +142,14 @@ export default function EquipmentPage() {
         <div className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <motion.a
-              href="/#/"
+              href={fromCatalog ? '/#/catalog' : '/#/'}
+              onClick={() => { if (!fromCatalog) sessionStorage.setItem('homeScrollY', String(window.scrollY)) }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-1 p-2 -ml-2 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase"
             >
               <ArrowLeft className="w-3.5 h-3.5 text-lum-ivory/70" />
-              <span>{t('back')}</span>
+              <span>{fromCatalog ? t('backToList') : t('back')}</span>
             </motion.a>
             {/* Logo on mobile - next to back button */}
             <a href="/#/" onClick={() => sessionStorage.setItem('homeScrollY', String(window.scrollY))} className="sm:hidden">
@@ -208,7 +252,7 @@ export default function EquipmentPage() {
               </div>
               <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{section.title}</h2>
             </div>
-            <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: section.content }} />
+            <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.content) }} />
           </motion.section>
         ))}
 
@@ -226,7 +270,11 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('safety')}</h2>
           </div>
-          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).safety || (Array.isArray((data as any).safetyGuidelines) ? (data as any).safetyGuidelines.join('<br>') : '') }} />
+            {((data as any).safety || Array.isArray((data as any).safetyGuidelines)) ? (
+              <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: sanitizeHtml((data as any).safety || (data as any).safetyGuidelines.join('<br>')) }} />
+            ) : (
+              <p className="text-sm font-light leading-relaxed text-lum-slate-warm/60">{t('contentPending')}</p>
+            )}
         </motion.section>
 
         {/* Procedure */}
@@ -243,7 +291,11 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('procedure')}</h2>
           </div>
-          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).procedure || (Array.isArray((data as any).operatingProcedure) ? (data as any).operatingProcedure.join('<br>') : '') }} />
+          {((data as any).procedure || Array.isArray((data as any).operatingProcedure)) ? (
+            <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: sanitizeHtml((data as any).procedure || (data as any).operatingProcedure.join('<br>')) }} />
+          ) : (
+            <p className="text-sm font-light leading-relaxed text-lum-slate-warm/60">{t('contentPending')}</p>
+          )}
         </motion.section>
 
         {/* Maintenance */}
@@ -260,7 +312,11 @@ export default function EquipmentPage() {
             </div>
             <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('maintenance')}</h2>
           </div>
-          <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: (data as any).maintenance || (Array.isArray((data as any).maintenance) ? (data as any).maintenance.join('<br>') : '') }} />
+          {maintenanceContent ? (
+            <div className="tiptap text-sm font-light leading-relaxed text-lum-slate-light" dangerouslySetInnerHTML={{ __html: sanitizeHtml(maintenanceContent) }} />
+          ) : (
+            <p className="text-sm font-light leading-relaxed text-lum-slate-warm/60">{t('contentPending')}</p>
+          )}
         </motion.section>
 
         {/* Video Tutorial */}
@@ -287,6 +343,27 @@ export default function EquipmentPage() {
             </div>
           </motion.section>
         )}
+
+        {/* Manual */}
+        <motion.section
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.2, ease: silkEase, delay: 0.6 }}
+          className="lum-card p-4 md:p-6 lg:p-8 mb-6"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-lum-ivory tracking-tight">{t('manual')}</h2>
+              <p className="text-sm font-light leading-relaxed text-lum-slate-warm/60 mt-2">{manualBlobUrl ? t('manualAvailable') : t('contentPending')}</p>
+            </div>
+            {manualBlobUrl && (
+              <a href={manualBlobUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-lum-slate-light/10 hover:bg-lum-slate-light/20 text-lum-ivory text-xs font-medium transition-colors border border-lum-panel-border flex-shrink-0">
+                <FileText className="w-4 h-4" /> {t('viewManual')}
+              </a>
+            )}
+          </div>
+        </motion.section>
 
         {/* ─── FOOTER ─── */}
         <footer className="text-center py-12 border-t border-lum-panel-border mt-16">

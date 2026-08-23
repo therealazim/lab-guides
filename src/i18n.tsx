@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 export type Lang = 'en' | 'uz' | 'kk' | 'ru' | 'ko'
 
@@ -62,6 +62,10 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     heroStatLanguages: 'Languages',
     heroStatAccess: 'Access',
     videoTitle: 'Equipment Tutorial',
+    manual: 'Equipment Manual',
+    viewManual: 'View manual',
+    manualAvailable: 'Official PDF manual available for this equipment.',
+    contentPending: 'Content awaiting official laboratory review.',
     greeting: 'Hello!',
     adminLogin: 'Admin Login',
     adminPanel: 'Admin Panel',
@@ -148,6 +152,10 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     heroStatLanguages: "Tillar",
     heroStatAccess: "Kirish",
     videoTitle: "Video qo'llanma",
+    manual: "Jihoz qo'llanmasi",
+    viewManual: "Qo'llanmani ko'rish",
+    manualAvailable: "Bu jihoz uchun rasmiy PDF qo'llanmasi mavjud.",
+    contentPending: "Kontent laboratoriya tomonidan rasmiy ko'rib chiqilishini kutmoqda.",
     greeting: 'Assalomu alaykum!',
     adminLogin: "Admin kirish",
     adminPanel: "Admin paneli",
@@ -235,6 +243,10 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     heroStatLanguages: "Tillari",
     heroStatAccess: "Kiriw",
     videoTitle: "Video qollanba",
+    manual: "Qurılma qollanbası",
+    viewManual: "Qollanbanı kóriw",
+    manualAvailable: "Bul qurılma ushın rásmiy PDF qollanba bar.",
+    contentPending: "Kontent laboratoriya tárepinen rásmiy kórip shıǵılıwın kútip atır.",
     greeting: 'Assalawma áleykum!',
     adminLogin: "Admin kiriw",
     adminPanel: "Admin paneli",
@@ -322,6 +334,10 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     heroStatLanguages: 'Языки',
     heroStatAccess: 'Доступ',
     videoTitle: 'Видеоурок',
+    manual: 'Руководство по оборудованию',
+    viewManual: 'Открыть руководство',
+    manualAvailable: 'Официальное PDF-руководство для этого оборудования доступно.',
+    contentPending: 'Материал ожидает официальной проверки лабораторией.',
     greeting: 'Здравствуйте!',
     adminLogin: "Вход администратора",
     adminPanel: "Панель администратора",
@@ -409,6 +425,10 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     heroStatLanguages: '언어',
     heroStatAccess: '액세스',
     videoTitle: '장비 튜토리얼',
+    manual: '장비 매뉴얼',
+    viewManual: '매뉴얼 보기',
+    manualAvailable: '이 장비의 공식 PDF 매뉴얼을 사용할 수 있습니다.',
+    contentPending: '이 콘텐츠는 실험실의 공식 검토를 기다리고 있습니다.',
     greeting: '안녕하세요!',
     adminLogin: "관리자 로그인",
     adminPanel: "관리자 패널",
@@ -467,7 +487,16 @@ const I18nContext = createContext<I18nContextType>({
 })
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>('en')
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window === 'undefined') return 'en'
+    const saved = localStorage.getItem('language') as Lang | null
+    return saved && LANGUAGES.some(item => item.code === saved) ? saved : 'en'
+  })
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+    localStorage.setItem('language', lang)
+  }, [lang])
   const [overrides, _setOverrides] = useState<Record<string, Record<string, string>>>(() => {
     const initial = (window as any).__INITIAL_DATA__
     return initial?.translations || {}
