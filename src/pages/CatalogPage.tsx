@@ -189,12 +189,7 @@ export default function CatalogPage() {
                     </div>
                   )}
                 </div>
-                {eq.brand && eq.brand !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.brand}</p>}
-                {eq.model && eq.model !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.model}</p>}
-                {eq.quantity && eq.quantity !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{t('quantity')}: {eq.quantity}</p>}
-                {eq.location && eq.location !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{eq.location}</p>}
-                {eq.purchase_date && eq.purchase_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{t('purchaseDate')}: {eq.purchase_date}</p>}
-                {eq.installation_date && eq.installation_date !== '—' && <p className="text-[9px] text-lum-slate-warm/60 truncate">{t('installationDate')}: {eq.installation_date}</p>}
+                <p className="text-xs font-medium text-lum-ivory truncate">{d.name}</p>
                 {eq.status && (
                   <span className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[8px] font-medium ${
                     eq.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
