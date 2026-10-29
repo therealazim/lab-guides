@@ -68,14 +68,15 @@ export default function CatalogItemPage() {
 
   const d = equipment[lang as Lang] || equipment.en || equipment
   const imgSrc = (imageMap as Record<string, string>)[slug || ''] || equipment.image || ''
+  const statusKey = ({ AVAILABLE: 'statusAvailable', IN_USE: 'statusInUse', MAINTENANCE: 'statusMaintenance', OUT_OF_SERVICE: 'statusOutOfService', UNAVAILABLE: 'statusUnavailable', UNKNOWN: 'statusUnknown' } as Record<string, string>)[String(equipment.status || '').toUpperCase()] || 'statusUnknown'
 
   return (
-    <div className="relative z-10 min-h-screen" style={{ background: '#0F1115' }}>
+    <div className="relative z-10 min-h-screen">
       <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-4 py-3 flex items-center justify-between">
           <Link to="/catalog" className="flex items-center gap-1 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase">
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Catalog
+            {t('backToList')}
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -95,7 +96,6 @@ export default function CatalogItemPage() {
               </div>
             )}
             <h1 className="text-xl font-semibold text-lum-ivory">{d.name}</h1>
-            <p className="text-xs text-lum-slate-warm/60 mt-1">Slug: {slug}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -108,37 +108,37 @@ export default function CatalogItemPage() {
             {equipment.model && equipment.model !== '—' && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
                 <Info className="w-3.5 h-3.5 text-lum-slate-light flex-shrink-0" />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Model</p><p className="text-xs font-medium text-lum-ivory">{equipment.model}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('model')}</p><p className="text-xs font-medium text-lum-ivory">{equipment.model}</p></div>
               </div>
             )}
             {equipment.quantity && equipment.quantity !== '—' && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
                 <Hash className="w-3.5 h-3.5 text-lum-slate-light flex-shrink-0" />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Qty</p><p className="text-xs font-medium text-lum-ivory">{equipment.quantity}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('quantity')}</p><p className="text-xs font-medium text-lum-ivory">{equipment.quantity}</p></div>
               </div>
             )}
             {equipment.location && equipment.location !== '—' && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
                 <MapPin className="w-3.5 h-3.5 text-lum-slate-light flex-shrink-0" />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Location</p><p className="text-xs font-medium text-lum-ivory">{equipment.location}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('location')}</p><p className="text-xs font-medium text-lum-ivory">{equipment.location}</p></div>
               </div>
             )}
             {equipment.purchase_date && equipment.purchase_date !== '—' && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
                 <ShoppingCart className="w-3.5 h-3.5 text-lum-slate-light flex-shrink-0" />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Purchased</p><p className="text-xs font-medium text-lum-ivory">{equipment.purchase_date}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('purchaseDate')}</p><p className="text-xs font-medium text-lum-ivory">{equipment.purchase_date}</p></div>
               </div>
             )}
             {equipment.installation_date && equipment.installation_date !== '—' && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border">
                 <Package className="w-3.5 h-3.5 text-lum-slate-light flex-shrink-0" />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Installed</p><p className="text-xs font-medium text-lum-ivory">{equipment.installation_date}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('installationDate')}</p><p className="text-xs font-medium text-lum-ivory">{equipment.installation_date}</p></div>
               </div>
             )}
             {equipment.status && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border col-span-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${equipment.status === 'AVAILABLE' ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">Status</p><p className="text-xs font-medium text-lum-ivory">{equipment.status}</p></div>
+                <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('status')}</p><p className="text-xs font-medium text-lum-ivory">{t(statusKey)}</p></div>
               </div>
             )}
           </div>
@@ -152,7 +152,7 @@ export default function CatalogItemPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-lum-slate-light/10 hover:bg-lum-slate-light/20 text-lum-ivory text-sm font-medium transition-colors border border-lum-panel-border"
               >
                 <FileText className="w-4 h-4" />
-                View Manual
+                {t('viewManual')}
               </a>
             </div>
           )}

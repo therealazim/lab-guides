@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage'
 import EquipmentPage from './pages/EquipmentPage'
 import AdminPage from './pages/AdminPage'
 import CatalogPage from './pages/CatalogPage'
+import CatalogItemPage from './pages/CatalogItemPage'
 
 function ScrollToTop() {
   const { t } = useI18n()
@@ -81,7 +82,7 @@ function AnimatedRoutes() {
           <Routes location={location}>
             <Route path="/" element={<HomePage />} />
             <Route path="/catalog" element={<CatalogPage />} />
-            <Route path="/catalog/:slug" element={<EquipmentPage />} />
+            <Route path="/catalog/:slug" element={<CatalogItemPage />} />
             <Route path="/equipment/:slug" element={<EquipmentPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
