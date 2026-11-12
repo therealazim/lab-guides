@@ -139,7 +139,7 @@ export default function EquipmentPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 py-8 sm:py-10">
+      <main className="mx-auto w-full px-4 sm:px-6 md:px-8 py-8 sm:py-10">
         <motion.a
           href={fromCatalog ? '/#/catalog' : '/#/'}
           onClick={() => { if (!fromCatalog) sessionStorage.setItem('homeScrollY', String(window.scrollY)) }}

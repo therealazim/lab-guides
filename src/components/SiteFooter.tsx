@@ -7,7 +7,7 @@ export default function SiteFooter() {
   const { t } = useI18n()
   return (
     <footer className="bg-lum-navy text-white">
-      <div className="mx-auto grid w-full max-w-[1400px] gap-10 px-4 py-14 md:grid-cols-3 md:px-8">
+      <div className="mx-auto grid w-full gap-10 px-4 py-14 md:grid-cols-3 md:px-8">
         <div>
           <LupicLogo light />
           <p className="mt-5 max-w-xs text-xs leading-relaxed text-white/70">
@@ -48,7 +48,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-between gap-3 px-4 py-5 text-[11px] text-white/60 md:flex-row md:px-8">
+        <div className="mx-auto flex w-full flex-col items-center justify-between gap-3 px-4 py-5 text-[11px] text-white/60 md:flex-row md:px-8">
           <p>&copy; 2025 Korea University. {t('rightsReserved')}</p>
           <div className="flex items-center gap-4">
             <Link to="/admin" className="hover:text-white">{t('adminLink')}</Link>

@@ -25,7 +25,7 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-lum-panel-border bg-white">
-      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-3 md:px-8">
+      <div className="mx-auto flex w-full items-center justify-between gap-4 px-4 py-3 md:px-8">
         <Link to="/" aria-label="LUPIC home" className="flex-shrink-0">
           <LupicLogo />
         </Link>
@@ -44,9 +44,9 @@ export default function SiteHeader() {
 
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-4 xl:flex">
-            <img src="/logos/korea-univ.svg" alt="Korea University" className="h-9 w-auto" />
+            <img src="/logos/korea-univ.svg" alt="Korea University" className="h-[68px] w-auto" />
             <span className="h-7 w-px bg-lum-panel-border" />
-            <img src="/logos/nrf.svg" alt="National Research Foundation of Korea" className="h-9 w-auto" />
+            <img src="/logos/nrf.svg" alt="National Research Foundation of Korea" className="h-[68px] w-auto" />
           </div>
           <LanguageSwitcher />
           <button

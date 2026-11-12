@@ -151,7 +151,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,227,223,0.96)_0%,rgba(251,227,223,0.85)_30%,rgba(240,244,250,0.55)_55%,rgba(255,255,255,0.15)_100%)]" />
         </div>
 
-        <div className="relative mx-auto flex w-full max-w-[1400px] flex-col justify-center px-4 py-16 md:min-h-[560px] md:px-8 md:py-24">
+        <div className="relative mx-auto flex w-full flex-col justify-center px-4 py-16 md:min-h-[560px] md:px-8 md:py-24">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -170,10 +170,10 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-6">
-              <img src="/logos/korea-univ.svg" alt="Korea University" className="h-12 w-auto" />
-              <span className="hidden h-10 w-px bg-lum-navy/15 sm:block" />
+              <img src="/logos/korea-univ.svg" alt="Korea University" className="h-36 w-auto" />
+              <span className="hidden h-32 w-px bg-lum-navy/15 sm:block" />
               <div className="flex items-center gap-2">
-                <img src="/logos/kmi.svg" alt="KMI" className="h-11 w-auto" />
+                <img src="/logos/kmi.svg" alt="KMI" className="h-[132px] w-auto" />
               </div>
             </div>
 
@@ -187,7 +187,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── EQUIPMENT ─── */}
-      <section className="mx-auto w-full max-w-[1400px] px-4 py-16 md:px-8 md:py-20">
+      <section className="mx-auto w-full px-4 py-16 md:px-8 md:py-20">
         <h2 className="lx-heading">{t('homeEquipmentTitle')}</h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-lum-slate-warm">{t('homeEquipmentDesc')}</p>
 
@@ -229,7 +229,7 @@ export default function HomePage() {
 
       {/* ─── FEATURE CARDS ─── */}
       <section className="bg-[#F7F9FC] py-16 md:py-20">
-        <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-5 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 md:px-8">
+        <div className="mx-auto grid w-full grid-cols-1 gap-5 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 md:px-8">
           {FEATURES.map((feature, i) => (
             <motion.div
               key={feature.to}
@@ -252,7 +252,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── WELCOME + NEWS ─── */}
-      <section className="mx-auto grid w-full max-w-[1400px] gap-12 px-4 py-16 md:grid-cols-[1fr_1fr] md:px-8 md:py-20 lg:gap-20">
+      <section className="mx-auto grid w-full gap-12 px-4 py-16 md:grid-cols-[1fr_1fr] md:px-8 md:py-20 lg:gap-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -316,8 +316,7 @@ export default function HomePage() {
 
       {/* ─── PARTNERS ─── */}
       <section className="border-t border-lum-panel-border bg-white py-12">
-        <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] text-lum-slate-warm">{t('partners')}</p>
-        <div className="mx-auto mt-8 flex w-full max-w-[1400px] flex-wrap items-center justify-center gap-x-14 gap-y-8 px-4 md:px-8">
+        <div className="mx-auto flex w-full flex-wrap items-center justify-center gap-x-14 gap-y-8 px-4 md:px-8">
           {partners.map((partner, i) => (
             <a
               key={`${partner.name}-${i}`}
@@ -326,7 +325,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="flex items-center justify-center opacity-70 transition-opacity hover:opacity-100"
             >
-              <img src={partner.src} alt={partner.name} className="h-14 w-auto object-contain md:h-16" />
+              <img src={partner.src} alt={partner.name} className="h-28 w-auto object-contain md:h-32" />
             </a>
           ))}
         </div>

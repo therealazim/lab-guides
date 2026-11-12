@@ -106,8 +106,7 @@ function AnimatedRoutes() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={() => { setShowGreeting(false); setTimeout(() => { setGreeting(null); setRippling(false) }, 300) }}
-            className="fixed inset-0 z-[100] flex items-center justify-center"
-            style={{ backgroundColor: '#0F1115' }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[linear-gradient(115deg,#FBE3DF_0%,#FDF0EE_28%,#F4F1F6_52%,#E6EEF8_100%)]"
           >
             {/* Rings */}
             {rippling && (
@@ -116,19 +115,19 @@ function AnimatedRoutes() {
                   initial={{ opacity: 0.5, scale: 0 }}
                   animate={{ opacity: 0, scale: 4 }}
                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute w-32 h-32 rounded-full border border-white/20"
+                  className="absolute w-32 h-32 rounded-full border border-lum-navy/20"
                 />
                 <motion.span
                   initial={{ opacity: 0.4, scale: 0 }}
                   animate={{ opacity: 0, scale: 4 }}
                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-                  className="absolute w-40 h-40 rounded-full border border-white/15"
+                  className="absolute w-40 h-40 rounded-full border border-lum-accent/25"
                 />
                 <motion.span
                   initial={{ opacity: 0.3, scale: 0 }}
                   animate={{ opacity: 0, scale: 4 }}
                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-                  className="absolute w-48 h-48 rounded-full border border-white/10"
+                  className="absolute w-48 h-48 rounded-full border border-lum-navy/10"
                 />
               </>
             )}
@@ -145,8 +144,7 @@ function AnimatedRoutes() {
               initial={{ opacity: 0, scale: 0.9, filter: 'blur(8px)' }}
               animate={showGreeting ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : { opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[clamp(1.8rem,7vw,4.5rem)] font-light text-white/90 tracking-tight relative z-10"
-              style={{ fontFamily: "'Noto Serif KR', serif" }}
+              className="text-[clamp(1.8rem,7vw,4.5rem)] font-bold text-lum-navy tracking-tight relative z-10"
             >
               <span className={`relative inline-block ${rippling ? 'ring-fade' : ''}`}>
                 <span className="inline-flex" style={{ whiteSpace: 'pre' }}>

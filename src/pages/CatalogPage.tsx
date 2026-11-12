@@ -85,7 +85,7 @@ export default function CatalogPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-10 md:px-8 md:py-14">
+      <main className="mx-auto w-full flex-1 px-4 py-10 md:px-8 md:py-14">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

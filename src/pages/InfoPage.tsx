@@ -26,7 +26,7 @@ export default function InfoPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <SiteHeader />
       <section className="bg-[linear-gradient(120deg,#FDEFEC_0%,#F7F9FC_60%,#E8F0FB_100%)]">
-        <div className="mx-auto w-full max-w-[1400px] px-4 py-16 md:px-8 md:py-20">
+        <div className="mx-auto w-full px-4 py-16 md:px-8 md:py-20">
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-lum-accent">LUPIC</p>
           <h1 className="mt-3 text-[clamp(1.8rem,3.4vw,2.75rem)] font-bold leading-tight text-lum-navy">
             {t(keys.title)}
@@ -35,7 +35,7 @@ export default function InfoPage() {
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-14 md:px-8">
+      <main className="mx-auto w-full flex-1 px-4 py-14 md:px-8">
         <div className="lum-card flex flex-col items-center px-6 py-16 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-lum-accent-soft">
             <Clock3 className="h-6 w-6 text-lum-accent" />

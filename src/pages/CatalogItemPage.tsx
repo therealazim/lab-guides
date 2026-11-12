@@ -74,7 +74,7 @@ export default function CatalogItemPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-10 md:px-8 md:py-14">
+      <main className="mx-auto w-full flex-1 px-4 py-10 md:px-8 md:py-14">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto">
           <div className="lum-card p-6 md:p-8 flex flex-col items-center text-center mb-6">
             {imgSrc ? (
