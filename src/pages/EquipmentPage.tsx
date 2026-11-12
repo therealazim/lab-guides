@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Shield, ListOrdered, Wrench, Info, MapPin, Hash, Tag, ShoppingCart, Package, BookOpen, FileText } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
-import LanguageSwitcher from '../components/LanguageSwitcher'
-import ThemeToggle from '../components/ThemeToggle'
+import SiteHeader from '../components/SiteHeader'
+import SiteFooter from '../components/SiteFooter'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import youtubeVideos from '../data/youtube-videos.json'
@@ -114,16 +114,16 @@ export default function EquipmentPage() {
 
   if (!hiddenLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
-        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-lum-panel-border border-t-lum-accent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!equipment) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
-        <p className="text-lum-slate-light/60 text-lg font-light">{t('noResults')}</p>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-lum-slate-warm text-lg">{t('noResults')}</p>
       </div>
     )
   }
@@ -136,48 +136,20 @@ export default function EquipmentPage() {
   const maintenanceContent = Array.isArray((data as any).maintenance) ? (data as any).maintenance.join('<br>') : (data as any).maintenance
 
   return (
-    <div className="relative z-10 min-h-screen">
-      {/* ─── HEADER ─── */}
-      <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
-        <div className="w-full px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <motion.a
-              href={fromCatalog ? '/#/catalog' : '/#/'}
-              onClick={() => { if (!fromCatalog) sessionStorage.setItem('homeScrollY', String(window.scrollY)) }}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-1 p-2 -ml-2 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-lum-ivory/70" />
-              <span>{fromCatalog ? t('backToList') : t('back')}</span>
-            </motion.a>
-            {/* Logo on mobile - next to back button */}
-            <a href="/#/" onClick={() => sessionStorage.setItem('homeScrollY', String(window.scrollY))} className="sm:hidden">
-              <img src="/korea-univ-logo.svg" alt="Korea University" className="h-8 w-auto" />
-            </a>
-          </div>
+    <div className="flex min-h-screen flex-col bg-white">
+      <SiteHeader />
 
-          {/* Center logo & branding - desktop only */}
-          <a
-            href="/#/"
-            onClick={() => sessionStorage.setItem('homeScrollY', String(window.scrollY))}
-            className="hidden sm:flex absolute left-1/2 -translate-x-1/2 items-center gap-2"
-          >
-            <img src="/korea-univ-logo.svg" alt="Korea University" className="h-9 w-auto" />
-            <div>
-              <p className="text-[11px] font-bold text-lum-ivory leading-tight">고려대학교 IEH</p>
-              <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-lum-slate-light/70">KMI - LUPIC</span>
-            </div>
-          </a>
-
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </header>
-
-      <main className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-8 sm:py-12 pt-20">
+      <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 py-8 sm:py-10">
+        <motion.a
+          href={fromCatalog ? '/#/catalog' : '/#/'}
+          onClick={() => { if (!fromCatalog) sessionStorage.setItem('homeScrollY', String(window.scrollY)) }}
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-8 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-lum-slate-warm transition-colors hover:text-lum-accent"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>{fromCatalog ? t('backToList') : t('back')}</span>
+        </motion.a>
         {/* ─── HERO ─── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -198,10 +170,10 @@ export default function EquipmentPage() {
             {/* Info */}
             <div>
               <p className="section-tag">{t('heroTagline')}</p>
-              <h1 className="text-[clamp(1.8rem,3.5vw,2.8rem)] font-light tracking-[-0.04em] leading-[1.15] text-lum-ivory mb-4">
+              <h1 className="text-[clamp(1.8rem,3.5vw,2.8rem)] font-bold tracking-[-0.02em] leading-[1.15] text-lum-navy mb-4">
                 <strong className="font-semibold">{data.name}</strong>
               </h1>
-              <p className="text-sm font-light leading-relaxed text-lum-slate-light mb-8">
+              <p className="text-sm leading-relaxed text-lum-slate-light mb-8">
                 {data.description}
               </p>
 
@@ -220,7 +192,7 @@ export default function EquipmentPage() {
                 {meta.status && (
                   <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-lum-panel-bg border border-lum-panel-border backdrop-blur-xl">
                     <span className={`w-2.5 h-2.5 rounded-full ${
-                      meta.status === 'AVAILABLE' ? 'bg-emerald-400' : 'bg-red-400'
+                      meta.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-red-500'
                     }`} />
                     <div className="min-w-0">
                       <p className="text-[9px] tracking-[0.15em] uppercase text-lum-slate-warm/70">{t('status')}</p>
@@ -365,16 +337,8 @@ export default function EquipmentPage() {
           </div>
         </motion.section>
 
-        {/* ─── FOOTER ─── */}
-        <footer className="text-center py-12 border-t border-lum-panel-border mt-16">
-          <p className="text-[10px] tracking-[0.15em] uppercase text-lum-slate-warm/80">
-            &copy; 2026 <span className="text-lum-slate-light font-semibold">KMI / LUPIC Laboratory</span>
-          </p>
-          <p className="text-[11px] text-lum-slate-warm/50 mt-3 max-w-2xl mx-auto leading-relaxed">
-            {t('footerDisclaimer')}
-          </p>
-        </footer>
       </main>
+      <SiteFooter />
     </div>
   )
 }

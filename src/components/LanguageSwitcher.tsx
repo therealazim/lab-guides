@@ -28,7 +28,7 @@ export default function LanguageSwitcher() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={current.label}
-        className="flex items-center gap-2 px-3 py-2.5 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-all duration-500 backdrop-blur-xl text-xs tracking-[0.1em]"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-9 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-all duration-500 backdrop-blur-xl text-xs tracking-[0.1em]"
       >
         {current.flag === 'kk' ? (
           <img src="/flags/kk.svg" alt={current.label} className="w-4 h-4 rounded-sm" />

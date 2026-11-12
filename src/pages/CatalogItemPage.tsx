@@ -1,10 +1,10 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Tag, Info, MapPin, Hash, ShoppingCart, Package, FileText } from 'lucide-react'
+import { Tag, Info, MapPin, Hash, ShoppingCart, Package, FileText } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
-import ThemeToggle from '../components/ThemeToggle'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import SiteHeader from '../components/SiteHeader'
+import SiteFooter from '../components/SiteFooter'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipmentBySlug as apiFetchEq, fetchHiddenEquipment } from '../api'
@@ -52,16 +52,16 @@ export default function CatalogItemPage() {
 
   if (!hiddenLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
-        <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-lum-panel-border border-t-lum-accent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!equipment) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F1115' }}>
-        <p className="text-lum-slate-light/60 text-lg font-light">{t('noResults')}</p>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-lum-slate-warm text-lg">{t('noResults')}</p>
       </div>
     )
   }
@@ -71,31 +71,22 @@ export default function CatalogItemPage() {
   const statusKey = ({ AVAILABLE: 'statusAvailable', IN_USE: 'statusInUse', MAINTENANCE: 'statusMaintenance', OUT_OF_SERVICE: 'statusOutOfService', UNAVAILABLE: 'statusUnavailable', UNKNOWN: 'statusUnknown' } as Record<string, string>)[String(equipment.status || '').toUpperCase()] || 'statusUnknown'
 
   return (
-    <div className="relative z-10 min-h-screen">
-      <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
-        <div className="w-full px-4 py-3 flex items-center justify-between">
-          <Link to="/catalog" className="flex items-center gap-1 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t('backToList')}
-          </Link>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col bg-white">
+      <SiteHeader />
 
-      <main className="w-full px-8 md:px-12 lg:px-16 py-12 pt-20">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-10 md:px-8 md:py-14">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto">
           <div className="lum-card p-6 md:p-8 flex flex-col items-center text-center mb-6">
             {imgSrc ? (
-              <img src={imgSrc} alt={d.name} className="h-40 w-auto object-contain mb-6" />
+              <div className="flex h-48 w-full items-center justify-center rounded-lg bg-[#F7F9FC] p-4 mb-6">
+                <img src={imgSrc} alt={d.name} className="max-h-full w-auto object-contain" />
+              </div>
             ) : (
               <div className="w-24 h-24 rounded-2xl bg-lum-soft flex items-center justify-center mb-6">
                 <span className="text-3xl font-semibold text-lum-slate-warm/40">{d.name?.[0]}</span>
               </div>
             )}
-            <h1 className="text-xl font-semibold text-lum-ivory">{d.name}</h1>
+            <h1 className="text-xl font-bold text-lum-navy">{d.name}</h1>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -137,7 +128,7 @@ export default function CatalogItemPage() {
             )}
             {equipment.status && (
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-lum-panel-bg border border-lum-panel-border col-span-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${equipment.status === 'AVAILABLE' ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                <span className={`w-2.5 h-2.5 rounded-full ${equipment.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-red-500'}`} />
                 <div><p className="text-[8px] tracking-[0.15em] uppercase text-lum-slate-warm/60">{t('status')}</p><p className="text-xs font-medium text-lum-ivory">{t(statusKey)}</p></div>
               </div>
             )}
@@ -149,7 +140,7 @@ export default function CatalogItemPage() {
                 href={manualBlobUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-lum-slate-light/10 hover:bg-lum-slate-light/20 text-lum-ivory text-sm font-medium transition-colors border border-lum-panel-border"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-lum-accent text-white hover:bg-[#E0513F] text-xs font-semibold uppercase tracking-[0.12em] transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 {t('viewManual')}
@@ -158,6 +149,7 @@ export default function CatalogItemPage() {
           )}
         </motion.div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

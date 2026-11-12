@@ -9,6 +9,7 @@ import EquipmentPage from './pages/EquipmentPage'
 import AdminPage from './pages/AdminPage'
 import CatalogPage from './pages/CatalogPage'
 import CatalogItemPage from './pages/CatalogItemPage'
+import InfoPage from './pages/InfoPage'
 
 function ScrollToTop() {
   const { t } = useI18n()
@@ -84,6 +85,13 @@ function AnimatedRoutes() {
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/catalog/:slug" element={<CatalogItemPage />} />
             <Route path="/equipment/:slug" element={<EquipmentPage />} />
+            <Route path="/training" element={<InfoPage />} />
+            <Route path="/sop" element={<InfoPage />} />
+            <Route path="/download" element={<InfoPage />} />
+            <Route path="/certificate" element={<InfoPage />} />
+            <Route path="/faq" element={<InfoPage />} />
+            <Route path="/announcements" element={<InfoPage />} />
+            <Route path="/about" element={<InfoPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </motion.div>

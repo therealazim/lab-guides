@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Search, SlidersHorizontal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search, SlidersHorizontal } from 'lucide-react'
 import { useI18n, type Lang } from '../i18n'
-import ThemeToggle from '../components/ThemeToggle'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import SiteHeader from '../components/SiteHeader'
+import SiteFooter from '../components/SiteFooter'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
@@ -18,7 +18,6 @@ export default function CatalogPage() {
     const initial = (window as any).__INITIAL_DATA__
     return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
   })
-  const [mouse, setMouse] = useState({ x: 50, y: 50 })
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [sortBy, setSortBy] = useState('name')
@@ -57,12 +56,6 @@ export default function CatalogPage() {
     }).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => setMouse({ x: (e.clientX / window.innerWidth) * 100, y: (e.clientY / window.innerHeight) * 100 })
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
-
   const allEquipments = useMemo(() => {
     const merged = staticEquipments
       .filter((eq: any) => !hiddenSlugs.includes(eq.slug))
@@ -89,48 +82,20 @@ export default function CatalogPage() {
   }, [allEquipments, lang, query, sortBy, statusFilter])
 
   return (
-    <div className="relative z-10 min-h-screen">
-      <div
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: 'linear-gradient(to right, var(--grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px)',
-          backgroundSize: '120px 120px',
-          WebkitMaskImage: `radial-gradient(circle 400px at ${mouse.x}% ${mouse.y}%, rgba(0,0,0,0.8) 0%, transparent 60%)`,
-          maskImage: `radial-gradient(circle 400px at ${mouse.x}% ${mouse.y}%, rgba(0,0,0,0.8) 0%, transparent 60%)`,
-        }}
-      />
+    <div className="flex min-h-screen flex-col bg-white">
+      <SiteHeader />
 
-      <header className="fixed top-0 left-0 right-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
-        <div className="w-full px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-9 sm:h-12 w-auto" /></a>
-            <div className="hidden sm:block min-w-0">
-              <p className="text-xs font-bold text-lum-ivory">고려대학교 IEH</p>
-              <span className="text-lum-ivory font-bold text-xs tracking-[0.2em] uppercase">KMI - LUPIC</span>
-            </div>
-            <Link to="/" aria-label={t('back')} className="flex items-center gap-1 px-2.5 py-2.5 min-h-11 text-lum-slate-warm hover:text-lum-ivory transition-colors text-xs tracking-[0.15em] uppercase shrink-0">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t('back')}</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </header>
-
-      <main className="pt-24 px-4 sm:px-8 md:px-12 lg:px-16 pb-12 sm:pb-16">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-10 md:px-8 md:py-14">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="mb-10"
         >
-          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-lum-slate-warm/60 mb-3">{t('equipmentCatalog')}</p>
-          <h1 className="text-[clamp(1.8rem,3.5vw,2.6rem)] font-light tracking-[-0.04em] text-lum-ivory">
-            {t('allEquipment')} <strong className="font-semibold">({filteredEquipment.length})</strong>
+          <p className="section-tag">{t('equipmentCatalog')}</p>
+          <h1 className="text-[clamp(1.7rem,3vw,2.4rem)] font-bold tracking-[-0.02em] text-lum-navy">
+            {t('allEquipment')} <span className="text-lum-slate-warm">({filteredEquipment.length})</span>
           </h1>
-          <p className="text-xs text-lum-slate-warm/60 mt-3">{t('showing')} {filteredEquipment.length} {t('of')} {allEquipments.length} {t('equipmentGuides')}</p>
+          <p className="mt-2 text-sm text-lum-slate-warm">{t('showing')} {filteredEquipment.length} {t('of')} {allEquipments.length} {t('equipmentGuides')}</p>
         </motion.div>
 
         <div className="lum-card p-3 md:p-4 mb-6 flex flex-col md:flex-row gap-3">
@@ -178,9 +143,9 @@ export default function CatalogPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
                 onClick={() => navigate(`/catalog/${eq.slug}`)}
-                className="lum-card p-3 cursor-pointer hover:border-lum-slate-light/20 transition-all group"
+                className="lum-card p-3 cursor-pointer group"
               >
-                <div className="aspect-square rounded-xl bg-lum-mid border border-lum-panel-border flex items-center justify-center p-3 mb-3 overflow-hidden">
+                <div className="aspect-square rounded-lg bg-[#F7F9FC] border border-lum-panel-border flex items-center justify-center p-3 mb-3 overflow-hidden">
                   {imgSrc ? (
                     <img src={imgSrc} alt={d.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                   ) : (
@@ -189,11 +154,12 @@ export default function CatalogPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs font-medium text-lum-ivory truncate">{d.name}</p>
+                <p className="text-sm font-semibold text-lum-navy truncate">{d.name}</p>
                 {eq.status && (
-                  <span className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[8px] font-medium ${
-                    eq.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                  <span className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
+                    eq.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'
                   }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${eq.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-red-500'}`} />
                     {t(({ AVAILABLE: 'statusAvailable', IN_USE: 'statusInUse', MAINTENANCE: 'statusMaintenance', OUT_OF_SERVICE: 'statusOutOfService', UNAVAILABLE: 'statusUnavailable', UNKNOWN: 'statusUnknown' } as Record<string, string>)[String(eq.status).toUpperCase()] || 'statusUnknown')}
                   </span>
                 )}
@@ -203,6 +169,7 @@ export default function CatalogPage() {
         </div>
         )}
       </main>
+      <SiteFooter />
     </div>
   )
 }
