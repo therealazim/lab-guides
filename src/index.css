@@ -17,7 +17,7 @@
   --color-lum-accent: #F2685A;
   --color-lum-accent-soft: #FDEFEC;
   --color-lum-navy: #0B2B57;
-  --font-sans: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Montserrat', 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
 
 :root {
@@ -38,7 +38,7 @@ html {
 }
 
 body {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #FFFFFF;
@@ -59,7 +59,7 @@ body {
 
 /* ── Nav link style ── */
 .nav-link {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 12.6px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--lum-text); text-decoration: none; position: relative; padding: 8px 0;
   transition: color 0.25s ease;
 }
@@ -204,7 +204,7 @@ input, textarea, select {
   color: var(--lum-text) !important;
   border-radius: 10px !important;
   font-size: 14px !important;
-  font-family: 'Montserrat', sans-serif !important;
+  font-family: 'Montserrat', 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--lum-accent) !important;
@@ -263,55 +263,4 @@ input:focus, textarea:focus, select:focus {
   .language-current-label {
     display: none;
   }
-}
-
-
-/* ── LUPIC academic homepage refresh ── */
-.lupic-home {
-  background: #fff;
-  color: #243247;
-  font-family: 'Montserrat', Arial, sans-serif;
-}
-.lupic-home .lupic-nav,
-.lupic-home .lupic-nav-active {
-  position: relative;
-  padding: 10px 0;
-  color: #26364d;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .025em;
-  text-decoration: none;
-  transition: color .2s ease;
-}
-.lupic-home .lupic-nav:hover,
-.lupic-home .lupic-nav-active { color: #e47f78; }
-.lupic-home .lupic-hero { background-color: #f6f4f7; }
-.lupic-home input {
-  background: transparent !important;
-  border: 0 !important;
-  color: #26364d !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-.lupic-home input:focus { border: 0 !important; outline: none !important; }
-.lupic-home ::placeholder { color: #94a0b0 !important; opacity: 1; }
-.lupic-home a:focus-visible,
-.lupic-home button:focus-visible { outline-color: #e47f78; }
-@media (max-width: 640px) {
-  .lupic-home .lupic-hero { background-position: 58% center; }
-}
-
-
-/* The global decorative background belongs behind the app, not over the homepage. */
-body:has(.lupic-home) {
-  background: #fff;
-  color: #243247;
-}
-body:has(.lupic-home) #root {
-  position: relative;
-  z-index: 1;
-}
-body:has(.lupic-home) .atmosphere {
-  pointer-events: none;
-  z-index: -1;
 }

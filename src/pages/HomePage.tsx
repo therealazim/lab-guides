@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowRight, MonitorPlay, FileText, CloudDownload, Award, MessagesSquare, Megaphone,
+  ArrowRight, MonitorPlay, FileText, CloudDownload, Award, MessagesSquare, Megaphone, X, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useI18n, type Lang } from '../i18n'
@@ -51,6 +51,34 @@ export default function HomePage() {
     { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
   ])
   const [newsItems, setNewsItems] = useState<any[]>([])
+  const [activeNews, setActiveNews] = useState<any | null>(null)
+  const [activeImg, setActiveImg] = useState(0)
+
+  const newsImages = (item: any): string[] => {
+    const images = Array.isArray(item?.images) ? item.images.filter(Boolean) : []
+    return images.length ? images : item?.image ? [item.image] : []
+  }
+
+  const openNews = (item: any) => {
+    if (!item) return
+    setActiveImg(0)
+    setActiveNews(item)
+  }
+
+  useEffect(() => {
+    if (!activeNews) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveNews(null)
+      if (e.key === 'ArrowLeft') setActiveImg(i => Math.max(0, i - 1))
+      if (e.key === 'ArrowRight') setActiveImg(i => Math.min(newsImages(activeNews).length - 1, i + 1))
+    }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [activeNews])
 
   useEffect(() => {
     document.title = t('title')
@@ -276,7 +304,11 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="flex gap-5 py-5 first:pt-0"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openNews(item)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNews(item) } }}
+                  className="group flex cursor-pointer gap-5 py-5 first:pt-0"
                 >
                   <div className="flex h-16 w-14 flex-shrink-0 flex-col items-center justify-center rounded-md border border-lum-panel-border bg-lum-soft text-lum-navy">
                     {parts ? (
@@ -290,11 +322,11 @@ export default function HomePage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-semibold leading-snug text-lum-navy">{item.title}</h3>
+                    <h3 className="text-sm font-semibold leading-snug text-lum-navy group-hover:text-lum-accent">{item.title}</h3>
                     <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-lum-slate-warm">
                       {item.description || t('newsUpdatesSoonDesc')}
                     </p>
-                    <span className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-lum-accent">
+                    <span className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-lum-accent transition-all group-hover:gap-2.5">
                       {t('readMore')} <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -313,6 +345,86 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* ─── NEWS READER ─── */}
+      <AnimatePresence>
+        {activeNews && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-lum-navy/45 p-4 backdrop-blur-sm md:p-8"
+            role="dialog"
+            aria-modal="true"
+            aria-label={activeNews.title}
+            onClick={() => setActiveNews(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              onClick={e => e.stopPropagation()}
+              className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-lum-panel-border px-5 py-4 md:px-7">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-lum-accent">{formatNewsDate(activeNews.upload_date || activeNews.created_at) || t('latestNewsTitle')}</p>
+                  <h2 className="mt-1 text-lg font-bold leading-snug text-lum-navy md:text-xl">{activeNews.title}</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveNews(null)}
+                  aria-label={t('close')}
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-lum-panel-border text-lum-slate-warm transition-colors hover:bg-lum-soft hover:text-lum-navy"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto px-5 py-5 md:px-7">
+                {(() => {
+                  const images = newsImages(activeNews)
+                  if (!images.length) return null
+                  const current = Math.min(activeImg, images.length - 1)
+                  return (
+                    <div className="mb-6">
+                      <div className="relative flex items-center justify-center overflow-hidden rounded-xl bg-[#F7F9FC]">
+                        <img src={images[current]} alt={activeNews.title} className="max-h-[46vh] w-full object-contain" />
+                        {images.length > 1 && (
+                          <>
+                            <button type="button" onClick={() => setActiveImg(Math.max(0, current - 1))} disabled={current === 0} aria-label={t('previousImage')} className="absolute left-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lum-navy shadow-md transition-colors hover:bg-white disabled:opacity-35">
+                              <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button type="button" onClick={() => setActiveImg(Math.min(images.length - 1, current + 1))} disabled={current === images.length - 1} aria-label={t('nextImage')} className="absolute right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lum-navy shadow-md transition-colors hover:bg-white disabled:opacity-35">
+                              <ChevronRight className="h-5 w-5" />
+                            </button>
+                            <span className="absolute bottom-2 right-3 rounded-full bg-lum-navy/70 px-2.5 py-1 text-[10px] font-semibold text-white">{current + 1} / {images.length}</span>
+                          </>
+                        )}
+                      </div>
+                      {images.length > 1 && (
+                        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                          {images.map((image: string, index: number) => (
+                            <button key={`${image}-${index}`} type="button" onClick={() => setActiveImg(index)} aria-label={`${t('newsImage')} ${index + 1}`} className={`h-14 w-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all ${current === index ? 'border-lum-accent' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                              <img src={image} alt="" className="h-full w-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+
+                <p className="whitespace-pre-line text-sm leading-[1.9] text-lum-slate-light">
+                  {activeNews.description || t('newsUpdatesSoonDesc')}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── PARTNERS ─── */}
       <section className="border-t border-lum-panel-border bg-white py-12">

@@ -68,7 +68,7 @@ export default function SiteHeader() {
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
-                className={`rounded-lg px-3 py-3 text-sm font-semibold uppercase tracking-[0.1em] ${
+                className={`rounded-lg px-3 py-4 text-base font-semibold uppercase tracking-[0.1em] ${
                   isActive(link.to) ? 'bg-lum-accent-soft text-lum-accent' : 'text-lum-slate-light'
                 }`}
               >
