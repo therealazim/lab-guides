@@ -288,3 +288,39 @@ input:focus, textarea:focus, select:focus {
     display: none;
   }
 }
+
+
+/* ── LUPIC academic homepage refresh ── */
+.lupic-home {
+  background: #fff;
+  color: #243247;
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+.lupic-home .lupic-nav,
+.lupic-home .lupic-nav-active {
+  position: relative;
+  padding: 10px 0;
+  color: #26364d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .025em;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+.lupic-home .lupic-nav:hover,
+.lupic-home .lupic-nav-active { color: #e47f78; }
+.lupic-home .lupic-hero { background-color: #f6f4f7; }
+.lupic-home input {
+  background: transparent !important;
+  border: 0 !important;
+  color: #26364d !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.lupic-home input:focus { border: 0 !important; outline: none !important; }
+.lupic-home ::placeholder { color: #94a0b0 !important; opacity: 1; }
+.lupic-home a:focus-visible,
+.lupic-home button:focus-visible { outline-color: #e47f78; }
+@media (max-width: 640px) {
+  .lupic-home .lupic-hero { background-position: 58% center; }
+}
