@@ -7,7 +7,7 @@ import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
 
-const featuredSlugs = ['atomic-absorption-spectrometer', 'ion-chromatograph', 'uv-spectrometer', 'indoor-air-monitoring-system', 'outdoor-air-monitoring-system', 'microscope']
+const featuredSlugs = ['atomic-absorption-spectrometer', 'ion-chromatograph', 'uv-spectrometer', 'air-sampler', 'outdoor-air-monitoring-system', 'microscope']
 const resources = [
   { title: 'TRAINING', description: 'Step-by-step video lectures and learning materials', icon: BookOpen },
   { title: 'SOP', description: 'Standard Operating Procedures for each equipment', icon: ClipboardList },
