@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { useI18n, type Lang } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
+import PageMeta from '../components/PageMeta'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
@@ -53,6 +54,7 @@ export default function HomePage() {
   const [newsItems, setNewsItems] = useState<any[]>([])
   const [activeNews, setActiveNews] = useState<any | null>(null)
   const [activeImg, setActiveImg] = useState(0)
+  const [heroSrc, setHeroSrc] = useState<string | null>(null)
 
   const newsImages = (item: any): string[] => {
     const images = Array.isArray(item?.images) ? item.images.filter(Boolean) : []
@@ -84,6 +86,17 @@ export default function HomePage() {
     document.title = t('title')
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('homeHeroSubtitle'))
   }, [lang, t])
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const connection = (navigator as any).connection
+    if (connection?.saveData) return
+    const slow = connection && connection.effectiveType && !['4g', 'wifi'].includes(connection.effectiveType)
+    const wide = window.matchMedia('(min-width: 1280px)').matches
+    const src = wide && !slow ? '/videos/lab-hero-4k.mp4' : '/videos/lab-hero-1080.mp4'
+    const timer = window.setTimeout(() => setHeroSrc(src), 700)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const allEquipments = useMemo(() => {
     const mergedStatic = staticEquipments
@@ -165,23 +178,29 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <PageMeta title={t('title')} description={t('homeHeroSubtitle')} image="/og-image.jpg" />
       <SiteHeader />
 
       {/* ─── HERO ─── */}
       <section className="relative overflow-hidden bg-[linear-gradient(115deg,#FBE3DF_0%,#FDF0EE_28%,#F4F1F6_52%,#E6EEF8_100%)]">
         <div className="absolute inset-0">
-          <video
-            className="h-full w-full object-cover object-center"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-          >
-            <source src="/videos/lab-hero-4k.mp4" type="video/mp4" media="(min-width: 1280px)" />
-            <source src="/videos/lab-hero-1080.mp4" type="video/mp4" />
-          </video>
+          {heroSrc ? (
+            <video
+              key={heroSrc}
+              className="h-full w-full object-cover object-center"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/videos/lab-hero-poster.jpg"
+              aria-hidden="true"
+            >
+              <source src={heroSrc} type="video/mp4" />
+            </video>
+          ) : (
+            <img src="/videos/lab-hero-poster.jpg" alt="" className="h-full w-full object-cover object-center" aria-hidden="true" />
+          )}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,227,223,0.96)_0%,rgba(251,227,223,0.85)_30%,rgba(240,244,250,0.55)_55%,rgba(255,255,255,0.15)_100%)]" />
         </div>
 
@@ -240,7 +259,7 @@ export default function HomePage() {
                 <Link to={`/catalog/${eq.slug}`} className="group flex h-full flex-col rounded-xl border border-lum-panel-border bg-white p-4 transition-all hover:-translate-y-1 hover:border-lum-accent/40 hover:shadow-[0_14px_30px_rgba(16,35,66,0.08)]">
                   <div className="mb-4 flex h-28 items-center justify-center">
                     {imgSrc ? (
-                      <img src={imgSrc} alt={d.name} className="max-h-full w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-105" />
+                      <img src={imgSrc} alt={d.name} loading="lazy" decoding="async" className="max-h-full w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-105" />
                     ) : (
                       <span className="text-3xl font-bold text-lum-slate-warm/30">{d.name?.[0]}</span>
                     )}
@@ -442,7 +461,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="flex items-center justify-center opacity-70 transition-opacity hover:opacity-100"
             >
-              <img src={partner.src} alt={partner.name} className="h-28 w-auto object-contain md:h-32" />
+              <img src={partner.src} alt={partner.name} loading="lazy" decoding="async" className="h-28 w-auto object-contain md:h-32" />
             </a>
           ))}
         </div>

@@ -4,6 +4,7 @@ import { Tag, Info, MapPin, Hash, ShoppingCart, Package, FileText } from 'lucide
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
+import PageMeta from '../components/PageMeta'
 import SiteFooter from '../components/SiteFooter'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
@@ -72,6 +73,7 @@ export default function CatalogItemPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageMeta title={`${d.name} | ${t('equipmentCatalog')}`} description={`${d.name} — laboratory equipment details, status, and manual.`} />
       <SiteHeader />
 
       <main className="mx-auto w-full flex-1 px-4 py-10 md:px-8 md:py-14">

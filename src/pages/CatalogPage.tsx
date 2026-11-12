@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal } from 'lucide-react'
 import { useI18n, type Lang } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
+import PageMeta from '../components/PageMeta'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
@@ -83,6 +84,7 @@ export default function CatalogPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageMeta title={`${t('equipmentCatalog')} | ${t('title')}`} description={t('equipSectionDesc')} />
       <SiteHeader />
 
       <main className="mx-auto w-full flex-1 px-4 py-10 md:px-8 md:py-14">
@@ -147,7 +149,7 @@ export default function CatalogPage() {
               >
                 <div className="aspect-square rounded-lg bg-[#F7F9FC] border border-lum-panel-border flex items-center justify-center p-3 mb-3 overflow-hidden">
                   {imgSrc ? (
-                    <img src={imgSrc} alt={d.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                    <img src={imgSrc} alt={d.name} loading="lazy" decoding="async" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-lum-soft flex items-center justify-center">
                       <span className="text-lg font-semibold text-lum-slate-warm/40">{d.name?.[0]}</span>

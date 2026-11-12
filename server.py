@@ -399,6 +399,48 @@ def delete_news(news_id):
     conn.close()
     return jsonify({'ok': True})
 
+# ─── SEO ───
+def site_base_url():
+    configured = os.environ.get('SITE_URL', '').strip()
+    return (configured or request.host_url).rstrip('/')
+
+
+def bundled_equipment_slugs():
+    data_file = os.path.join(BASE_DIR, 'src', 'data', 'equipments.json')
+    try:
+        with open(data_file, 'r', encoding='utf-8') as handle:
+            rows = json.load(handle)
+        return [row['slug'] for row in rows if isinstance(row, dict) and row.get('slug')]
+    except (OSError, ValueError, KeyError):
+        return []
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    body = (
+        'User-agent: *\n'
+        'Allow: /\n'
+        'Disallow: /admin\n'
+        f'Sitemap: {site_base_url()}/sitemap.xml\n'
+    )
+    return Flask.response_class(body, mimetype='text/plain')
+
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    base = site_base_url()
+    pages = ['/', '/catalog', '/training', '/sop', '/download', '/certificate', '/faq', '/announcements', '/about', '/privacy', '/terms']
+    urls = [f'{base}/' if page == '/' else f'{base}/#{page}' for page in pages]
+    urls += [f'{base}/#/catalog/{slug}' for slug in bundled_equipment_slugs()]
+    items = ''.join(f'<url><loc>{url}</loc></url>' for url in urls)
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f'{items}</urlset>'
+    )
+    return Flask.response_class(xml, mimetype='application/xml')
+
+
 # ─── Frontend ───
 @app.route('/', defaults={'path': None})
 @app.route('/<path:path>')

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from './SiteHeader'
 import SiteFooter from './SiteFooter'
+import PageMeta from './PageMeta'
 
 export type LegalSection = {
   title: string
@@ -21,6 +22,7 @@ export default function LegalLayout({ title, intro, updated, sections, contactEm
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageMeta title={`${title} | KMI - LUPIC`} description={intro} />
       <SiteHeader />
 
       <section className="border-b border-lum-panel-border bg-[linear-gradient(120deg,#FDEFEC_0%,#F7F9FC_60%,#E8F0FB_100%)]">

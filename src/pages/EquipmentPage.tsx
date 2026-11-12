@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
+import PageMeta from '../components/PageMeta'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import youtubeVideos from '../data/youtube-videos.json'
@@ -137,6 +138,7 @@ export default function EquipmentPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageMeta title={`${data.name} | ${t('title')}`} description={`${data.name} — laboratory equipment guide, safety information, procedure, and manual.`} />
       <SiteHeader />
 
       <main className="mx-auto w-full px-4 sm:px-6 md:px-8 py-8 sm:py-10">

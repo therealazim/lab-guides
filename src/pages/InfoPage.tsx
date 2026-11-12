@@ -4,6 +4,7 @@ import { Clock3 } from 'lucide-react'
 import { useI18n } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
+import PageMeta from '../components/PageMeta'
 
 const PAGE_KEYS: Record<string, { title: string; desc: string }> = {
   '/training': { title: 'featTrainingTitle', desc: 'featTrainingDesc' },
@@ -24,6 +25,7 @@ export default function InfoPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageMeta title={`${t(keys.title)} | ${t('title')}`} description={t(keys.desc)} />
       <SiteHeader />
       <section className="bg-[linear-gradient(120deg,#FDEFEC_0%,#F7F9FC_60%,#E8F0FB_100%)]">
         <div className="mx-auto w-full px-4 py-16 md:px-8 md:py-20">

@@ -3,6 +3,7 @@ import { Download, FileText } from 'lucide-react'
 import { useI18n } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
+import PageMeta from '../components/PageMeta'
 
 const GUIDES = [
   { file: 'ion-chromatography-system.pdf', name: 'Ion Chromatography System', size: '4.7 MB' },
@@ -22,6 +23,7 @@ export default function DownloadPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageMeta title={`${t('featDownloadTitle')} | ${t('title')}`} description={t('featDownloadDesc')} />
       <SiteHeader />
 
       <section className="border-b border-lum-panel-border bg-[linear-gradient(120deg,#FDEFEC_0%,#F7F9FC_60%,#E8F0FB_100%)]">

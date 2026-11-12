@@ -7,6 +7,7 @@ import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { useI18n, UI_STRINGS } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
+import PageMeta from '../components/PageMeta'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
 import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
@@ -328,6 +329,7 @@ export default function AdminPage() {
   if (!authChecked) {
     return (
       <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-4">
+        <PageMeta title="Admin Panel | KMI - LUPIC" description="Restricted administrator workspace." noindex />
         <div className="w-8 h-8 border-2 border-lum-slate-light/20 border-t-lum-slate-light rounded-full animate-spin" aria-label={t('adminChecking')} />
       </div>
     )
@@ -336,6 +338,7 @@ export default function AdminPage() {
     if (loginSuccess) {
       return (
         <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-4">
+        <PageMeta title="Admin Panel | KMI - LUPIC" description="Restricted administrator workspace." noindex />
           <dotlottie-wc
             src="https://lottie.host/d37c46cb-82e4-485e-b564-ddeea9a4b07f/94KZRUR1Vs.lottie"
             style={{ width: '300px', height: '300px' }}
@@ -347,6 +350,7 @@ export default function AdminPage() {
     if (loginError) {
       return (
         <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-4">
+        <PageMeta title="Admin Panel | KMI - LUPIC" description="Restricted administrator workspace." noindex />
           <div className="lum-card p-8 max-w-sm w-full text-center">
             <dotlottie-wc
               src="https://lottie.host/a4d516a2-3683-4702-bec4-f5ff25c70dc2/KxnaCqRQk2.lottie"
@@ -362,6 +366,7 @@ export default function AdminPage() {
     }
     return (
       <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-4">
+        <PageMeta title="Admin Panel | KMI - LUPIC" description="Restricted administrator workspace." noindex />
         <div className="lum-card p-8 max-w-sm w-full text-center">
           <img src="/korea-univ-logo.svg" alt="Korea University" className="h-16 sm:h-24 mx-auto mb-6" />
           <h1 className="text-lg font-bold text-lum-ivory mb-2">{t('adminPanel')}</h1>
@@ -431,6 +436,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
+      <PageMeta title="Admin Panel | KMI - LUPIC" description="Restricted administrator workspace." noindex />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
         <div className="w-full px-2 sm:px-4 py-2.5 flex items-center justify-between gap-1">
