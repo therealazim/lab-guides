@@ -3,6 +3,9 @@ FROM node:22-alpine AS frontend
 
 WORKDIR /app
 
+# The translation validation script runs with Python during the Vite build.
+RUN apk add --no-cache python3
+
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 COPY package.json pnpm-lock.yaml ./
