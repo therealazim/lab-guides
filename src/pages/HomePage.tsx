@@ -246,8 +246,7 @@ export default function HomePage() {
                     )}
                   </div>
                   <h3 className="text-sm font-bold text-lum-navy">{d.name}</h3>
-                  <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-lum-slate-warm">{d.description}</p>
-                  <span className="mt-auto flex items-center gap-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-lum-accent transition-all group-hover:gap-2.5">
+                  <span className="mt-auto flex items-center gap-1.5 pt-6 text-[10px] font-bold uppercase tracking-[0.14em] text-lum-accent transition-all group-hover:gap-2.5">
                     {t('viewGuide')} <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </Link>

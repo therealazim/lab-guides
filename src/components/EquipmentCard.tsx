@@ -41,13 +41,10 @@ export default function EquipmentCard({ equipment, index }: Props) {
 
           {/* Content */}
           <div className="p-6 flex flex-col flex-grow">
-            <h3 className="text-sm font-semibold text-lum-ivory mb-2 line-clamp-2 active:text-lum-silver md:group-hover:text-lum-silver transition-colors duration-500 tracking-tight">
+            <h3 className="text-sm font-semibold text-lum-ivory mb-5 line-clamp-2 active:text-lum-silver md:group-hover:text-lum-silver transition-colors duration-500 tracking-tight">
               {data.name}
             </h3>
-            <p className="text-xs text-lum-slate-light/60 font-light line-clamp-2 mb-5 flex-grow leading-relaxed">
-              {data.description}
-            </p>
-            <div className="flex items-center justify-between pt-4 border-t border-lum-panel-border">
+            <div className="mt-auto flex items-center justify-between pt-4 border-t border-lum-panel-border">
               <span className="text-[9px] font-medium tracking-[0.15em] uppercase text-lum-slate-warm">
                 {t('viewGuide')}
               </span>

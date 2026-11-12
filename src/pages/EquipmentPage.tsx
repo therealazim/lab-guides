@@ -170,12 +170,9 @@ export default function EquipmentPage() {
             {/* Info */}
             <div>
               <p className="section-tag">{t('heroTagline')}</p>
-              <h1 className="text-[clamp(1.8rem,3.5vw,2.8rem)] font-bold tracking-[-0.02em] leading-[1.15] text-lum-navy mb-4">
+              <h1 className="text-[clamp(1.8rem,3.5vw,2.8rem)] font-bold tracking-[-0.02em] leading-[1.15] text-lum-navy mb-6">
                 <strong className="font-semibold">{data.name}</strong>
               </h1>
-              <p className="text-sm leading-relaxed text-lum-slate-light mb-8">
-                {data.description}
-              </p>
 
               {/* Meta badges */}
               <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 gap-2.5">

@@ -49,13 +49,13 @@ export default function SiteFooter() {
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex w-full flex-col items-center justify-between gap-3 px-4 py-5 text-[11px] text-white/60 md:flex-row md:px-8">
-          <p>&copy; 2025 Korea University. {t('rightsReserved')}</p>
+          <p>&copy; {new Date().getFullYear()} Korea University. {t('rightsReserved')}</p>
           <div className="flex items-center gap-4">
             <Link to="/admin" className="hover:text-white">{t('adminLink')}</Link>
             <span className="h-3 w-px bg-white/20" />
-            <Link to="/about" className="hover:text-white">{t('privacyPolicy')}</Link>
+            <Link to="/privacy" className="hover:text-white">{t('privacyPolicy')}</Link>
             <span className="h-3 w-px bg-white/20" />
-            <Link to="/about" className="hover:text-white">{t('termsOfUse')}</Link>
+            <Link to="/terms" className="hover:text-white">{t('termsOfUse')}</Link>
           </div>
         </div>
       </div>
