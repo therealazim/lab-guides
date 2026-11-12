@@ -1,680 +1,130 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowRight, BookOpen, ClipboardList, Download, Award, MessageCircle, Megaphone, Search, ChevronLeft, ChevronRight, X, Menu } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useI18n, type Lang } from '../i18n'
-import ThemeToggle from '../components/ThemeToggle'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import { fetchEquipment as apiFetchEq, fetchHiddenEquipment } from '../api'
 
-const SCROLL_KEY = 'homeScrollY'
-
-const formatNewsDate = (value?: string) => {
+const featuredSlugs = ['atomic-absorption-spectrometer', 'ion-chromatograph', 'uv-spectrometer', 'indoor-air-monitoring-system', 'outdoor-air-monitoring-system', 'microscope']
+const resources = [
+  { title: 'TRAINING', description: 'Step-by-step video lectures and learning materials', icon: BookOpen },
+  { title: 'SOP', description: 'Standard Operating Procedures for each equipment', icon: ClipboardList },
+  { title: 'DOWNLOAD', description: 'Manuals, worksheets, and reference materials', icon: Download },
+  { title: 'CERTIFICATE', description: 'Get your training certificate after course completion', icon: Award },
+  { title: 'FAQ', description: 'Find answers to frequently asked questions', icon: MessageCircle },
+  { title: 'ANNOUNCEMENTS', description: 'Latest news and important updates', icon: Megaphone },
+]
+const formatDate = (value?: string) => {
   if (!value) return ''
-  const parsed = new Date(`${value.slice(0, 10)}T00:00:00`)
-  return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsed)
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { month: 'short', day: '2-digit', year: 'numeric' }).format(date)
 }
 
 export default function HomePage() {
   const { lang, t } = useI18n()
-  const [query, setQuery] = useState('')
-  const [mouse, setMouse] = useState({ x: 50, y: 50 })
-  const [showDropdown, setShowDropdown] = useState(false)
-  const [highlightIdx, setHighlightIdx] = useState(-1)
-  const [spinKey, setSpinKey] = useState(0)
-  const [adminItems, setAdminItems] = useState<any[]>([])
-  const [staticOverrides, setStaticOverrides] = useState<Record<string, any>>({})
-  const [hiddenSlugs, setHiddenSlugs] = useState<string[]>(() => {
-    const initial = (window as any).__INITIAL_DATA__
-    return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
-  })
-  const [adminPartners, setAdminPartners] = useState<{name:string;src:string;url:string}[]>([])
-  const [newsItems, setNewsItems] = useState<any[]>([])
-  const [newsIdx, setNewsIdx] = useState(0)
-  const [playing, setPlaying] = useState(true)
-  const [newsViewer, setNewsViewer] = useState<{ images: string[]; index: number; title: string } | null>(null)
   const navigate = useNavigate()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dropRef = useRef<HTMLDivElement>(null)
+  const [query, setQuery] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [equipment, setEquipment] = useState<any[]>(staticEquipments)
+  const [news, setNews] = useState<any[]>([])
+  const [gallery, setGallery] = useState<{ images: string[]; index: number; title: string } | null>(null)
+  const [mobileMenu, setMobileMenu] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const filtered = useMemo(() => {
+    const term = query.trim().toLowerCase()
+    if (!term) return []
+    return equipment.filter((item: any) => {
+      const localized = item[lang as Lang] || item.en || item
+      return [localized.name, localized.description, item.slug, item.en?.name].some(value => String(value || '').toLowerCase().includes(term))
+    }).slice(0, 8)
+  }, [equipment, lang, query])
 
   useEffect(() => {
     document.title = t('title')
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('subtitle'))
   }, [lang, t])
 
-  const getNewsImages = (item: any): string[] => {
-    const images = Array.isArray(item?.images) ? item.images.filter(Boolean) : []
-    return images.length ? images : item?.image ? [item.image] : []
-  }
-
-  const openNewsViewer = (item: any, index = 0) => {
-    const images = getNewsImages(item)
-    if (!images.length) return
-    setPlaying(false)
-    setNewsViewer({ images, index: Math.max(0, Math.min(index, images.length - 1)), title: item?.title || t('newsImage') })
-  }
-
-  const closeNewsViewer = () => {
-    setNewsViewer(null)
-    setPlaying(true)
-  }
-
-  const moveNewsViewer = (direction: number) => {
-    setNewsViewer(current => {
-      if (!current || current.images.length < 2) return current
-      return { ...current, index: (current.index + direction + current.images.length) % current.images.length }
-    })
-  }
-
-  // Save scroll on unmount, restore on mount
-  // Save scroll when navigating to equipment page, restore on back
   useEffect(() => {
-    const saved = sessionStorage.getItem(SCROLL_KEY)
-    if (saved) {
-      const y = parseInt(saved, 10)
-      if (!isNaN(y)) {
-        setTimeout(() => window.scrollTo(0, y), 120)
-      }
-      sessionStorage.removeItem(SCROLL_KEY)
-    }
-  }, [])
-
-  // Click handler to save scroll before navigation
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const link = (e.target as HTMLElement).closest('a[href^="#/equipment/"]')
-      if (link) {
-        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
-      }
-    }
-    document.addEventListener('click', handler)
-    return () => document.removeEventListener('click', handler)
-  }, [])
-
-  const allEquipments = useMemo(() => {
-    const mergedStatic = staticEquipments
-      .filter((eq: any) => !hiddenSlugs.includes(eq.slug))
-      .map((eq: any) => staticOverrides[eq.slug] ? { ...eq, ...staticOverrides[eq.slug] } : eq)
-    const visibleAdminItems = adminItems.filter((item: any) => !hiddenSlugs.includes(item.slug))
-    return [...mergedStatic, ...visibleAdminItems]
-  }, [staticOverrides, adminItems, hiddenSlugs])
-
-  const filtered = useMemo(() => {
-    if (!query.trim()) return allEquipments
-    const q = query.toLowerCase()
-    return allEquipments.filter((eq: any) => {
-      const d = eq[lang as Lang] || eq.en || eq
-      return (
-        (d.name || '').toLowerCase().includes(q) ||
-        (d.description || '').toLowerCase().includes(q) ||
-        eq.slug?.includes(q) ||
-        (eq.en?.name || '').toLowerCase().includes(q)
-      )
-    })
-  }, [query, lang, allEquipments])
-
-  // Load admin data from API (always fetches fresh, uses injected data as initial)
-  useEffect(() => {
-    const initial = (window as any).__INITIAL_DATA__
-      if (Array.isArray(initial?.hiddenEquipment)) setHiddenSlugs(initial.hiddenEquipment)
-      if (initial?.equipment) {
-        const apiOverridden = initial.equipment.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
-        setAdminItems(apiOverridden)
-      const ovs: Record<string, any> = {}
-      initial.equipment.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
-      setStaticOverrides(ovs)
-    }
-    async function load() {
+    let active = true
+    const load = async () => {
       try {
-        const eqData = await apiFetchEq()
-        if (eqData) {
-          const apiOverridden = eqData.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
-          setAdminItems(apiOverridden)
-          const ovs: Record<string, any> = {}
-          eqData.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
-          setStaticOverrides(ovs)
-        }
-      } catch {}
+        const [apiItems, hidden] = await Promise.all([apiFetchEq(), fetchHiddenEquipment()])
+        if (!active || !Array.isArray(apiItems) || !apiItems.length) return
+        const hiddenSlugs = Array.isArray(hidden) ? hidden : []
+        const bySlug = new Map(apiItems.map((item: any) => [item.slug, item]))
+        setEquipment(staticEquipments.filter((item: any) => !hiddenSlugs.includes(item.slug)).map((item: any) => bySlug.has(item.slug) ? { ...item, ...(bySlug.get(item.slug) as object) } : item).concat(apiItems.filter((item: any) => item._overridden && !staticEquipments.some((base: any) => base.slug === item.slug) && !hiddenSlugs.includes(item.slug))))
+      } catch { /* Bundled catalogue remains available offline. */ }
     }
     load()
-    fetchHiddenEquipment().then(data => {
-      if (Array.isArray(data)) setHiddenSlugs(data)
-    }).catch(() => {})
+    return () => { active = false }
   }, [])
 
-  // Load partners from API
   useEffect(() => {
-    const defaults = [
-      { name: 'KMI', url: 'https://kkmi.uz/en/', src: '/logos/kmi.svg' },
-      { name: 'Korea University', url: 'https://hes.korea.ac.kr/eng/main/main.html#HOME', src: '/logos/korea-univ.svg' },
-      { name: 'Ministry of Education', url: 'https://www.moe.go.kr/main.do?s=moe', src: '/logos/moe.svg' },
-      { name: 'NRF', url: 'https://www.nrf.re.kr/index', src: '/logos/nrf.svg' },
-    ]
+    let active = true
     const initial = (window as any).__INITIAL_DATA__
-    if (initial?.partners) {
-      const apiPartners = initial.partners.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
-      setAdminPartners([...defaults, ...apiPartners])
-    } else {
-      setAdminPartners(defaults)
-    }
-    async function loadPartners() {
-      try {
-        const r = await fetch('/api/partners')
-        const data = await r.json()
-        if (data?.length) {
-          const apiPartners = data.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, url: p.url, src: p.image }))
-          setAdminPartners([...defaults, ...apiPartners])
-        }
-      } catch {}
-    }
-    loadPartners()
+    if (Array.isArray(initial?.news)) setNews(initial.news)
+    fetch('/api/news').then(response => response.json()).then(data => { if (active && Array.isArray(data)) setNews(data) }).catch(() => {})
+    return () => { active = false }
   }, [])
 
-  // Load news
   useEffect(() => {
-    const initial = (window as any).__INITIAL_DATA__
-    if (initial?.news?.length) setNewsItems(initial.news)
-    async function loadNews() {
-      try {
-        const r = await fetch('/api/news')
-        const data = await r.json()
-        if (data?.length) setNewsItems(data)
-      } catch {}
-    }
-    loadNews()
-  }, [])
-
-  // Close the viewer when the featured News slide changes.
-  useEffect(() => { setNewsViewer(null) }, [newsIdx])
-
-  // Keep the viewer focused and keyboard-navigable.
-  useEffect(() => {
-    if (!newsViewer) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeNewsViewer()
-      if (e.key === 'ArrowLeft') moveNewsViewer(-1)
-      if (e.key === 'ArrowRight') moveNewsViewer(1)
+    if (!gallery) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setGallery(null)
+      if (event.key === 'ArrowLeft') setGallery(current => current ? { ...current, index: (current.index - 1 + current.images.length) % current.images.length } : current)
+      if (event.key === 'ArrowRight') setGallery(current => current ? { ...current, index: (current.index + 1) % current.images.length } : current)
     }
     document.body.style.overflow = 'hidden'
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = ''
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [newsViewer])
-
-  useEffect(() => {
-    if (newsItems.length <= 1 || !playing) return
-    const timer = setInterval(() => {
-      setNewsIdx(i => (i + 1) % newsItems.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [newsItems.length, playing])
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      setMouse({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      })
-    }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
-
-  // Keyboard nav & close dropdown on outside click
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!showDropdown || !filtered.length) return
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setHighlightIdx(i => Math.min(i + 1, filtered.length - 1))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setHighlightIdx(i => Math.max(i - 1, 0))
-      } else if (e.key === 'Enter' && highlightIdx >= 0) {
-        e.preventDefault()
-        navigate(`/catalog/${filtered[highlightIdx].slug}`)
-        setShowDropdown(false)
-        setQuery('')
-      } else if (e.key === 'Escape') {
-        setShowDropdown(false)
-      }
-    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [showDropdown, filtered, highlightIdx, navigate])
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey) }
+  }, [gallery])
 
-  useEffect(() => {
-    if (!showDropdown) { setHighlightIdx(-1); return }
-    const onOut = (e: MouseEvent) => {
-      if (dropRef.current && !dropRef.current.contains(e.target as Node) &&
-          inputRef.current && !inputRef.current.contains(e.target as Node)) {
-        setShowDropdown(false)
-      }
-    }
-    document.addEventListener('mousedown', onOut)
-    return () => document.removeEventListener('mousedown', onOut)
-  }, [showDropdown])
+  const featured = featuredSlugs.map(slug => equipment.find((item: any) => item.slug === slug)).filter(Boolean)
+  const imagesFor = (item: any): string[] => Array.isArray(item?.images) ? item.images.filter(Boolean) : item?.image ? [item.image] : []
+  const openGallery = (item: any) => { const images = imagesFor(item); if (images.length) setGallery({ images, index: 0, title: item.title || t('newsImage') }) }
 
-  return (
-    <div className="relative z-10">
-      {/* Full-page grid spotlight */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, var(--grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px)',
-          backgroundSize: '120px 120px',
-          WebkitMaskImage: `radial-gradient(circle 400px at ${mouse.x}% ${mouse.y}%, rgba(0,0,0,0.8) 0%, transparent 60%)`,
-          maskImage: `radial-gradient(circle 400px at ${mouse.x}% ${mouse.y}%, rgba(0,0,0,0.8) 0%, transparent 60%)`,
-          WebkitMaskComposite: 'source-over',
-          maskComposite: 'add',
-        }}
-      />
-
-      {/* ─── FIXED NAV ─── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-lum-mid/80 backdrop-blur-xl border-b border-lum-panel-border">
-        <div className="w-full px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-9 sm:h-12 w-auto" /></a>
-            <div>
-              <p className="text-xs font-bold text-lum-ivory">고려대학교 IEH</p>
-              <span className="text-lum-ivory font-bold text-xs tracking-[0.2em] uppercase">KMI - LUPIC</span>
-              <p className="text-[8px] text-lum-slate-warm tracking-[0.15em] uppercase">{t('labGuide')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </header>
-
-      {/* ─── HERO ─── */}
-      <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20 overflow-visible">
-
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-            className="text-[clamp(2.2rem,8.5vw,5.5rem)] font-light tracking-[-0.05em] leading-[1.05] text-lum-ivory mb-12 sm:mb-24 px-2"
-          >
-            {t('title')}<br />
-            <strong className="font-semibold bg-gradient-to-r from-lum-ivory via-lum-silver to-lum-slate-light bg-clip-text text-transparent">{t('heroTagline')}</strong>
-          </motion.h1>
-
-          {/* Search */}
-          <div
-            className="max-w-lg mx-auto w-full relative"
-          >
-            <div className="relative">
-              <motion.div
-                key={spinKey}
-                animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute left-5 top-1/2 -translate-y-1/2 z-10"
-              >
-                <Search className="w-5 h-5 text-lum-ivory/70" />
-              </motion.div>
-              <motion.input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={e => { setQuery(e.target.value); setShowDropdown(true); setHighlightIdx(-1) }}
-                onFocus={() => { setShowDropdown(true); setSpinKey(k => k + 1) }}
-                placeholder={t('search')}
-                animate={{
-                  boxShadow: showDropdown
-                    ? '0 0 20px rgba(156,163,175,0.15), 0 0 40px rgba(156,163,175,0.05)'
-                    : '0 0 0px rgba(156,163,175,0)',
-                }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full pl-12 pr-5 py-4 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/60 outline-none focus:border-lum-slate-light/20 transition-all text-sm backdrop-blur-xl"
-              />
-              {/* Dropdown */}
-              {/* Lottie animation - always visible */}
-              <div
-                className="absolute -top-24 right-[-10px] pointer-events-none -z-10"
-                style={{ transform: 'rotate(8deg)' }}
-              >
-                <dotlottie-wc
-                  src="https://lottie.host/a44b6e06-10d9-46c4-8e7e-bded9c4d743d/z95IywomIe.lottie"
-                  style={{ width: '100px', height: '100px' }}
-                  autoplay
-                  loop
-                ></dotlottie-wc>
-              </div>
-              <AnimatePresence>
-              {showDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                  ref={dropRef} className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-lum-mid border border-lum-panel-border backdrop-blur-xl overflow-y-auto shadow-2xl z-50 max-h-60"
-                >
-                  {filtered.length === 0 ? (
-                    <div className="px-5 py-4 text-sm text-lum-slate-warm/60 text-center">{t('noResults')}</div>
-                  ) : (
-                    filtered.map((eq: any, i: number) => {
-                      const d = eq[lang as Lang] || eq.en || eq
-                      return (
-                        <Link
-                          key={eq.slug}
-                          to={`/catalog/${eq.slug}`}
-                          onClick={() => { setShowDropdown(false); setQuery('') }}
-                          className={`flex items-center gap-3 px-5 py-3 text-left text-sm transition-colors ${
-                            i === highlightIdx ? 'bg-lum-soft text-lum-ivory' : 'text-lum-slate-light active:bg-lum-soft/50 md:hover:bg-lum-soft/50'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-lg bg-lum-mid flex items-center justify-center overflow-hidden flex-shrink-0 border border-lum-panel-border">
-                            {(eq.image || (imageMap as Record<string, string>)[eq.slug]) ? (
-                              <img
-                                src={eq.image || (imageMap as Record<string, string>)[eq.slug] || ''}
-                                alt=""
-                                className="w-full h-full object-contain p-1"
-                              />
-                            ) : (
-                              <span className="text-lg font-semibold text-lum-slate-warm/40">{d.name?.[0] || eq.slug?.[0] || '?'}</span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium truncate">{d.name}</div>
-                            <div className="text-xs text-lum-slate-warm/60 truncate">{d.description}</div>
-                          </div>
-                        </Link>
-                      )
-                    })
-                  )}
-                </motion.div>
-              )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 1 }}
-            className="flex justify-center gap-4 sm:gap-10 md:gap-14 mt-16 sm:mt-20"
-          >
-            {[
-              { value: filtered.length, label: t('heroStatEquipment') },
-              { value: '5', label: t('heroStatLanguages') },
-              { value: '24/7', label: t('heroStatAccess') },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="text-[clamp(1.8rem,3vw,2.6rem)] font-light tracking-[-0.04em] text-lum-ivory">
-                  {s.value}
-                </div>
-                <div className="text-[9px] font-medium tracking-[0.2em] uppercase text-lum-slate-warm mt-2">{s.label}</div>
-              </div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1.25, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-wrap items-center justify-center gap-3 mt-10"
-          >
-            <Link to="/catalog" className="btn-lum-primary w-full sm:w-auto justify-center">{t('browseAllEquipment')}</Link>
-            <button type="button" onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="btn-lum-secondary w-full sm:w-auto justify-center">{t('latestUpdates')}</button>
-          </motion.div>
-      </section>
-
-      {/* ─── NEWS SLIDER ─── */}
-      <section id="news" className="py-20 px-4 md:px-6 lg:px-8 border-t border-lum-panel-border">
-        {newsItems.length > 0 ? (
-          <>
-          <h2 className="text-center text-[clamp(28px,3.5vw,40px)] font-light text-lum-ivory mb-12" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>
-            {t('newsToday')}
-          </h2>
-
-          <div className="w-full">
-            <div className="flex items-center gap-3 md:gap-4">
-              {/* Prev button */}
-              <button
-                onClick={() => setNewsIdx(i => (i - 1 + newsItems.length) % newsItems.length)}
-                aria-label={t('previousNews')}
-                className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-              </button>
-
-              <div className="flex-1 grid md:grid-cols-[1.4fr_1fr] gap-6 md:gap-10 items-center">
-                {/* Featured News image */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={newsIdx}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.45 }}
-                    className="aspect-[4/3] md:aspect-[16/9] rounded-md overflow-hidden cursor-pointer group relative bg-lum-soft"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Open photos for ${newsItems[newsIdx]?.title || 'this news post'}`}
-                    onClick={() => openNewsViewer(newsItems[newsIdx])}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNewsViewer(newsItems[newsIdx]) } }}
-                  >
-                    {(() => {
-                      const imgs = getNewsImages(newsItems[newsIdx])
-                      if (imgs.length === 0) {
-                        return <div className="w-full h-full flex items-center justify-center"><span className="text-lg text-lum-slate-warm/20">KMI</span></div>
-                      }
-                      return (
-                        <>
-                          <img src={imgs[0]} alt={`${newsItems[newsIdx]?.title || t('newsImage')} ${t('newsCover')}`} className="w-full h-full object-cover bg-lum-soft transition-transform duration-700 group-hover:scale-[1.02]" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/0 to-black/10" />
-                          <div className="absolute inset-x-0 bottom-0 p-4 md:p-5 flex items-end justify-between gap-3">
-                            <span className="inline-flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md border border-white/15 px-3 py-2 text-xs text-white">
-                              <Maximize2 className="w-3.5 h-3.5" /> {t('viewPhoto')}{imgs.length > 1 ? ` · ${imgs.length}` : ''}
-                            </span>
-                            {imgs.length > 1 && <span className="text-[10px] text-white/80">{t('clickOpenGallery')}</span>}
-                          </div>
-                        </>
-                      )
-                    })()}
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Text panel */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={newsIdx}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.45 }}
-                    className="py-2"
-                  >
-                    <h3
-                      className="text-[clamp(20px,2.2vw,28px)] font-medium text-lum-ivory leading-snug mb-4"
-                      style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}
-                    >
-                      {newsItems[newsIdx].title}
-                    </h3>
-                    {newsItems[newsIdx].description && (
-                      <p className="text-sm text-lum-slate-light/70 leading-relaxed line-clamp-3 mb-4">
-                        {newsItems[newsIdx].description}
-                      </p>
-                    )}
-                    {(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at) && (
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-lum-slate-warm/60 mb-6">
-                        {t('uploaded')} {formatNewsDate(newsItems[newsIdx].upload_date || newsItems[newsIdx].created_at)}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setPlaying(!playing)}
-                        className="w-8 h-8 rounded-full border border-lum-panel-border flex items-center justify-center text-lum-slate-light hover:text-lum-ivory transition-colors"
-                        aria-label={playing ? 'Pause' : 'Play'}
-                      >
-                        {playing ? (
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
-                        ) : (
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M7 5l12 7-12 7V5z" fill="currentColor"/></svg>
-                        )}
-                      </button>
-                      <span className="text-xs text-lum-slate-warm/60">
-                        <b className="text-lum-ivory font-semibold">{newsIdx + 1}</b> / {newsItems.length}
-                      </span>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Next button */}
-              <button
-                onClick={() => setNewsIdx(i => (i + 1) % newsItems.length)}
-                aria-label={t('nextNews')}
-                className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-lum-panel-border bg-lum-panel-bg flex items-center justify-center text-lum-slate-light hover:text-lum-ivory hover:border-lum-slate-light/30 transition-all flex-shrink-0"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-              </button>
-            </div>
-          </div>
-          </>
-        ) : (
-          <div className="max-w-2xl mx-auto text-center py-8">
-            <p className="text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm/60 mb-4">{t('newsToday')}</p>
-            <h2 className="text-[clamp(24px,3.5vw,40px)] font-light text-lum-ivory" style={{ fontFamily: "'Noto Serif KR', Georgia, serif" }}>{t('newsUpdatesSoon')}</h2>
-            <p className="text-sm text-lum-slate-light/60 leading-relaxed mt-4">{t('newsUpdatesSoonDesc')}</p>
-          </div>
-        )}
-      </section>
-
-      {/* News image viewer */}
-      <AnimatePresence>
-        {newsViewer && (
-          <motion.div
-            className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${newsViewer.title} image gallery`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeNewsViewer}
-          >
-            <motion.div
-              className="relative w-full max-w-6xl max-h-[92vh] flex flex-col items-center gap-3 sm:gap-4 px-1 sm:px-0"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ duration: 0.25 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="w-full flex items-center justify-between gap-4 px-1">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/55">{t('newsGallery')}</p>
-                  <h3 className="text-base md:text-lg text-white font-medium line-clamp-2 mt-1">{newsViewer.title}</h3>
-                </div>
-                <button type="button" onClick={closeNewsViewer} aria-label={t('closeGallery')} className="w-11 h-11 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors flex-shrink-0 touch-manipulation">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="relative w-full flex items-center justify-center min-h-0">
-                {newsViewer.images.length > 1 && (
-                  <button type="button" onClick={() => moveNewsViewer(-1)} aria-label={t('previousImage')} className="absolute left-1 sm:left-2 md:left-4 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors touch-manipulation">
-                    <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-                  </button>
-                )}
-                <motion.img
-                  key={newsViewer.images[newsViewer.index]}
-                  src={newsViewer.images[newsViewer.index]}
-                  alt={`${newsViewer.title}, image ${newsViewer.index + 1}`}
-                  className="max-h-[68vh] md:max-h-[72vh] max-w-full object-contain rounded-xl shadow-2xl border border-white/10"
-                  initial={{ opacity: 0.4, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                />
-                {newsViewer.images.length > 1 && (
-                  <button type="button" onClick={() => moveNewsViewer(1)} aria-label={t('nextImage')} className="absolute right-1 sm:right-2 md:right-4 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/45 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors touch-manipulation">
-                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 max-w-full">
-                <span className="text-xs text-white/70 tabular-nums min-w-[3.5rem] text-center">{newsViewer.index + 1} / {newsViewer.images.length}</span>
-                {newsViewer.images.length > 1 && (
-                  <div className="flex items-center gap-2 max-w-[min(70vw,32rem)] overflow-x-auto py-1 px-1">
-                    {newsViewer.images.map((image, index) => (
-                      <button key={`${image}-${index}`} type="button" onClick={() => setNewsViewer(current => current ? { ...current, index } : current)} aria-label={`Open image ${index + 1}`} className={`w-16 h-11 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all ${newsViewer.index === index ? 'border-white' : 'border-white/15 opacity-55 hover:opacity-100'}`}>
-                        <img src={image} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <p className="text-[10px] text-white/40">{t('galleryHelp')}</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── LOGO TICKER ─── */}
-      <div className="py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 border-t border-b border-lum-panel-border overflow-hidden">
-        <p className="text-center text-[9px] font-medium tracking-[0.25em] uppercase text-lum-slate-warm opacity-50 mb-8">
-          {t('partners')}
-        </p>
-        <div className="flex w-max animate-[tickerScroll_30s_linear_infinite]" style={{ willChange: 'transform' }}>
-          {[...Array(3)].flatMap(() => [
-            ...adminPartners,
-          ]).map((item, i) => (
-            <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center mx-3 sm:mx-6 md:mx-8 lg:mx-12">
-              <img
-                src={item.src}
-                alt={item.name}
-                className="h-24 sm:h-32 md:h-40 lg:h-56 w-auto object-contain opacity-60 hover:opacity-100 active:opacity-100 transition-opacity duration-500"
-              />
-              <span className="w-1 h-1 rounded-full bg-lum-slate-warm opacity-20 ml-3 sm:ml-6 md:ml-8 lg:ml-12" />
-            </a>
-          ))}
-        </div>
+  return <div className="lupic-home min-h-screen bg-white text-slate-800">
+    <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 shadow-sm backdrop-blur">
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-5 px-5 py-3 lg:px-10">
+        <a href="/#/" aria-label="LUPIC home" className="flex h-14 w-28 shrink-0 items-center justify-center rounded-[45%] bg-gradient-to-br from-rose-100 via-white to-indigo-100 text-2xl font-black tracking-tight text-slate-900">LUPIC</a>
+        <nav className="hidden items-center gap-7 lg:flex">
+          <a className="lupic-nav-active" href="#home">HOME</a><a className="lupic-nav" href="#equipment">EQUIPMENT</a><a className="lupic-nav" href="#resources">TRAINING</a><a className="lupic-nav" href="#resources">SOP</a><a className="lupic-nav" href="#resources">DOWNLOAD</a><a className="lupic-nav" href="#about">ABOUT</a>
+        </nav>
+        <div className="flex items-center gap-3"><div className="hidden h-9 items-center gap-3 md:flex"><img src="/logos/moe.svg" alt="Ministry of Education" className="h-7 max-w-[100px] object-contain" /><img src="/logos/nrf.svg" alt="National Research Foundation of Korea" className="h-8 max-w-[115px] object-contain" /></div><LanguageSwitcher /><button type="button" onClick={() => setMobileMenu(value => !value)} className="rounded-lg border border-slate-200 p-2 text-slate-700 lg:hidden" aria-label="Toggle navigation"><Menu size={20} /></button></div>
       </div>
+      {mobileMenu && <nav className="grid gap-1 border-t border-slate-100 bg-white px-6 py-4 lg:hidden">{[['HOME','#home'],['EQUIPMENT','#equipment'],['TRAINING','#resources'],['SOP','#resources'],['DOWNLOAD','#resources'],['ABOUT','#about']].map(([label,href]) => <a key={label} href={href} onClick={() => setMobileMenu(false)} className="py-2 text-sm font-semibold text-slate-700">{label}</a>)}</nav>}
+    </header>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 border-t border-lum-panel-border">
-        <div className="w-full">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
-            <div className="flex items-center gap-3">
-              <a href="/#/"><img src="/korea-univ-logo.svg" alt="Korea University" className="h-14 sm:h-20 w-auto" /></a>
-              <div>
-                <p className="text-xs font-bold text-lum-slate-light/70">고려대학교 IEH</p>
-                <span className="text-sm font-semibold tracking-[0.2em] uppercase text-lum-slate-light/70">KMI - LUPIC</span>
-              </div>
+    <main>
+      <section id="home" className="lupic-hero relative isolate overflow-visible">
+        <div className="absolute inset-0 -z-20 bg-[url('/images/eb8e30205e7bc.webp')] bg-cover bg-center" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-rose-50/95 via-white/90 to-white/35" />
+        <div className="mx-auto grid min-h-[420px] max-w-[1440px] items-center gap-8 px-6 py-14 md:min-h-[470px] md:grid-cols-[1.08fr_.92fr] md:px-16 lg:py-20">
+          <div className="max-w-2xl"><p className="mb-2 text-lg font-medium text-[#17345f] md:text-2xl">KU Environmental Health</p><h1 className="max-w-2xl text-4xl font-bold leading-[1.12] tracking-tight text-[#102b50] md:text-5xl">Laboratory Training Platform</h1><div className="my-6 h-[3px] w-12 rounded-full bg-[#e98b83]" /><p className="max-w-lg text-sm leading-7 text-slate-700 md:text-base">Building capacity for environmental health through equipment training and knowledge sharing</p>
+            <div className="mt-7 flex flex-wrap items-center gap-5"><img src="/logos/korea-univ.svg" alt="Korea University" className="h-9 max-w-[150px] object-contain" /><span className="hidden h-8 w-px bg-slate-300 sm:block" /><span className="text-sm font-bold text-[#18345c]">TMA <span className="block text-[10px] font-medium text-slate-600">Medical Academy</span></span><span className="hidden h-8 w-px bg-slate-300 sm:block" /><img src="/logos/kmi.svg" alt="Korea Medical Institute" className="h-10 max-w-[145px] object-contain" /></div>
+            <div className="relative mt-8 max-w-md"><div className="flex overflow-hidden rounded-full border border-white/80 bg-white shadow-md"><Search className="ml-4 mt-3.5 shrink-0 text-slate-400" size={18} /><input ref={searchRef} value={query} onChange={event => setQuery(event.target.value)} onFocus={() => setShowDropdown(true)} onKeyDown={event => { if (event.key === 'Enter' && filtered[0]) { navigate(`/catalog/${filtered[0].slug}`); setShowDropdown(false) } }} placeholder={t('search')} className="min-w-0 flex-1 border-0 bg-transparent px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400" /><Link to="/catalog" className="m-1 rounded-full bg-[#102d55] px-4 py-2 text-xs font-bold text-white">GET STARTED <ArrowRight className="ml-1 inline" size={14} /></Link></div>
+              {showDropdown && query.trim() && <div className="absolute left-0 right-0 top-full z-40 mt-2 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xl">{filtered.length ? filtered.map((item: any) => { const localized = item[lang as Lang] || item.en || item; return <Link key={item.slug} to={`/catalog/${item.slug}`} onClick={() => { setShowDropdown(false); setQuery('') }} className="flex items-center gap-3 rounded-lg p-2 hover:bg-slate-50"><img src={item.image || (imageMap as Record<string,string>)[item.slug] || ''} alt="" className="h-10 w-12 object-contain" /><span><strong className="block text-sm text-slate-800">{localized.name}</strong><small className="text-xs text-slate-500">{localized.description}</small></span></Link> }) : <p className="p-3 text-sm text-slate-500">{t('noResults')}</p>}</div>}
             </div>
-            <div className="flex items-center gap-4">
-              <a href="/#/admin" className="inline-flex items-center gap-1.5 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                {t('adminLink')}
-              </a>
-              <Link to="/catalog" className="inline-flex items-center gap-1.5 text-[9px] text-lum-slate-warm/30 hover:text-lum-slate-warm/60 transition-colors tracking-[0.15em] uppercase">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                {t('catalogLink')}
-              </Link>
-            </div>
-          </div>
-          <div className="text-center pt-8 border-t border-lum-panel-border">
-            <p className="text-[10px] tracking-[0.15em] uppercase text-lum-slate-warm/80">
-              &copy; 2026 <span className="text-lum-slate-light font-semibold">KMI / LUPIC Laboratory</span>
-            </p>
-            <p className="text-[11px] text-lum-slate-warm/50 mt-3 max-w-2xl mx-auto leading-relaxed">
-              {t('footerDisclaimer')}
-            </p>
-          </div>
+          </div><div className="hidden md:block" aria-hidden="true" />
         </div>
-      </footer>
-    </div>
-  )
+      </section>
+
+      <section id="equipment" className="mx-auto max-w-[1440px] px-5 py-8 md:px-10 md:py-10">
+        <div className="mb-6 flex items-end justify-between gap-4"><div><h2 className="text-center text-2xl font-bold tracking-tight text-[#17345f] md:text-left">EQUIPMENT</h2><div className="mx-auto mt-2 h-[3px] w-10 bg-[#e98b83] md:mx-0" /></div><Link to="/catalog" className="text-xs font-bold uppercase tracking-wide text-[#e17f78] hover:text-[#b95d58]">View all <ArrowRight className="ml-1 inline" size={14} /></Link></div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{featured.map((item: any) => { const localized = item[lang as Lang] || item.en || item; const image = item.image || (imageMap as Record<string,string>)[item.slug]; return <Link key={item.slug} to={`/catalog/${item.slug}`} className="group rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="flex h-24 items-center justify-center sm:h-28"><img src={image} alt={localized.name} className="max-h-full max-w-full object-contain transition group-hover:scale-105" /></div><h3 className="mt-3 text-sm font-bold text-slate-800">{localized.name}</h3><p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500">{localized.description}</p><div className="mt-2 flex justify-end text-[#e58b83]"><ArrowRight size={15} /></div></Link> })}</div>
+      </section>
+
+      <section id="resources" className="mx-auto max-w-[1440px] px-5 pb-8 md:px-10"><div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-slate-200 sm:grid-cols-3 lg:grid-cols-6">{resources.map(({title,description,icon:Icon}) => <Link key={title} to="/catalog" className="group flex min-h-[190px] flex-col items-center bg-[#f7f8fc] px-4 py-6 text-center transition hover:bg-white"><Icon size={38} strokeWidth={1.5} className="mb-4 text-[#18345c] transition group-hover:-translate-y-1" /><h3 className="text-xs font-bold text-[#17345f]">{title}</h3><p className="mt-2 max-w-[180px] text-[11px] leading-4 text-slate-600">{description}</p><span className="mt-auto pt-4 text-[10px] font-bold tracking-wide text-[#e18b83]">LEARN MORE <ArrowRight className="ml-1 inline" size={12} /></span></Link>)}</div></section>
+
+      <section id="about" className="mx-auto grid max-w-[1440px] gap-10 px-5 py-10 md:grid-cols-[1.15fr_.85fr] md:px-10 md:py-14">
+        <div><h2 className="text-xl font-bold text-[#17345f]">WELCOME TO OUR PLATFORM</h2><div className="mb-5 mt-2 h-[3px] w-10 bg-[#e98b83]" /><p className="max-w-xl text-sm leading-7 text-slate-600">This platform is part of the LUPIC project between Korea University, Tashkent Medical Academy (TMA), and Korea Medical Institute (KMI) to strengthen environmental health education and research capacity in Uzbekistan.</p><Link to="/catalog" className="mt-6 inline-flex items-center gap-2 rounded border border-[#e18b83] px-4 py-2 text-xs font-bold text-[#d87870] transition hover:bg-rose-50">ABOUT LUPIC <ArrowRight size={14} /></Link></div>
+        <div><div className="mb-5 flex items-center justify-between"><div><h2 className="text-xl font-bold text-[#17345f]">LATEST NEWS</h2><div className="mt-2 h-[3px] w-10 bg-[#e98b83]" /></div></div>{news.length ? <div className="space-y-3">{news.slice(0,3).map((item:any,index:number) => <article key={item.id || item.title || index} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0"><div className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded bg-[#f2f4f8] text-center text-[9px] font-semibold uppercase text-slate-500"><span>{formatDate(item.date || item.createdAt).split(' ')[0]}</span><strong className="text-lg leading-5 text-[#17345f]">{formatDate(item.date || item.createdAt).split(' ')[1]?.replace(',','')}</strong><span>{formatDate(item.date || item.createdAt).split(' ')[2]}</span></div><div className="min-w-0 flex-1"><h3 className="text-sm font-semibold text-slate-800">{item.title}</h3><p className="mt-1 line-clamp-1 text-xs text-slate-500">{item.description || item.content || 'Korea University LUPIC project update'}</p>{imagesFor(item).length > 0 && <button onClick={() => openGallery(item)} className="mt-1 text-xs font-semibold text-[#df8179]">Read more <ArrowRight className="ml-1 inline" size={12} /></button>}</div></article>)}</div> : <p className="text-sm leading-6 text-slate-500">{t('newsUpdatesSoonDesc')}</p>}</div>
+      </section>
+    </main>
+
+    <footer className="bg-[#102d55] px-5 py-8 text-white md:px-10"><div className="mx-auto grid max-w-[1440px] gap-8 md:grid-cols-[1fr_1.2fr_.8fr]"><div><div className="text-3xl font-black tracking-tight">LUPIC</div><p className="mt-1 max-w-[190px] text-xs leading-5 text-blue-100">Leading University Project for International Cooperation</p></div><div><h3 className="mb-3 text-xs font-bold uppercase tracking-wider">CONTACT US</h3><a className="block text-xs leading-6 text-blue-100 hover:text-white" href="mailto:ku.tma.lupic@gmail.com">✉ ku.tma.lupic@gmail.com</a><a className="block text-xs leading-6 text-blue-100 hover:text-white" href="https://ku-tma.com" target="_blank" rel="noreferrer">◎ https://ku-tma.com</a><p className="text-xs leading-6 text-blue-100">⌖ Korea University, Seoul, Republic of Korea</p></div><div><h3 className="mb-3 text-xs font-bold uppercase tracking-wider">FOLLOW US</h3><a href="mailto:ku.tma.lupic@gmail.com" aria-label="Email LUPIC" className="inline-flex rounded-full bg-white/15 p-2 hover:bg-white/25"><MessageCircle size={16} /></a><div className="mt-5 flex gap-3"><Link to="/admin" className="text-xs text-blue-100 hover:text-white">{t('adminLink')}</Link><Link to="/catalog" className="text-xs text-blue-100 hover:text-white">{t('catalogLink')}</Link></div></div></div><div className="mx-auto mt-7 flex max-w-[1440px] flex-col justify-between gap-2 border-t border-white/15 pt-4 text-[10px] text-blue-100/75 sm:flex-row"><span>© 2025 Korea University. All Rights Reserved.</span><span>Privacy Policy　 |　 Terms of Use</span></div></footer>
+
+    {gallery && <div role="dialog" aria-modal="true" aria-label={gallery.title} onClick={() => setGallery(null)} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"><div className="relative flex max-h-[90vh] w-full max-w-5xl items-center justify-center" onClick={event => event.stopPropagation()}><button onClick={() => setGallery(null)} aria-label="Close gallery" className="absolute -top-12 right-0 rounded-full bg-white/15 p-2 text-white"><X size={20} /></button>{gallery.images.length > 1 && <button onClick={() => setGallery(current => current ? {...current,index:(current.index-1+current.images.length)%current.images.length} : current)} aria-label="Previous image" className="absolute left-2 z-10 rounded-full bg-black/50 p-3 text-white"><ChevronLeft /></button>}<img src={gallery.images[gallery.index]} alt={gallery.title} className="max-h-[82vh] max-w-full rounded-lg object-contain" />{gallery.images.length > 1 && <button onClick={() => setGallery(current => current ? {...current,index:(current.index+1)%current.images.length} : current)} aria-label="Next image" className="absolute right-2 z-10 rounded-full bg-black/50 p-3 text-white"><ChevronRight /></button>}</div></div>}
+  </div>
 }
