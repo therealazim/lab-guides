@@ -324,3 +324,18 @@ input:focus, textarea:focus, select:focus {
 @media (max-width: 640px) {
   .lupic-home .lupic-hero { background-position: 58% center; }
 }
+
+
+/* The global decorative background belongs behind the app, not over the homepage. */
+body:has(.lupic-home) {
+  background: #fff;
+  color: #243247;
+}
+body:has(.lupic-home) #root {
+  position: relative;
+  z-index: 1;
+}
+body:has(.lupic-home) .atmosphere {
+  pointer-events: none;
+  z-index: -1;
+}
