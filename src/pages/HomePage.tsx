@@ -170,12 +170,18 @@ export default function HomePage() {
       {/* ─── HERO ─── */}
       <section className="relative overflow-hidden bg-[linear-gradient(115deg,#FBE3DF_0%,#FDF0EE_28%,#F4F1F6_52%,#E6EEF8_100%)]">
         <div className="absolute inset-0">
-          <img
-            src="/images/hero-lab.jpg"
-            alt=""
+          <video
             className="h-full w-full object-cover object-center"
-            onError={e => { e.currentTarget.style.display = 'none' }}
-          />
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+          >
+            <source src="/videos/lab-hero-4k.mp4" type="video/mp4" media="(min-width: 1280px)" />
+            <source src="/videos/lab-hero-1080.mp4" type="video/mp4" />
+          </video>
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,227,223,0.96)_0%,rgba(251,227,223,0.85)_30%,rgba(240,244,250,0.55)_55%,rgba(255,255,255,0.15)_100%)]" />
         </div>
 
