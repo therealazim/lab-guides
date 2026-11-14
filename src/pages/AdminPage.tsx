@@ -10,7 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import PageMeta from '../components/PageMeta'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, fetchHiddenEquipmentDetails, restoreEquipmentApi, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
+import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, fetchHiddenEquipmentDetails, restoreEquipmentApi, deleteHiddenEquipmentApi, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
 
 interface EquipmentForm {
   name: string
@@ -463,6 +463,17 @@ export default function AdminPage() {
     }
   }
 
+  const purgeHiddenEquipment = async (slug: string) => {
+    try {
+      await deleteHiddenEquipmentApi(slug)
+      setHiddenSlugs(current => current.filter(s => s !== slug))
+      setHiddenItems(current => current.filter(item => item.slug !== slug))
+      setToastMsg(t('adminHiddenDeleted')); setToastShow(true)
+    } catch (e: any) {
+      setToastMsg(`${t('adminErrorPrefix')}: ${e?.message || t('adminSaveFailed')}`); setToastShow(true)
+    }
+  }
+
   const sectionItems = [
     { id: 'home' as AdminSection, label: t('adminDashboard'), description: t('adminOverview'), icon: LayoutDashboard },
     { id: 'equipment' as AdminSection, label: t('allEquipment'), description: t('adminEquipmentDesc'), icon: List },
@@ -768,9 +779,19 @@ export default function AdminPage() {
                           <p className="text-sm font-semibold text-lum-ivory truncate">{label}</p>
                           <p className="text-[10px] text-lum-slate-warm truncate">{item.slug}</p>
                         </div>
-                        <button onClick={() => restoreHiddenEquipment(item.slug)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-[10px] font-semibold uppercase tracking-[0.1em] flex-shrink-0">
-                          <RotateCcw className="w-3.5 h-3.5" /> {t('adminRestore')}
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <button onClick={() => restoreHiddenEquipment(item.slug)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-[10px] font-semibold uppercase tracking-[0.1em]">
+                            <RotateCcw className="w-3.5 h-3.5" /> {t('adminRestore')}
+                          </button>
+                          <button
+                            onClick={() => { setConfirmMsg(t('adminDeleteHiddenConfirm')); setConfirmAction(() => () => purgeHiddenEquipment(item.slug)) }}
+                            aria-label={t('adminDelete')}
+                            title={t('adminDelete')}
+                            className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     )
                   })}

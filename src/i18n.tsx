@@ -127,7 +127,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     welcomeTitle: 'Welcome to Our Platform', welcomeText: 'This platform is part of the LUPIC project between Korea University and the Karakalpakstan Medical Institute (KMI) to strengthen environmental health education and research capacity in Uzbekistan.', aboutLupic: 'About LUPIC',
     latestNewsTitle: 'Latest News', readMore: 'Read more', contactUsTitle: 'Contact Us', followUsTitle: 'Follow Us', footerLocation: 'Korea University, Seoul, Republic of Korea', rightsReserved: 'All Rights Reserved.', privacyPolicy: 'Privacy Policy', termsOfUse: 'Terms of Use',
     comingSoonTitle: 'Coming Soon', comingSoonText: 'This section is being prepared. Please check back soon.',
-    adminHiddenEquipmentTitle: 'Hidden equipment', adminHiddenEquipmentHelp: 'Restore equipment to make it visible in the catalog again.', adminRestore: 'Restore', adminNoHidden: 'No hidden equipment.', adminEquipmentRestored: 'Equipment restored',
+    adminHiddenEquipmentTitle: 'Hidden equipment', adminHiddenEquipmentHelp: 'Restore equipment to make it visible in the catalog again.', adminRestore: 'Restore', adminNoHidden: 'No hidden equipment.', adminEquipmentRestored: 'Equipment restored', adminDeleteHiddenConfirm: 'Permanently delete this hidden entry? This cannot be undone.', adminHiddenDeleted: 'Hidden entry deleted',
   },
   uz: {
     title: 'KMI - LUPIC Laboratoriyasi',
@@ -239,7 +239,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     welcomeTitle: 'Platformamizga xush kelibsiz', welcomeText: "Ushbu platforma Koreya universiteti va Qoraqalpog'iston tibbiyot instituti (KMI) o'rtasidagi LUPIC loyihasining bir qismi bo'lib, O'zbekistonda atrof-muhit salomatligi ta'limi va tadqiqot salohiyatini mustahkamlaydi.", aboutLupic: 'LUPIC haqida',
     latestNewsTitle: "So'nggi yangiliklar", readMore: 'Batafsil', contactUsTitle: "Bog'lanish", followUsTitle: 'Bizni kuzatib boring', footerLocation: 'Koreya universiteti, Seul, Koreya Respublikasi', rightsReserved: 'Barcha huquqlar himoyalangan.', privacyPolicy: 'Maxfiylik siyosati', termsOfUse: 'Foydalanish shartlari',
     comingSoonTitle: 'Tez orada', comingSoonText: "Ushbu bo'lim tayyorlanmoqda. Tez orada qayta tekshiring.",
-    adminHiddenEquipmentTitle: 'Yashirilgan jihozlar', adminHiddenEquipmentHelp: "Jihozni katalogda qayta ko'rinadigan qilish uchun tiklang.", adminRestore: 'Tiklash', adminNoHidden: "Yashirilgan jihozlar yo'q.", adminEquipmentRestored: 'Jihoz tiklandi',
+    adminHiddenEquipmentTitle: 'Yashirilgan jihozlar', adminHiddenEquipmentHelp: "Jihozni katalogda qayta ko'rinadigan qilish uchun tiklang.", adminRestore: 'Tiklash', adminNoHidden: "Yashirilgan jihozlar yo'q.", adminEquipmentRestored: 'Jihoz tiklandi', adminDeleteHiddenConfirm: "Bu yashirilgan yozuv butunlay o'chirilsinmi? Buni qaytarib bo'lmaydi.", adminHiddenDeleted: "Yashirilgan yozuv o'chirildi",
   },
   kk: {
     title: 'KMI - LUPIC Laboratoriyası',
@@ -351,7 +351,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     welcomeTitle: 'Platformamızǵa xosh kelipsiz', welcomeText: 'Bul platforma Koreya universiteti hám Qaraqalpaqstan medicina instituti (KMI) arasındaǵı LUPIC joybarınıń bir bólegi bolıp, Ózbekstanda átirap-ortalıq salamatlıǵı tálimi hám izertlew potencialın bekkemleydi.', aboutLupic: 'LUPIC haqında',
     latestNewsTitle: 'Eń jańa habarlar', readMore: 'Tolıq', contactUsTitle: 'Baylanıs', followUsTitle: 'Bizdi kúzetiń', footerLocation: 'Koreya universiteti, Seul, Koreya Respublikası', rightsReserved: 'Barlıq huqıqlar qorǵalǵan.', privacyPolicy: 'Jasırınlıq siyasatı', termsOfUse: 'Paydalanıw shártleri',
     comingSoonTitle: 'Tez arada', comingSoonText: 'Bul bólim tayarlanbaqta. Tez arada qayta tekseriń.',
-    adminHiddenEquipmentTitle: 'Jasırılǵan qurılmalar', adminHiddenEquipmentHelp: 'Qurılmanı katalogta qayta kóriniwli etiw ushın tikleń.', adminRestore: 'Tiklew', adminNoHidden: 'Jasırılǵan qurılmalar joq.', adminEquipmentRestored: 'Qurılma tiklandi',
+    adminHiddenEquipmentTitle: 'Jasırılǵan qurılmalar', adminHiddenEquipmentHelp: 'Qurılmanı katalogta qayta kóriniwli etiw ushın tikleń.', adminRestore: 'Tiklew', adminNoHidden: 'Jasırılǵan qurılmalar joq.', adminEquipmentRestored: 'Qurılma tiklandi', adminDeleteHiddenConfirm: 'Bul jasırılǵan jazba pútkilley óshirilsin be? Bunı qaytarıw múmkin emes.', adminHiddenDeleted: 'Jasırılǵan jazba óshirildi',
   },
   ru: {
     title: 'KMI - LUPIC Лаборатория',
@@ -463,7 +463,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     welcomeTitle: 'Добро пожаловать на нашу платформу', welcomeText: 'Эта платформа является частью проекта LUPIC между Университетом Корё и Каракалпакским медицинским институтом (KMI) и направлена на укрепление образования и исследовательского потенциала в области экологического здоровья в Узбекистане.', aboutLupic: 'О LUPIC',
     latestNewsTitle: 'Последние новости', readMore: 'Подробнее', contactUsTitle: 'Свяжитесь с нами', followUsTitle: 'Подписывайтесь', footerLocation: 'Университет Корё, Сеул, Республика Корея', rightsReserved: 'Все права защищены.', privacyPolicy: 'Политика конфиденциальности', termsOfUse: 'Условия использования',
     comingSoonTitle: 'Скоро', comingSoonText: 'Этот раздел готовится. Пожалуйста, зайдите позже.',
-    adminHiddenEquipmentTitle: 'Скрытое оборудование', adminHiddenEquipmentHelp: 'Восстановите оборудование, чтобы оно снова отображалось в каталоге.', adminRestore: 'Восстановить', adminNoHidden: 'Скрытого оборудования нет.', adminEquipmentRestored: 'Оборудование восстановлено',
+    adminHiddenEquipmentTitle: 'Скрытое оборудование', adminHiddenEquipmentHelp: 'Восстановите оборудование, чтобы оно снова отображалось в каталоге.', adminRestore: 'Восстановить', adminNoHidden: 'Скрытого оборудования нет.', adminEquipmentRestored: 'Оборудование восстановлено', adminDeleteHiddenConfirm: 'Удалить эту скрытую запись навсегда? Это нельзя отменить.', adminHiddenDeleted: 'Скрытая запись удалена',
   },
   ko: {
     title: 'KMI - LUPIC 연구실',
@@ -571,7 +571,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     welcomeTitle: '플랫폼에 오신 것을 환영합니다', welcomeText: '이 플랫폼은 고려대학교와 카라칼팍스탄 의료원(KMI) 간 LUPIC 프로젝트의 일환으로, 우즈베키스탄의 환경보건 교육 및 연구 역량을 강화하기 위해 마련되었습니다.', aboutLupic: 'LUPIC 소개',
     latestNewsTitle: '최신 뉴스', readMore: '더 보기', contactUsTitle: '문의하기', followUsTitle: '팔로우', footerLocation: '고려대학교, 서울, 대한민국', rightsReserved: '모든 권리 보유.', privacyPolicy: '개인정보처리방침', termsOfUse: '이용약관',
     comingSoonTitle: '곧 제공 예정', comingSoonText: '이 섹션은 준비 중입니다. 곧 다시 확인해 주세요.',
-    adminHiddenEquipmentTitle: '숨겨진 장비', adminHiddenEquipmentHelp: '장비를 복원하면 카탈로그에 다시 표시됩니다.', adminRestore: '복원', adminNoHidden: '숨겨진 장비가 없습니다.', adminEquipmentRestored: '장비가 복원되었습니다',
+    adminHiddenEquipmentTitle: '숨겨진 장비', adminHiddenEquipmentHelp: '장비를 복원하면 카탈로그에 다시 표시됩니다.', adminRestore: '복원', adminNoHidden: '숨겨진 장비가 없습니다.', adminEquipmentRestored: '장비가 복원되었습니다', adminDeleteHiddenConfirm: '이 숨겨진 항목을 영구 삭제하시겠습니까? 되돌릴 수 없습니다.', adminHiddenDeleted: '숨겨진 항목이 삭제되었습니다',
   },
 }
 

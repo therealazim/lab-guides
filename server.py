@@ -427,6 +427,24 @@ def get_hidden_equipment_details():
     return jsonify(result)
 
 
+@app.route('/api/hidden-equipment/<slug>', methods=['DELETE'])
+@admin_required
+def purge_hidden_equipment(slug):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM equipment WHERE slug = %s AND hidden = true', (slug,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Hidden equipment not found'}), 404
+    conn.commit()
+    cur.close()
+    conn.close()
+    log_audit('equipment.purge', 'equipment', slug)
+    return jsonify({'ok': True})
+
+
 @app.route('/api/equipment/<slug>/restore', methods=['POST'])
 @admin_required
 def restore_equipment(slug):
