@@ -3,6 +3,9 @@ export function fetchHiddenEquipment(): Promise<string[]>
 export function fetchEquipmentBySlug(slug: string): Promise<any>
 export function saveEquipment(item: any): Promise<any>
 export function deleteEquipmentApi(slug: string): Promise<any>
+export function saveNews(item: any): Promise<any>
+export function deleteNewsApi(id: number): Promise<any>
+export function saveTranslation(entry: { key: string; lang: string; value: string }): Promise<any>
 export function fetchPartners(): Promise<any[]>
 export function savePartner(partner: any): Promise<any>
 export function updatePartner(id: number, partner: any): Promise<any>

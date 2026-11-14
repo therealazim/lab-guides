@@ -10,7 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import PageMeta from '../components/PageMeta'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
+import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
 
 interface EquipmentForm {
   name: string
@@ -181,22 +181,14 @@ export default function AdminPage() {
 
   const save = async (items: any[]) => {
     for (const item of items) {
-      const response = await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(item) })
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}))
-        throw new Error(error?.error || `Equipment save failed (${response.status})`)
-      }
+      await apiSaveEquipment(item)
     }
     setSavedItems(items)
   }
 
   const saveOverrides = async (ov: Record<string, any>) => {
     for (const [slug, data] of Object.entries(ov)) {
-      const response = await fetch('/api/equipment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ slug, ...data as any }) })
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}))
-        throw new Error(error?.error || `Equipment update failed (${response.status})`)
-      }
+      await apiSaveEquipment({ slug, ...data as any })
     }
     setOverrides({...ov})
   }
@@ -411,13 +403,10 @@ export default function AdminPage() {
     if (!newsTitle.trim()) { setToastMsg(t('adminTitleRequired')); setToastShow(true); return }
     const body: any = { title: newsTitle, description: newsDesc, upload_date: newsDate || todayDate(), images: newsImgs, id: newsEditIdx ?? undefined }
     try {
-      const r = await fetch('/api/news', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const d = await r.json()
-      if (d.ok) {
-        setToastMsg(t('adminNewsSaved')); setToastShow(true)
-        setNewsTitle(''); setNewsDesc(''); setNewsDate(todayDate()); setNewsImgs([]); setNewsEditIdx(null)
-        loadNews()
-      }
+      await apiSaveNews(body)
+      setToastMsg(t('adminNewsSaved')); setToastShow(true)
+      setNewsTitle(''); setNewsDesc(''); setNewsDate(todayDate()); setNewsImgs([]); setNewsEditIdx(null)
+      loadNews()
     } catch (e: any) {
       setToastMsg(`${t('adminErrorPrefix')}: ${e?.message || t('adminSaveFailed')}`); setToastShow(true)
     }
@@ -425,7 +414,7 @@ export default function AdminPage() {
 
   const deleteNewsItem = async (id: number) => {
     try {
-      await fetch('/api/news/' + id, { method: 'DELETE' })
+      await deleteNewsApi(id)
       setToastMsg(t('adminNewsDeleted')); setToastShow(true)
       loadNews()
     } catch {}
@@ -785,11 +774,7 @@ export default function AdminPage() {
                         if (val && typeof val === 'string') {
                           if (!updated[key]) updated[key] = {}
                           updated[key][lang] = val
-                          await fetch('/api/translations', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ key, lang, value: val }),
-                          })
+                          await apiSaveTranslation({ key, lang, value: val })
                         }
                       }
                     }
