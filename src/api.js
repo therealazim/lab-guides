@@ -1,7 +1,7 @@
 const API = '/api'
 let csrfToken = ''
 
-async function req(path, options = {}) {
+async function req(path, options = {}, retried = false) {
   const method = (options.method || 'GET').toUpperCase()
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
   if (csrfToken && method !== 'GET' && method !== 'HEAD') {
@@ -14,7 +14,17 @@ async function req(path, options = {}) {
   })
   let data = null
   try { data = await r.json() } catch { data = null }
-  if (!r.ok) throw new Error(data?.error || `Request failed with status ${r.status}`)
+  if (!r.ok) {
+    const message = data?.error || `Request failed with status ${r.status}`
+    if (r.status === 403 && !retried && /csrf/i.test(message)) {
+      try {
+        const session = await req('/auth/session')
+        csrfToken = session?.csrfToken || ''
+        if (csrfToken) return req(path, options, true)
+      } catch {}
+    }
+    throw new Error(message)
+  }
   return data
 }
 

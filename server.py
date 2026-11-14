@@ -34,7 +34,7 @@ ADMIN_IDLE_SECONDS = int(os.environ.get('ADMIN_IDLE_SECONDS', '3600'))
 MAX_IMAGE_BYTES = 2 * 1024 * 1024
 MAX_PDF_BYTES = 8 * 1024 * 1024
 CSRF_HEADER = 'X-CSRF-Token'
-CSRF_EXEMPT_PATHS = {'/api/auth/login'}
+CSRF_EXEMPT_PATHS = {'/api/auth/login', '/api/auth/logout'}
 VALID_STATUSES = {'AVAILABLE', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'UNKNOWN', 'UNAVAILABLE'}
 CONTENT_SECURITY_POLICY = (
     "default-src 'self'; "
@@ -274,6 +274,8 @@ init_db()
 @app.route('/api/auth/session', methods=['GET'])
 def auth_session():
     authenticated = bool(session.get('admin_authenticated'))
+    if authenticated and not session.get('csrf_token'):
+        session['csrf_token'] = secrets.token_urlsafe(32)
     return jsonify({
         'authenticated': authenticated,
         'csrfToken': session.get('csrf_token', '') if authenticated else '',
