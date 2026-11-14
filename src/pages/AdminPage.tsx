@@ -300,14 +300,16 @@ export default function AdminPage() {
   }
 
   const handleSubmit = async () => {
-    if (!form.name.trim() || !form.description.trim()) {
+    if (!form.name.trim()) {
       setToastMsg(t('adminRequired')); setToastShow(true)
       return
     }
     setSaving(true)
     setSaveProgress(10)
 
-    const slug = generateSlug(form.brand + '-' + form.model)
+    const slug = editIdx !== null
+      ? editIdx
+      : (generateSlug(form.name) || generateSlug(`${form.brand} ${form.model}`) || `equipment-${Date.now().toString(36)}`)
     const data: any = {
       slug,
       en: {
