@@ -222,20 +222,37 @@ export default function AdminPage() {
     }
   }
 
+  const MAX_IMAGE_BYTES = 2 * 1024 * 1024
+  const MAX_PDF_BYTES = 8 * 1024 * 1024
+
+  const readUpload = (file: File, kind: 'image' | 'pdf', onReady: (dataUrl: string) => void) => {
+    const isPdf = kind === 'pdf'
+    const maxBytes = isPdf ? MAX_PDF_BYTES : MAX_IMAGE_BYTES
+    if (!file.type.startsWith(isPdf ? 'application/pdf' : 'image/')) {
+      setToastMsg(`${t('adminErrorPrefix')}: ${isPdf ? 'PDF expected' : 'Image expected'}`)
+      setToastShow(true)
+      return
+    }
+    if (file.size > maxBytes) {
+      setToastMsg(`${t('adminErrorPrefix')}: file exceeds ${isPdf ? '8' : '2'} MB`)
+      setToastShow(true)
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => onReady(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setImage(reader.result as string)
-    reader.readAsDataURL(file)
+    readUpload(file, 'image', setImage)
   }
 
   const handleManual = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setManual(reader.result as string)
-    reader.readAsDataURL(file)
+    readUpload(file, 'pdf', setManual)
   }
 
   const generateSlug = (name: string) =>
@@ -658,7 +675,7 @@ export default function AdminPage() {
                 <input value={partnerName} onChange={e => setPartnerName(e.target.value)} placeholder={t('adminPartnerName')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <input value={partnerUrl} onChange={e => setPartnerUrl(e.target.value)} placeholder={t('adminWebsiteUrl')} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20" />
                 <div className="flex gap-2">
-                  <input ref={fileRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setPartnerImg(r.result as string); r.readAsDataURL(f) } }} className="hidden" />
+                  <input ref={fileRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) readUpload(f, 'image', setPartnerImg) }} className="hidden" />
                   <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm flex-1">
                     <ImageIcon className="w-4 h-4" /> {partnerImg ? t('adminChange') : t('adminUploadSquare')}
                   </button>
@@ -807,7 +824,7 @@ export default function AdminPage() {
                 <span className="block text-[10px] text-lum-slate-warm/55 mt-1.5">{t('adminNewsUploadHelp')}</span>
               </label>
               <div className="flex items-center gap-3">
-                <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewsImgs(prev => [...prev, r.result as string]); r.readAsDataURL(f) } }} className="hidden" />
+                <input ref={newsImgRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) readUpload(f, 'image', url => setNewsImgs(prev => [...prev, url])) }} className="hidden" />
                 <button onClick={() => newsImgRef.current?.click()} className="flex items-center gap-2 px-3 py-2 min-h-11 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm touch-manipulation">
                   <ImageIcon className="w-4 h-4" /> {newsImgs.length > 0 ? `${t('adminAddAnother')} (${newsImgs.length})` : t('adminUploadImage')}
                 </button>

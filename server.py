@@ -2,12 +2,19 @@ import os
 import json
 import mimetypes
 import hmac
+import secrets
 import time
-from datetime import date
+from datetime import date, timedelta
 from functools import wraps
 from flask import Flask, request, jsonify, session
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
+except ImportError:
+    pass
 
 app = Flask(__name__)
 app.config.update(
@@ -15,14 +22,35 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true',
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
+    MAX_CONTENT_LENGTH=20 * 1024 * 1024,
 )
 
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', '')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 LOGIN_WINDOW_SECONDS = 600
 LOGIN_MAX_ATTEMPTS = 5
-failed_logins = {}
+ADMIN_IDLE_SECONDS = int(os.environ.get('ADMIN_IDLE_SECONDS', '3600'))
+MAX_IMAGE_BYTES = 2 * 1024 * 1024
+MAX_PDF_BYTES = 8 * 1024 * 1024
+CSRF_HEADER = 'X-CSRF-Token'
+CSRF_EXEMPT_PATHS = {'/api/auth/login'}
 VALID_STATUSES = {'AVAILABLE', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'UNKNOWN', 'UNAVAILABLE'}
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://unpkg.com https://lottie.host; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+    "img-src 'self' data: blob:; "
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+    "media-src 'self'; "
+    "connect-src 'self' https://lottie.host https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://unpkg.com; "
+    "frame-src https://www.youtube.com https://www.youtube-nocookie.com; "
+    "worker-src 'self' blob:; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'"
+)
 
 
 def normalize_status(value):
@@ -41,20 +69,142 @@ def admin_required(view):
     return wrapped
 
 
+def client_ip():
+    forwarded = request.headers.get('X-Forwarded-For', '')
+    return (forwarded.split(',')[0].strip() or request.remote_addr or 'unknown')
+
+
+def log_audit(action, entity='', entity_id='', details=None):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'INSERT INTO audit_log (actor, action, entity, entity_id, details, ip) VALUES (%s, %s, %s, %s, %s, %s)',
+            ('admin', action, entity, str(entity_id or ''), json.dumps(details or {}), client_ip()),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as exc:
+        print(f'Audit log error: {exc}')
+
+
+def validate_upload_data_url(value, allowed_mimes, max_bytes, label):
+    if not value:
+        return value
+    if not isinstance(value, str) or not value.startswith('data:'):
+        raise ValueError(f'{label} must be an uploaded file')
+    header, separator, payload = value.partition(',')
+    if not separator:
+        raise ValueError(f'{label} is invalid')
+    mime = header[5:].split(';')[0].strip().lower()
+    if mime not in allowed_mimes:
+        raise ValueError(f'Unsupported {label} file type')
+    if (len(payload) * 3) // 4 > max_bytes:
+        raise ValueError(f'{label} exceeds the {max_bytes // (1024 * 1024)} MB limit')
+    return value
+
+
+def recent_login_attempts(ip, username):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM login_attempts WHERE attempted_at > NOW() - (%s * INTERVAL '1 second') AND (ip = %s OR username = %s)",
+            (LOGIN_WINDOW_SECONDS, ip, username),
+        )
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return count
+    except Exception as exc:
+        print(f'Login attempt lookup error: {exc}')
+        return 0
+
+
+def record_login_attempt(ip, username):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('INSERT INTO login_attempts (ip, username) VALUES (%s, %s)', (ip, username))
+        cur.execute("DELETE FROM login_attempts WHERE attempted_at < NOW() - INTERVAL '1 day'")
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as exc:
+        print(f'Login attempt record error: {exc}')
+
+
+def clear_login_attempts(ip, username):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('DELETE FROM login_attempts WHERE ip = %s OR username = %s', (ip, username))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as exc:
+        print(f'Login attempt clear error: {exc}')
+
+
+@app.before_request
+def enforce_session_and_csrf():
+    if not request.path.startswith('/api/'):
+        return None
+
+    if session.get('admin_authenticated'):
+        last_seen = session.get('last_seen')
+        if last_seen and time.time() - last_seen > ADMIN_IDLE_SECONDS:
+            session.clear()
+        else:
+            session['last_seen'] = time.time()
+
+    if (
+        request.method in ('POST', 'PUT', 'PATCH', 'DELETE')
+        and request.path not in CSRF_EXEMPT_PATHS
+    ):
+        expected = session.get('csrf_token', '')
+        provided = request.headers.get(CSRF_HEADER, '')
+        if not expected or not provided or not hmac.compare_digest(expected, provided):
+            return jsonify({'error': 'Invalid or missing CSRF token'}), 403
+    return None
+
+
 @app.after_request
-def no_cache(response):
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
+def add_security_headers(response):
+    if request.path.startswith('/api/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    response.headers.setdefault('X-Frame-Options', 'DENY')
+    response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    response.headers.setdefault('Content-Security-Policy', CONTENT_SECURITY_POLICY)
+    if request.is_secure or app.config.get('SESSION_COOKIE_SECURE'):
+        response.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
     return response
+
+
+@app.errorhandler(413)
+def handle_too_large(_error):
+    return jsonify({'error': 'Upload is too large'}), 413
+
+
+@app.errorhandler(500)
+def handle_server_error(_error):
+    return jsonify({'error': 'Internal server error'}), 500
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
+DATABASE_SSLMODE = os.environ.get('DATABASE_SSLMODE', 'require')
 
 def get_db():
-    return psycopg2.connect(DATABASE_URL, sslmode='require')
+    if DATABASE_SSLMODE:
+        return psycopg2.connect(DATABASE_URL, sslmode=DATABASE_SSLMODE)
+    return psycopg2.connect(DATABASE_URL)
 
 def init_db():
     conn = get_db()
@@ -90,6 +240,30 @@ def init_db():
     ''')
     cur.execute('ALTER TABLE news ADD COLUMN IF NOT EXISTS upload_date DATE')
     cur.execute('UPDATE news SET upload_date = created_at::date WHERE upload_date IS NULL')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            id SERIAL PRIMARY KEY,
+            ip TEXT NOT NULL,
+            username TEXT NOT NULL,
+            attempted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    ''')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_login_attempts_time ON login_attempts (attempted_at)')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts (ip)')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_login_attempts_username ON login_attempts (username)')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id SERIAL PRIMARY KEY,
+            actor TEXT NOT NULL DEFAULT 'admin',
+            action TEXT NOT NULL,
+            entity TEXT DEFAULT '',
+            entity_id TEXT DEFAULT '',
+            details JSONB NOT NULL DEFAULT '{}'::jsonb,
+            ip TEXT DEFAULT '',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    ''')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log (created_at DESC)')
     conn.commit()
     cur.close()
     conn.close()
@@ -99,7 +273,11 @@ init_db()
 # ─── API Routes ───
 @app.route('/api/auth/session', methods=['GET'])
 def auth_session():
-    return jsonify({'authenticated': bool(session.get('admin_authenticated'))})
+    authenticated = bool(session.get('admin_authenticated'))
+    return jsonify({
+        'authenticated': authenticated,
+        'csrfToken': session.get('csrf_token', '') if authenticated else '',
+    })
 
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -107,26 +285,32 @@ def auth_login():
     body = request.get_json(silent=True) or {}
     username = str(body.get('username', ''))
     password = str(body.get('password', ''))
-    now = time.time()
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
-    attempts = [stamp for stamp in failed_logins.get(ip, []) if now - stamp < LOGIN_WINDOW_SECONDS]
-    if len(attempts) >= LOGIN_MAX_ATTEMPTS:
-        return jsonify({'error': 'Too many login attempts. Try again later.'}), 429
+    ip = client_ip()
+    if recent_login_attempts(ip, username) >= LOGIN_MAX_ATTEMPTS:
+        response = jsonify({'error': 'Too many login attempts. Try again later.'})
+        response.status_code = 429
+        response.headers['Retry-After'] = str(LOGIN_WINDOW_SECONDS)
+        return response
     if not ADMIN_USERNAME or not ADMIN_PASSWORD:
         return jsonify({'error': 'Admin authentication is not configured on the server'}), 503
     valid = hmac.compare_digest(username, ADMIN_USERNAME) and hmac.compare_digest(password, ADMIN_PASSWORD)
     if not valid:
-        attempts.append(now)
-        failed_logins[ip] = attempts
+        record_login_attempt(ip, username)
         return jsonify({'error': 'Invalid username or password'}), 401
-    failed_logins.pop(ip, None)
+    clear_login_attempts(ip, username)
     session.clear()
+    session.permanent = True
     session['admin_authenticated'] = True
-    return jsonify({'ok': True})
+    session['last_seen'] = time.time()
+    session['csrf_token'] = secrets.token_urlsafe(32)
+    log_audit('auth.login', 'session', '', {'ip': ip})
+    return jsonify({'ok': True, 'csrfToken': session['csrf_token']})
 
 
 @app.route('/api/auth/logout', methods=['POST'])
 def auth_logout():
+    if session.get('admin_authenticated'):
+        log_audit('auth.logout', 'session')
     session.clear()
     return jsonify({'ok': True})
 
@@ -183,6 +367,11 @@ def save_equipment():
     slug = body.pop('slug', None)
     if not slug:
         return jsonify({'error': 'No slug'}), 400
+    try:
+        validate_upload_data_url(body.get('image'), {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}, MAX_IMAGE_BYTES, 'Image')
+        validate_upload_data_url(body.get('manual'), {'application/pdf'}, MAX_PDF_BYTES, 'Manual')
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     body['status'] = normalize_status(body.get('status'))
     conn = get_db()
     cur = conn.cursor()
@@ -193,6 +382,7 @@ def save_equipment():
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('equipment.save', 'equipment', slug, {'status': body.get('status')})
     return jsonify({'ok': True})
 
 @app.route('/api/equipment/<slug>', methods=['DELETE'])
@@ -212,7 +402,9 @@ def delete_equipment(slug):
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('equipment.hide', 'equipment', slug)
     return jsonify({'ok': True})
+
 
 @app.route('/api/partners', methods=['GET'])
 def get_partners():
@@ -235,6 +427,10 @@ def save_partner():
     image = body.get('image', '')
     if not name:
         return jsonify({'error': 'No name'}), 400
+    try:
+        validate_upload_data_url(image, {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}, MAX_IMAGE_BYTES, 'Image')
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
@@ -245,6 +441,7 @@ def save_partner():
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('partner.create', 'partner', partner_id, {'name': name})
     return jsonify({'ok': True, 'id': partner_id})
 
 @app.route('/api/partners/<int:partner_id>', methods=['PUT'])
@@ -258,6 +455,10 @@ def update_partner(partner_id):
     image = body.get('image', '')
     if not name:
         return jsonify({'error': 'No name'}), 400
+    try:
+        validate_upload_data_url(image, {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}, MAX_IMAGE_BYTES, 'Image')
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
@@ -272,6 +473,7 @@ def update_partner(partner_id):
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('partner.update', 'partner', partner_id, {'name': name})
     return jsonify({'ok': True, 'id': partner_id})
 
 @app.route('/api/partners/<int:partner_id>', methods=['DELETE'])
@@ -283,6 +485,7 @@ def delete_partner(partner_id):
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('partner.delete', 'partner', partner_id)
     return jsonify({'ok': True})
 
 # ─── Translations API ───
@@ -322,6 +525,7 @@ def save_translation():
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('translation.save', 'translation', key, {'lang': lang})
     return jsonify({'ok': True})
 
 # ─── News API ───
@@ -363,6 +567,16 @@ def save_news():
     upload_date = body.get('upload_date') or None
     if not title:
         return jsonify({'error': 'No title'}), 400
+    if images is None:
+        images = []
+    if not isinstance(images, list):
+        return jsonify({'error': 'Images must be a list'}), 400
+    try:
+        for candidate in images:
+            validate_upload_data_url(candidate, {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}, MAX_IMAGE_BYTES, 'Image')
+        validate_upload_data_url(image, {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}, MAX_IMAGE_BYTES, 'Image')
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     if upload_date:
         try:
             date.fromisoformat(upload_date)
@@ -386,6 +600,7 @@ def save_news():
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('news.update' if body.get('id') else 'news.create', 'news', news_id, {'title': title})
     return jsonify({'ok': True, 'id': news_id})
 
 @app.route('/api/news/<int:news_id>', methods=['DELETE'])
@@ -397,7 +612,27 @@ def delete_news(news_id):
     conn.commit()
     cur.close()
     conn.close()
+    log_audit('news.delete', 'news', news_id)
     return jsonify({'ok': True})
+
+# ─── Audit ───
+@app.route('/api/audit', methods=['GET'])
+@admin_required
+def get_audit_log():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    result = []
+    for row in rows:
+        item = dict(row)
+        if item.get('created_at'):
+            item['created_at'] = item['created_at'].isoformat()
+        result.append(item)
+    return jsonify(result)
+
 
 # ─── SEO ───
 def site_base_url():

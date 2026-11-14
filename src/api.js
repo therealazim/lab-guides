@@ -1,12 +1,19 @@
 const API = '/api'
+let csrfToken = ''
 
 async function req(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase()
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  if (csrfToken && method !== 'GET' && method !== 'HEAD') {
+    headers['X-CSRF-Token'] = csrfToken
+  }
   const r = await fetch(`${API}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     credentials: 'same-origin',
     ...options,
+    headers,
   })
-  const data = await r.json()
+  let data = null
+  try { data = await r.json() } catch { data = null }
   if (!r.ok) throw new Error(data?.error || `Request failed with status ${r.status}`)
   return data
 }
@@ -20,7 +27,19 @@ export const fetchPartners = () => req('/partners')
 export const savePartner = (partner) => req('/partners', { method: 'POST', body: JSON.stringify(partner) })
 export const updatePartner = (id, partner) => req(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(partner) })
 export const deletePartnerApi = (id) => req(`/partners/${id}`, { method: 'DELETE' })
-export const getAdminSession = () => req('/auth/session')
-export const loginAdmin = (username, password) => req('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) })
-export const logoutAdmin = () => req('/auth/logout', { method: 'POST' })
+export const getAdminSession = () => req('/auth/session').then(data => {
+  csrfToken = data?.csrfToken || ''
+  return data
+})
+export const loginAdmin = (username, password) => req('/auth/login', {
+  method: 'POST',
+  body: JSON.stringify({ username, password }),
+}).then(data => {
+  csrfToken = data?.csrfToken || csrfToken
+  return data
+})
+export const logoutAdmin = () => req('/auth/logout', { method: 'POST' }).then(data => {
+  csrfToken = ''
+  return data
+})
 export const seedDatabase = (data) => req('/seed', { method: 'POST', body: JSON.stringify(data) })
