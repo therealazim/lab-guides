@@ -157,6 +157,12 @@ export default function AdminPage() {
     } catch {}
   }
 
+  useEffect(() => {
+    if (!authed) return
+    loadNews()
+    loadTranslations()
+  }, [authed])
+
   type AdminSection = 'home' | 'equipment' | 'partners' | 'translations' | 'news'
   const activeSection: AdminSection = editIdx !== null || showEquipList ? 'equipment' : showPartners ? 'partners' : showTranslations ? 'translations' : showNews ? 'news' : 'home'
 
