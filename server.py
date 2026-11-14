@@ -409,6 +409,42 @@ def delete_equipment(slug):
     return jsonify({'ok': True})
 
 
+@app.route('/api/hidden-equipment/details', methods=['GET'])
+@admin_required
+def get_hidden_equipment_details():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT slug, data FROM equipment WHERE hidden = true ORDER BY slug')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    result = []
+    for slug, data in rows:
+        payload = data or {}
+        localized = payload.get('en') or payload
+        name = localized.get('name') if isinstance(localized, dict) else ''
+        result.append({'slug': slug, 'name': name or ''})
+    return jsonify(result)
+
+
+@app.route('/api/equipment/<slug>/restore', methods=['POST'])
+@admin_required
+def restore_equipment(slug):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('UPDATE equipment SET hidden = false WHERE slug = %s', (slug,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Equipment not found'}), 404
+    conn.commit()
+    cur.close()
+    conn.close()
+    log_audit('equipment.restore', 'equipment', slug)
+    return jsonify({'ok': True})
+
+
 @app.route('/api/partners', methods=['GET'])
 def get_partners():
     conn = get_db()

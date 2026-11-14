@@ -39,6 +39,8 @@ async function req(path, options = {}, retried = false) {
 
 export const fetchEquipment = () => req('/equipment')
 export const fetchHiddenEquipment = () => req('/hidden-equipment')
+export const fetchHiddenEquipmentDetails = () => req('/hidden-equipment/details')
+export const restoreEquipmentApi = (slug) => req(`/equipment/${slug}/restore`, { method: 'POST' })
 export const fetchEquipmentBySlug = (slug) => req(`/equipment/${slug}`)
 export const saveEquipment = (item) => req('/equipment', { method: 'POST', body: JSON.stringify(item) })
 export const deleteEquipmentApi = (slug) => req(`/equipment/${slug}`, { method: 'DELETE' })

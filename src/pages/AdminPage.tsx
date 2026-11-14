@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages, Newspaper, LayoutDashboard, ChevronRight, Plus, Settings2, Pencil } from 'lucide-react'
+import { ArrowLeft, Save, Upload, LogOut, Eye, EyeOff, Trash2, Menu, X, List, Link2, Image as ImageIcon, Languages, Newspaper, LayoutDashboard, ChevronRight, Plus, Settings2, Pencil, RotateCcw } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
@@ -10,7 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import PageMeta from '../components/PageMeta'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
+import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, fetchHiddenEquipmentDetails, restoreEquipmentApi, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
 
 interface EquipmentForm {
   name: string
@@ -99,6 +99,7 @@ export default function AdminPage() {
     const initial = (window as any).__INITIAL_DATA__
     return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
   })
+  const [hiddenItems, setHiddenItems] = useState<{ slug: string; name: string }[]>([])
   const [manual, setManual] = useState<string | null>(null)
   const manualRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
@@ -157,10 +158,21 @@ export default function AdminPage() {
     } catch {}
   }
 
+  const loadHiddenEquipment = async () => {
+    try {
+      const data = await fetchHiddenEquipmentDetails()
+      if (Array.isArray(data)) {
+        setHiddenItems(data)
+        setHiddenSlugs(data.map((item: any) => item.slug))
+      }
+    } catch {}
+  }
+
   useEffect(() => {
     if (!authed) return
     loadNews()
     loadTranslations()
+    loadHiddenEquipment()
   }, [authed])
 
   type AdminSection = 'home' | 'equipment' | 'partners' | 'translations' | 'news'
@@ -179,6 +191,7 @@ export default function AdminPage() {
     resetForm()
     if (section === 'translations') loadTranslations()
     if (section === 'news') loadNews()
+    if (section === 'equipment') loadHiddenEquipment()
     setMenuOpen(false)
   }
 
@@ -429,6 +442,25 @@ export default function AdminPage() {
     } catch {}
   }
 
+  const restoreHiddenEquipment = async (slug: string) => {
+    try {
+      await restoreEquipmentApi(slug)
+      setHiddenSlugs(current => current.filter(s => s !== slug))
+      setHiddenItems(current => current.filter(item => item.slug !== slug))
+      setToastMsg(t('adminEquipmentRestored')); setToastShow(true)
+      const data = await apiFetchEquipment().catch(() => null)
+      if (data) {
+        const admin = data.filter((d: any) => d._overridden && !staticEquipments.some((s: any) => s.slug === d.slug))
+        const ovs: Record<string, any> = {}
+        data.filter((d: any) => staticEquipments.some((s: any) => s.slug === d.slug)).forEach((d: any) => { ovs[d.slug] = d })
+        setSavedItems(admin)
+        setOverrides(ovs)
+      }
+    } catch (e: any) {
+      setToastMsg(`${t('adminErrorPrefix')}: ${e?.message || t('adminSaveFailed')}`); setToastShow(true)
+    }
+  }
+
   const sectionItems = [
     { id: 'home' as AdminSection, label: t('adminDashboard'), description: t('adminOverview'), icon: LayoutDashboard },
     { id: 'equipment' as AdminSection, label: t('allEquipment'), description: t('adminEquipmentDesc'), icon: List },
@@ -654,6 +686,37 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+
+            <div className="mt-2">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-sm font-medium text-lum-ivory">{t('adminHiddenEquipmentTitle')}</p>
+                  <p className="text-[10px] text-lum-slate-warm/60 mt-1">{t('adminHiddenEquipmentHelp')}</p>
+                </div>
+                <span className="text-[10px] text-lum-slate-warm/60">{hiddenItems.length}</span>
+              </div>
+              {hiddenItems.length === 0 ? (
+                <p className="text-xs text-lum-slate-warm/60">{t('adminNoHidden')}</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {hiddenItems.map(item => {
+                    const staticMatch = staticEquipments.find((eq: any) => eq.slug === item.slug)
+                    const label = staticMatch?.en?.name || item.name || item.slug
+                    return (
+                      <div key={item.slug} className="lum-card p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-lum-ivory truncate">{label}</p>
+                          <p className="text-[10px] text-lum-slate-warm truncate">{item.slug}</p>
+                        </div>
+                        <button onClick={() => restoreHiddenEquipment(item.slug)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-[10px] font-semibold uppercase tracking-[0.1em] flex-shrink-0">
+                          <RotateCcw className="w-3.5 h-3.5" /> {t('adminRestore')}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </>
         )}
 
