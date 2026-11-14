@@ -658,6 +658,64 @@ export default function AdminPage() {
                   </label>
                 ))}
               </div>
+
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                {[
+                  { key: 'location', label: t('adminLocation') },
+                  { key: 'quantity', label: t('adminQty') },
+                  { key: 'purchase_date', label: t('purchaseDate') },
+                  { key: 'installation_date', label: t('installationDate') },
+                ].map(field => (
+                  <label key={field.key} className="block">
+                    <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">{field.label}</span>
+                    <input value={(form as any)[field.key]} onChange={e => setForm({...form, [field.key]: e.target.value})} placeholder={field.key === 'quantity' ? '1' : field.key.includes('date') ? '2026.01.01' : ''} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory placeholder:text-lum-slate-warm/40 text-sm outline-none focus:border-lum-slate-light/20" />
+                  </label>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <label className="block">
+                  <span className="block text-[10px] font-medium text-lum-slate-warm/80 mb-1.5">{t('status')}</span>
+                  <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full px-3 py-2 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-ivory text-sm outline-none focus:border-lum-slate-light/20">
+                    <option value="AVAILABLE">{t('statusAvailable')}</option>
+                    <option value="IN_USE">{t('statusInUse')}</option>
+                    <option value="MAINTENANCE">{t('statusMaintenance')}</option>
+                    <option value="OUT_OF_SERVICE">{t('statusOutOfService')}</option>
+                    <option value="UNKNOWN">{t('statusUnknown')}</option>
+                    <option value="UNAVAILABLE">{t('statusUnavailable')}</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminImage')}</label>
+                  <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
+                  <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 min-h-11 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm touch-manipulation">
+                    <Upload className="w-4 h-4" /> {image ? t('adminChange') : t('adminUpload')}
+                  </button>
+                  {image && (
+                    <div className="mt-2 relative inline-block">
+                      <img src={image} alt="" className="h-20 rounded-lg object-contain bg-lum-mid border border-lum-panel-border" />
+                      <button onClick={() => setImage(null)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-xs touch-manipulation">×</button>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-[9px] tracking-[0.15em] uppercase text-lum-ivory/80 mb-1 block">{t('adminManualPdf')}</label>
+                  <input ref={manualRef} type="file" accept=".pdf" onChange={handleManual} className="hidden" />
+                  <button onClick={() => manualRef.current?.click()} className="flex items-center gap-2 px-3 py-2 min-h-11 rounded-xl bg-lum-panel-bg border border-lum-panel-border text-lum-slate-light hover:text-lum-ivory transition-colors text-sm touch-manipulation">
+                    <Upload className="w-4 h-4" /> {manual ? t('adminChangePdf') : t('adminUploadManualPdf')}
+                  </button>
+                  {manual && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-[10px] text-lum-slate-warm/60">{t('adminPdfUploaded')}</span>
+                      <button onClick={() => setManual(null)} className="text-[10px] text-red-400 hover:text-red-300">{t('adminRemove')}</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <button onClick={handleSubmit} className="btn-lum-primary flex items-center gap-2 text-xs px-5 py-3">
                 <Save className="w-3.5 h-3.5" /> {t('adminAddEquipment')}
               </button>
