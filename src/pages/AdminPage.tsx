@@ -102,6 +102,7 @@ export default function AdminPage() {
   const [hiddenItems, setHiddenItems] = useState<{ slug: string; name: string }[]>([])
   const [hiddenNews, setHiddenNews] = useState<any[]>([])
   const [hiddenPartners, setHiddenPartners] = useState<any[]>([])
+  const sectionOpenRef = useRef(false)
   const [manual, setManual] = useState<string | null>(null)
   const manualRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
@@ -211,6 +212,10 @@ export default function AdminPage() {
   const activeSection: AdminSection = editIdx !== null || showEquipList ? 'equipment' : showPartners ? 'partners' : showTranslations ? 'translations' : showNews ? 'news' : 'home'
 
   const openSection = (section: AdminSection) => {
+    if (section !== 'home' && !sectionOpenRef.current) {
+      const state = window.history.state || {}
+      window.history.pushState({ ...state, idx: (typeof state.idx === 'number' ? state.idx : 0) + 1, lupicAdminPanel: section }, '')
+    }
     setShowEquipList(section === 'equipment')
     setShowPartners(section === 'partners')
     setShowTranslations(section === 'translations')
@@ -224,6 +229,28 @@ export default function AdminPage() {
     if (section === 'equipment') loadHiddenEquipment()
     setMenuOpen(false)
   }
+
+  useEffect(() => {
+    sectionOpenRef.current = showEquipList || showPartners || showTranslations || showNews || editIdx !== null
+  }, [showEquipList, showPartners, showTranslations, showNews, editIdx])
+
+  useEffect(() => {
+    const onPop = () => {
+      if (!window.location.hash.startsWith('#/admin')) return
+      if (sectionOpenRef.current) {
+        setShowEquipList(false)
+        setShowPartners(false)
+        setShowTranslations(false)
+        setShowNews(false)
+        setEditIdx(null)
+        setEditIsStatic(false)
+        resetForm()
+        setMenuOpen(false)
+      }
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => setMouse({ x: (e.clientX / window.innerWidth) * 100, y: (e.clientY / window.innerHeight) * 100 })
@@ -579,7 +606,20 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <LanguageSwitcher />
-            <button onClick={() => { const st = window.history.state; const idx = st && typeof st.idx === 'number' ? st.idx : 0; if (idx > 0) navigate(-1); else navigate('/') }} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
+            <button onClick={() => {
+              if (sectionOpenRef.current) {
+                setShowEquipList(false)
+                setShowPartners(false)
+                setShowTranslations(false)
+                setShowNews(false)
+                setEditIdx(null)
+                setEditIsStatic(false)
+                resetForm()
+                setMenuOpen(false)
+              } else {
+                navigate('/')
+              }
+            }} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminBack')}</span>
             </button>
             <button onClick={async () => { try { await logoutAdmin() } finally { setAuthed(false) } }} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
