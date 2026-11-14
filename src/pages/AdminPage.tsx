@@ -164,6 +164,9 @@ export default function AdminPage() {
   }, [authed])
 
   type AdminSection = 'home' | 'equipment' | 'partners' | 'translations' | 'news'
+  const visibleEquipmentCount =
+    staticEquipments.filter((eq: any) => !hiddenSlugs.includes(eq.slug)).length +
+    savedItems.filter((eq: any) => !hiddenSlugs.includes(eq.slug)).length
   const activeSection: AdminSection = editIdx !== null || showEquipList ? 'equipment' : showPartners ? 'partners' : showTranslations ? 'translations' : showNews ? 'news' : 'home'
 
   const openSection = (section: AdminSection) => {
@@ -557,7 +560,7 @@ export default function AdminPage() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                 {[
-                  { label: t('adminVisibleEquipment'), value: staticEquipments.length + savedItems.length - hiddenSlugs.length },
+                  { label: t('adminVisibleEquipment'), value: visibleEquipmentCount },
                   { label: t('partners'), value: partners.length },
                   { label: t('adminNewsPosts'), value: newsItems.length },
                   { label: t('adminTranslationKeys'), value: transKeys.length || Object.keys(UI_STRINGS.en).length },
@@ -632,7 +635,7 @@ export default function AdminPage() {
                 <p className="text-sm font-medium text-lum-ivory">{t('adminSavedEquipment')}</p>
                 <p className="text-[10px] text-lum-slate-warm/60 mt-1">{t('adminSavedEquipmentHelp')}</p>
               </div>
-              <span className="text-[10px] text-lum-slate-warm/60">{staticEquipments.length + savedItems.length - hiddenSlugs.length} {t('adminVisible')}</span>
+              <span className="text-[10px] text-lum-slate-warm/60">{visibleEquipmentCount} {t('adminVisible')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
             {[...overriddenStatic, ...savedItems].filter((item: any) => !hiddenSlugs.includes(item.slug)).map((item: any) => (
