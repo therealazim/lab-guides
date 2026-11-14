@@ -16,6 +16,14 @@ async function req(path, options = {}, retried = false) {
   try { data = await r.json() } catch { data = null }
   if (!r.ok) {
     const message = data?.error || `Request failed with status ${r.status}`
+    if (r.status === 401 && !path.startsWith('/auth/')) {
+      try {
+        if (!sessionStorage.getItem('lupic-auth-reload')) {
+          sessionStorage.setItem('lupic-auth-reload', '1')
+          setTimeout(() => window.location.reload(), 50)
+        }
+      } catch {}
+    }
     if (r.status === 403 && !retried && /csrf/i.test(message)) {
       try {
         const session = await req('/auth/session')
@@ -25,6 +33,7 @@ async function req(path, options = {}, retried = false) {
     }
     throw new Error(message)
   }
+  try { sessionStorage.removeItem('lupic-auth-reload') } catch {}
   return data
 }
 

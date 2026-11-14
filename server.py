@@ -71,7 +71,8 @@ def admin_required(view):
 
 def client_ip():
     forwarded = request.headers.get('X-Forwarded-For', '')
-    return (forwarded.split(',')[0].strip() or request.remote_addr or 'unknown')
+    parts = [part.strip() for part in forwarded.split(',') if part.strip()]
+    return parts[-1] if parts else (request.remote_addr or 'unknown')
 
 
 def log_audit(action, entity='', entity_id='', details=None):
@@ -652,6 +653,23 @@ def bundled_equipment_slugs():
         return []
 
 
+def sitemap_equipment_slugs():
+    bundled = set(bundled_equipment_slugs())
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT slug, hidden FROM equipment')
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        hidden = {row[0] for row in rows if row[1]}
+        visible = {row[0] for row in rows if not row[1]}
+        return sorted((bundled | visible) - hidden)
+    except Exception as exc:
+        print(f'Sitemap database error: {exc}')
+        return sorted(bundled)
+
+
 @app.route('/robots.txt')
 def robots_txt():
     body = (
@@ -668,7 +686,7 @@ def sitemap_xml():
     base = site_base_url()
     pages = ['/', '/catalog', '/training', '/sop', '/download', '/certificate', '/faq', '/announcements', '/about', '/privacy', '/terms']
     urls = [f'{base}/' if page == '/' else f'{base}/#{page}' for page in pages]
-    urls += [f'{base}/#/catalog/{slug}' for slug in bundled_equipment_slugs()]
+    urls += [f'{base}/#/catalog/{slug}' for slug in sitemap_equipment_slugs()]
     items = ''.join(f'<url><loc>{url}</loc></url>' for url in urls)
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -692,7 +710,13 @@ def serve_frontend(path):
             with open(file_path, 'rb') as f:
                 content = f.read()
             mime = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
-            return Flask.response_class(content, mimetype=mime)
+            response = Flask.response_class(content, mimetype=mime)
+            if path.startswith('assets/'):
+                response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+            return response
+        # Missing asset or file-like path should 404 instead of returning HTML.
+        if path.startswith(('assets/', 'videos/', 'guides/', 'images/', 'logos/', 'flags/')) or '.' in os.path.basename(path):
+            return 'Not found', 404
     
     # HTML pages - serve with injected data
     index_file = os.path.join(DIST_DIR, 'index.html')
@@ -754,7 +778,9 @@ def serve_frontend(path):
     except Exception as e:
         print(f'Data injection error: {e}')
     
-    return html
+    response = Flask.response_class(html, mimetype='text/html')
+    response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
