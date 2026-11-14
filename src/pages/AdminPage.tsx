@@ -10,7 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import PageMeta from '../components/PageMeta'
 import ConfirmModal from '../components/ConfirmModal'
 import Toast from '../components/Toast'
-import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, fetchHiddenEquipmentDetails, restoreEquipmentApi, deleteHiddenEquipmentApi, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
+import { fetchEquipment as apiFetchEquipment, fetchHiddenEquipment, fetchHiddenEquipmentDetails, restoreEquipmentApi, deleteHiddenEquipmentApi, deleteEquipmentApi, saveEquipment as apiSaveEquipment, saveNews as apiSaveNews, deleteNewsApi, fetchHiddenNews, restoreNewsApi, purgeNewsApi, fetchHiddenPartners, restorePartnerApi, purgePartnerApi, saveTranslation as apiSaveTranslation, savePartner as apiSavePartner, updatePartner as apiUpdatePartner, deletePartnerApi, getAdminSession, loginAdmin, logoutAdmin } from '../api'
 
 interface EquipmentForm {
   name: string
@@ -100,6 +100,8 @@ export default function AdminPage() {
     return Array.isArray(initial?.hiddenEquipment) ? initial.hiddenEquipment : []
   })
   const [hiddenItems, setHiddenItems] = useState<{ slug: string; name: string }[]>([])
+  const [hiddenNews, setHiddenNews] = useState<any[]>([])
+  const [hiddenPartners, setHiddenPartners] = useState<any[]>([])
   const [manual, setManual] = useState<string | null>(null)
   const manualRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
@@ -168,11 +170,38 @@ export default function AdminPage() {
     } catch {}
   }
 
+  const loadHiddenNews = async () => {
+    try {
+      const data = await fetchHiddenNews()
+      if (Array.isArray(data)) setHiddenNews(data)
+    } catch {}
+  }
+
+  const loadHiddenPartners = async () => {
+    try {
+      const data = await fetchHiddenPartners()
+      if (Array.isArray(data)) setHiddenPartners(data)
+    } catch {}
+  }
+
+  const refreshPartners = async () => {
+    try {
+      const r = await fetch('/api/partners')
+      const data = await r.json()
+      if (Array.isArray(data)) {
+        const apiPartners = data.filter((p: any) => p.name && p.image).map((p: any) => ({ name: p.name, src: p.image, url: p.url, _id: p.id, _default: false }))
+        setPartners([...DEFAULT_PARTNERS, ...apiPartners])
+      }
+    } catch {}
+  }
+
   useEffect(() => {
     if (!authed) return
     loadNews()
     loadTranslations()
     loadHiddenEquipment()
+    loadHiddenNews()
+    loadHiddenPartners()
   }, [authed])
 
   type AdminSection = 'home' | 'equipment' | 'partners' | 'translations' | 'news'
@@ -190,7 +219,8 @@ export default function AdminPage() {
     setEditIsStatic(false)
     resetForm()
     if (section === 'translations') loadTranslations()
-    if (section === 'news') loadNews()
+    if (section === 'news') { loadNews(); loadHiddenNews() }
+    if (section === 'partners') loadHiddenPartners()
     if (section === 'equipment') loadHiddenEquipment()
     setMenuOpen(false)
   }
@@ -439,8 +469,43 @@ export default function AdminPage() {
   const deleteNewsItem = async (id: number) => {
     try {
       await deleteNewsApi(id)
-      setToastMsg(t('adminNewsDeleted')); setToastShow(true)
+      setToastMsg(t('adminNewsHidden')); setToastShow(true)
       loadNews()
+      loadHiddenNews()
+    } catch {}
+  }
+
+  const restoreNewsItem = async (id: number) => {
+    try {
+      await restoreNewsApi(id)
+      setHiddenNews(current => current.filter(item => item.id !== id))
+      setToastMsg(t('adminItemRestored')); setToastShow(true)
+      loadNews()
+    } catch {}
+  }
+
+  const purgeNewsItem = async (id: number) => {
+    try {
+      await purgeNewsApi(id)
+      setHiddenNews(current => current.filter(item => item.id !== id))
+      setToastMsg(t('adminHiddenDeleted')); setToastShow(true)
+    } catch {}
+  }
+
+  const restorePartnerItem = async (id: number) => {
+    try {
+      await restorePartnerApi(id)
+      setHiddenPartners(current => current.filter(item => item.id !== id))
+      setToastMsg(t('adminItemRestored')); setToastShow(true)
+      refreshPartners()
+    } catch {}
+  }
+
+  const purgePartnerItem = async (id: number) => {
+    try {
+      await purgePartnerApi(id)
+      setHiddenPartners(current => current.filter(item => item.id !== id))
+      setToastMsg(t('adminHiddenDeleted')); setToastShow(true)
     } catch {}
   }
 
@@ -861,7 +926,7 @@ export default function AdminPage() {
                 <p className="text-sm text-lum-slate-warm/60 col-span-full text-center py-8">{t('adminNoPartners')}</p>
               ) : partners.map((p, i) => (
                 <div key={i} className="lum-card p-4 text-center relative cursor-pointer hover:border-lum-slate-light/20 transition-colors" onClick={() => { if (p._default) return; setPartnerName(p.name); setPartnerUrl(p.url); setPartnerImg(p.src); setPartnerEditIdx(i) }}>
-                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; if (partner._default) { setToastMsg(t('adminDefaultCannotDelete')); setToastShow(true); return }; setConfirmMsg(t('adminDeletePartnerConfirm')); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg(t('adminPartnerDeleted')); setToastShow(true) }) }} aria-label={t('adminDelete')} title={t('adminDelete')} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); const idx = i; const partner = partners[idx]; if (partner._default) { setToastMsg(t('adminDefaultCannotDelete')); setToastShow(true); return }; setConfirmMsg(t('adminHidePartnerConfirm')); setConfirmAction(() => () => { const u = partners.filter((_, x) => x !== idx); setPartners(u); if (partner._id) deletePartnerApi(partner._id).catch(() => {}); if (partnerEditIdx === idx) { setPartnerEditIdx(null); setPartnerName(''); setPartnerUrl(''); setPartnerImg(null) }; setToastMsg(t('adminPartnerHidden')); setToastShow(true); loadHiddenPartners() }) }} aria-label={t('adminDelete')} title={t('adminDelete')} className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <img src={p.src} alt={p.name} className="h-16 mx-auto mb-2 object-contain" />
@@ -869,6 +934,46 @@ export default function AdminPage() {
                   <p className="text-[9px] text-lum-slate-warm truncate">{p.url}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-8">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-sm font-medium text-lum-ivory">{t('adminHiddenPartnersTitle')}</p>
+                  <p className="text-[10px] text-lum-slate-warm/60 mt-1">{t('adminHiddenPartnersHelp')}</p>
+                </div>
+                <span className="text-[10px] text-lum-slate-warm/60">{hiddenPartners.length}</span>
+              </div>
+              {hiddenPartners.length === 0 ? (
+                <p className="text-xs text-lum-slate-warm/60">{t('adminNoHiddenItems')}</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {hiddenPartners.map((p: any) => (
+                    <div key={p.id} className="lum-card p-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {p.image && <img src={p.image} alt="" className="h-10 w-10 rounded-lg object-contain bg-lum-mid border border-lum-panel-border flex-shrink-0" />}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-lum-ivory truncate">{p.name}</p>
+                          <p className="text-[10px] text-lum-slate-warm truncate">{p.url}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button onClick={() => restorePartnerItem(p.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-[10px] font-semibold uppercase tracking-[0.1em]">
+                          <RotateCcw className="w-3.5 h-3.5" /> {t('adminRestore')}
+                        </button>
+                        <button
+                          onClick={() => { setConfirmMsg(t('adminDeleteHiddenConfirm')); setConfirmAction(() => () => purgePartnerItem(p.id)) }}
+                          aria-label={t('adminDelete')}
+                          title={t('adminDelete')}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1006,12 +1111,49 @@ export default function AdminPage() {
                     <button onClick={() => editNewsItem(n)} title={t('adminEdit')} aria-label={t('adminEdit')} className="p-1.5 rounded-lg bg-lum-slate-light/10 text-lum-slate-light hover:bg-lum-slate-light/20 transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => { setConfirmMsg(t('adminDeleteNewsConfirm')); setConfirmAction(() => () => deleteNewsItem(n.id)) }} aria-label={t('adminDelete')} title={t('adminDelete')} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                    <button onClick={() => { setConfirmMsg(t('adminHideNewsConfirm')); setConfirmAction(() => () => deleteNewsItem(n.id)) }} aria-label={t('adminDelete')} title={t('adminDelete')} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-8">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-sm font-medium text-lum-ivory">{t('adminHiddenNewsTitle')}</p>
+                  <p className="text-[10px] text-lum-slate-warm/60 mt-1">{t('adminHiddenNewsHelp')}</p>
+                </div>
+                <span className="text-[10px] text-lum-slate-warm/60">{hiddenNews.length}</span>
+              </div>
+              {hiddenNews.length === 0 ? (
+                <p className="text-xs text-lum-slate-warm/60">{t('adminNoHiddenItems')}</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {hiddenNews.map((n: any) => (
+                    <div key={n.id} className="lum-card p-4 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-lum-ivory truncate">{n.title}</p>
+                        <p className="text-[10px] text-lum-slate-warm truncate mt-0.5">{n.description}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button onClick={() => restoreNewsItem(n.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors text-[10px] font-semibold uppercase tracking-[0.1em]">
+                          <RotateCcw className="w-3.5 h-3.5" /> {t('adminRestore')}
+                        </button>
+                        <button
+                          onClick={() => { setConfirmMsg(t('adminDeleteHiddenConfirm')); setConfirmAction(() => () => purgeNewsItem(n.id)) }}
+                          aria-label={t('adminDelete')}
+                          title={t('adminDelete')}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

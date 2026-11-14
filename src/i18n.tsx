@@ -128,6 +128,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     latestNewsTitle: 'Latest News', readMore: 'Read more', contactUsTitle: 'Contact Us', followUsTitle: 'Follow Us', footerLocation: 'Korea University, Seoul, Republic of Korea', rightsReserved: 'All Rights Reserved.', privacyPolicy: 'Privacy Policy', termsOfUse: 'Terms of Use',
     comingSoonTitle: 'Coming Soon', comingSoonText: 'This section is being prepared. Please check back soon.',
     adminHiddenEquipmentTitle: 'Hidden equipment', adminHiddenEquipmentHelp: 'Restore equipment to make it visible in the catalog again.', adminRestore: 'Restore', adminNoHidden: 'No hidden equipment.', adminEquipmentRestored: 'Equipment restored', adminDeleteHiddenConfirm: 'Permanently delete this hidden entry? This cannot be undone.', adminHiddenDeleted: 'Hidden entry deleted',
+    adminHiddenNewsTitle: 'Hidden news', adminHiddenNewsHelp: 'Hidden news is not shown on the public site. Restore it or delete it permanently.', adminHiddenPartnersTitle: 'Hidden partners', adminHiddenPartnersHelp: 'Hidden partners are not shown on the public site. Restore them or delete them permanently.', adminNoHiddenItems: 'Nothing hidden.', adminHideNewsConfirm: 'Hide this news from the public site?', adminHidePartnerConfirm: 'Hide this partner from the public site?', adminNewsHidden: 'News hidden', adminPartnerHidden: 'Partner hidden', adminItemRestored: 'Restored',
   },
   uz: {
     title: 'KMI - LUPIC Laboratoriyasi',
@@ -240,6 +241,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     latestNewsTitle: "So'nggi yangiliklar", readMore: 'Batafsil', contactUsTitle: "Bog'lanish", followUsTitle: 'Bizni kuzatib boring', footerLocation: 'Koreya universiteti, Seul, Koreya Respublikasi', rightsReserved: 'Barcha huquqlar himoyalangan.', privacyPolicy: 'Maxfiylik siyosati', termsOfUse: 'Foydalanish shartlari',
     comingSoonTitle: 'Tez orada', comingSoonText: "Ushbu bo'lim tayyorlanmoqda. Tez orada qayta tekshiring.",
     adminHiddenEquipmentTitle: 'Yashirilgan jihozlar', adminHiddenEquipmentHelp: "Jihozni katalogda qayta ko'rinadigan qilish uchun tiklang.", adminRestore: 'Tiklash', adminNoHidden: "Yashirilgan jihozlar yo'q.", adminEquipmentRestored: 'Jihoz tiklandi', adminDeleteHiddenConfirm: "Bu yashirilgan yozuv butunlay o'chirilsinmi? Buni qaytarib bo'lmaydi.", adminHiddenDeleted: "Yashirilgan yozuv o'chirildi",
+    adminHiddenNewsTitle: 'Yashirilgan yangiliklar', adminHiddenNewsHelp: "Yashirilgan yangiliklar saytda ko'rsatilmaydi. Tiklang yoki butunlay o'chiring.", adminHiddenPartnersTitle: 'Yashirilgan hamkorlar', adminHiddenPartnersHelp: "Yashirilgan hamkorlar saytda ko'rsatilmaydi. Tiklang yoki butunlay o'chiring.", adminNoHiddenItems: "Yashirilgan narsa yo'q.", adminHideNewsConfirm: "Bu yangilikni saytdan yashirasizmi?", adminHidePartnerConfirm: "Bu hamkorni saytdan yashirasizmi?", adminNewsHidden: 'Yangilik yashirildi', adminPartnerHidden: 'Hamkor yashirildi', adminItemRestored: 'Tiklandi',
   },
   kk: {
     title: 'KMI - LUPIC Laboratoriyası',
@@ -352,6 +354,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     latestNewsTitle: 'Eń jańa habarlar', readMore: 'Tolıq', contactUsTitle: 'Baylanıs', followUsTitle: 'Bizdi kúzetiń', footerLocation: 'Koreya universiteti, Seul, Koreya Respublikası', rightsReserved: 'Barlıq huqıqlar qorǵalǵan.', privacyPolicy: 'Jasırınlıq siyasatı', termsOfUse: 'Paydalanıw shártleri',
     comingSoonTitle: 'Tez arada', comingSoonText: 'Bul bólim tayarlanbaqta. Tez arada qayta tekseriń.',
     adminHiddenEquipmentTitle: 'Jasırılǵan qurılmalar', adminHiddenEquipmentHelp: 'Qurılmanı katalogta qayta kóriniwli etiw ushın tikleń.', adminRestore: 'Tiklew', adminNoHidden: 'Jasırılǵan qurılmalar joq.', adminEquipmentRestored: 'Qurılma tiklandi', adminDeleteHiddenConfirm: 'Bul jasırılǵan jazba pútkilley óshirilsin be? Bunı qaytarıw múmkin emes.', adminHiddenDeleted: 'Jasırılǵan jazba óshirildi',
+    adminHiddenNewsTitle: 'Jasırılǵan jańalıqlar', adminHiddenNewsHelp: 'Jasırılǵan jańalıqlar saytta kórsetilmeydi. Tikleń yamasa pútkilley óshiriń.', adminHiddenPartnersTitle: 'Jasırılǵan sherikler', adminHiddenPartnersHelp: 'Jasırılǵan sherikler saytta kórsetilmeydi. Tikleń yamasa pútkilley óshiriń.', adminNoHiddenItems: 'Jasırılǵan zat joq.', adminHideNewsConfirm: 'Bul jańalıqtı sayttan jasırasız ba?', adminHidePartnerConfirm: 'Bul sherikti sayttan jasırasız ba?', adminNewsHidden: 'Jańalıq jasırıldı', adminPartnerHidden: 'Sherik jasırıldı', adminItemRestored: 'Tiklandi',
   },
   ru: {
     title: 'KMI - LUPIC Лаборатория',
@@ -464,6 +467,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     latestNewsTitle: 'Последние новости', readMore: 'Подробнее', contactUsTitle: 'Свяжитесь с нами', followUsTitle: 'Подписывайтесь', footerLocation: 'Университет Корё, Сеул, Республика Корея', rightsReserved: 'Все права защищены.', privacyPolicy: 'Политика конфиденциальности', termsOfUse: 'Условия использования',
     comingSoonTitle: 'Скоро', comingSoonText: 'Этот раздел готовится. Пожалуйста, зайдите позже.',
     adminHiddenEquipmentTitle: 'Скрытое оборудование', adminHiddenEquipmentHelp: 'Восстановите оборудование, чтобы оно снова отображалось в каталоге.', adminRestore: 'Восстановить', adminNoHidden: 'Скрытого оборудования нет.', adminEquipmentRestored: 'Оборудование восстановлено', adminDeleteHiddenConfirm: 'Удалить эту скрытую запись навсегда? Это нельзя отменить.', adminHiddenDeleted: 'Скрытая запись удалена',
+    adminHiddenNewsTitle: 'Скрытые новости', adminHiddenNewsHelp: 'Скрытые новости не отображаются на сайте. Восстановите или удалите их навсегда.', adminHiddenPartnersTitle: 'Скрытые партнёры', adminHiddenPartnersHelp: 'Скрытые партнёры не отображаются на сайте. Восстановите или удалите их навсегда.', adminNoHiddenItems: 'Скрытых элементов нет.', adminHideNewsConfirm: 'Скрыть эту новость с сайта?', adminHidePartnerConfirm: 'Скрыть этого партнёра с сайта?', adminNewsHidden: 'Новость скрыта', adminPartnerHidden: 'Партнёр скрыт', adminItemRestored: 'Восстановлено',
   },
   ko: {
     title: 'KMI - LUPIC 연구실',
@@ -572,6 +576,7 @@ export const UI_STRINGS: Record<Lang, Record<string, string>> = {
     latestNewsTitle: '최신 뉴스', readMore: '더 보기', contactUsTitle: '문의하기', followUsTitle: '팔로우', footerLocation: '고려대학교, 서울, 대한민국', rightsReserved: '모든 권리 보유.', privacyPolicy: '개인정보처리방침', termsOfUse: '이용약관',
     comingSoonTitle: '곧 제공 예정', comingSoonText: '이 섹션은 준비 중입니다. 곧 다시 확인해 주세요.',
     adminHiddenEquipmentTitle: '숨겨진 장비', adminHiddenEquipmentHelp: '장비를 복원하면 카탈로그에 다시 표시됩니다.', adminRestore: '복원', adminNoHidden: '숨겨진 장비가 없습니다.', adminEquipmentRestored: '장비가 복원되었습니다', adminDeleteHiddenConfirm: '이 숨겨진 항목을 영구 삭제하시겠습니까? 되돌릴 수 없습니다.', adminHiddenDeleted: '숨겨진 항목이 삭제되었습니다',
+    adminHiddenNewsTitle: '숨겨진 뉴스', adminHiddenNewsHelp: '숨겨진 뉴스는 사이트에 표시되지 않습니다. 복원하거나 영구 삭제하세요.', adminHiddenPartnersTitle: '숨겨진 파트너', adminHiddenPartnersHelp: '숨겨진 파트너는 사이트에 표시되지 않습니다. 복원하거나 영구 삭제하세요.', adminNoHiddenItems: '숨겨진 항목이 없습니다.', adminHideNewsConfirm: '이 뉴스를 사이트에서 숨기시겠습니까?', adminHidePartnerConfirm: '이 파트너를 사이트에서 숨기시겠습니까?', adminNewsHidden: '뉴스가 숨겨졌습니다', adminPartnerHidden: '파트너가 숨겨졌습니다', adminItemRestored: '복원됨',
   },
 }
 

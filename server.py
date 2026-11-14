@@ -240,6 +240,8 @@ def init_db():
         )
     ''')
     cur.execute('ALTER TABLE news ADD COLUMN IF NOT EXISTS upload_date DATE')
+    cur.execute('ALTER TABLE news ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT false')
+    cur.execute('ALTER TABLE partners ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT false')
     cur.execute('UPDATE news SET upload_date = created_at::date WHERE upload_date IS NULL')
     cur.execute('''
         CREATE TABLE IF NOT EXISTS login_attempts (
@@ -538,11 +540,64 @@ def update_partner(partner_id):
 def delete_partner(partner_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('DELETE FROM partners WHERE id = %s', (partner_id,))
+    cur.execute('UPDATE partners SET hidden = true WHERE id = %s', (partner_id,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Partner not found'}), 404
     conn.commit()
     cur.close()
     conn.close()
-    log_audit('partner.delete', 'partner', partner_id)
+    log_audit('partner.hide', 'partner', partner_id)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/hidden-partners', methods=['GET'])
+@admin_required
+def get_hidden_partners():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT * FROM partners WHERE hidden = true ORDER BY sort_order, id')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify(rows)
+
+
+@app.route('/api/partners/<int:partner_id>/restore', methods=['POST'])
+@admin_required
+def restore_partner(partner_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('UPDATE partners SET hidden = false WHERE id = %s AND hidden = true', (partner_id,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Hidden partner not found'}), 404
+    conn.commit()
+    cur.close()
+    conn.close()
+    log_audit('partner.restore', 'partner', partner_id)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/hidden-partners/<int:partner_id>', methods=['DELETE'])
+@admin_required
+def purge_partner(partner_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM partners WHERE id = %s AND hidden = true', (partner_id,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Hidden partner not found'}), 404
+    conn.commit()
+    cur.close()
+    conn.close()
+    log_audit('partner.purge', 'partner', partner_id)
     return jsonify({'ok': True})
 
 # ─── Translations API ───
@@ -665,11 +720,72 @@ def save_news():
 def delete_news(news_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('DELETE FROM news WHERE id = %s', (news_id,))
+    cur.execute('UPDATE news SET hidden = true WHERE id = %s', (news_id,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'News not found'}), 404
     conn.commit()
     cur.close()
     conn.close()
-    log_audit('news.delete', 'news', news_id)
+    log_audit('news.hide', 'news', news_id)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/hidden-news', methods=['GET'])
+@admin_required
+def get_hidden_news():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT id, title, description, upload_date, created_at FROM news WHERE hidden = true ORDER BY created_at DESC')
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    result = []
+    for row in rows:
+        item = dict(row)
+        if item.get('upload_date'):
+            item['upload_date'] = item['upload_date'].isoformat()
+        if item.get('created_at'):
+            item['created_at'] = item['created_at'].isoformat()
+        result.append(item)
+    return jsonify(result)
+
+
+@app.route('/api/news/<int:news_id>/restore', methods=['POST'])
+@admin_required
+def restore_news(news_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('UPDATE news SET hidden = false WHERE id = %s AND hidden = true', (news_id,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Hidden news not found'}), 404
+    conn.commit()
+    cur.close()
+    conn.close()
+    log_audit('news.restore', 'news', news_id)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/hidden-news/<int:news_id>', methods=['DELETE'])
+@admin_required
+def purge_news(news_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM news WHERE id = %s AND hidden = true', (news_id,))
+    if cur.rowcount == 0:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'Hidden news not found'}), 404
+    conn.commit()
+    cur.close()
+    conn.close()
+    log_audit('news.purge', 'news', news_id)
     return jsonify({'ok': True})
 
 # ─── Audit ───
@@ -786,11 +902,11 @@ def serve_frontend(path):
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute('SELECT * FROM equipment WHERE hidden = false ORDER BY slug')
         rows = cur.fetchall()
-        cur.execute('SELECT * FROM partners ORDER BY sort_order')
+        cur.execute('SELECT * FROM partners WHERE hidden = false ORDER BY sort_order')
         partners = cur.fetchall()
         cur.execute('SELECT * FROM translations')
         translation_rows = cur.fetchall()
-        cur.execute('SELECT * FROM news ORDER BY sort_order, created_at DESC')
+        cur.execute('SELECT * FROM news WHERE hidden = false ORDER BY sort_order, created_at DESC')
         news_rows = cur.fetchall()
         cur.execute('SELECT slug FROM equipment WHERE hidden = true ORDER BY slug')
         hidden_slugs = [r['slug'] for r in cur.fetchall()]

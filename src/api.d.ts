@@ -8,6 +8,12 @@ export function saveEquipment(item: any): Promise<any>
 export function deleteEquipmentApi(slug: string): Promise<any>
 export function saveNews(item: any): Promise<any>
 export function deleteNewsApi(id: number): Promise<any>
+export function fetchHiddenNews(): Promise<any[]>
+export function restoreNewsApi(id: number): Promise<any>
+export function purgeNewsApi(id: number): Promise<any>
+export function fetchHiddenPartners(): Promise<any[]>
+export function restorePartnerApi(id: number): Promise<any>
+export function purgePartnerApi(id: number): Promise<any>
 export function saveTranslation(entry: { key: string; lang: string; value: string }): Promise<any>
 export function fetchPartners(): Promise<any[]>
 export function savePartner(partner: any): Promise<any>
