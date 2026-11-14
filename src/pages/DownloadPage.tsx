@@ -4,6 +4,7 @@ import { useI18n } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
 import PageMeta from '../components/PageMeta'
+import BackButton from '../components/BackButton'
 
 const GUIDES = [
   { file: 'ion-chromatography-system.pdf', name: 'Ion Chromatography System', size: '4.7 MB' },
@@ -37,6 +38,7 @@ export default function DownloadPage() {
       </section>
 
       <main className="flex-1 px-4 py-12 md:px-8 md:py-16">
+        <BackButton className="mb-6" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {GUIDES.map(guide => (
             <article key={guide.file} className="lum-card flex h-full flex-col p-5">

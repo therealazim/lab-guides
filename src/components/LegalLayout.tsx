@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import SiteHeader from './SiteHeader'
 import SiteFooter from './SiteFooter'
 import PageMeta from './PageMeta'
+import BackButton from './BackButton'
 
 export type LegalSection = {
   title: string
@@ -40,6 +41,7 @@ export default function LegalLayout({ title, intro, updated, sections, contactEm
 
       <main className="flex-1 px-4 py-12 md:px-8 md:py-16">
         <div className="mx-auto w-full max-w-3xl">
+          <BackButton className="mb-6" />
           {sections.map((section, index) => (
             <section key={section.title} className="mb-9">
               <h2 className="mb-3 text-base font-bold text-lum-navy md:text-lg">

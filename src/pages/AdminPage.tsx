@@ -579,7 +579,7 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <LanguageSwitcher />
-            <button onClick={() => navigate('/')} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
+            <button onClick={() => { const st = window.history.state; const idx = st && typeof st.idx === 'number' ? st.idx : 0; if (idx > 0) navigate(-1); else navigate('/') }} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('adminBack')}</span>
             </button>
             <button onClick={async () => { try { await logoutAdmin() } finally { setAuthed(false) } }} className="flex items-center gap-1 px-2 sm:px-3 py-2 min-h-11 rounded-full bg-lum-panel-bg border border-lum-panel-border text-lum-slate-warm hover:text-lum-ivory transition-colors text-[10px] touch-manipulation">

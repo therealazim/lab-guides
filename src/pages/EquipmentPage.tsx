@@ -1,11 +1,12 @@
 import { useLocation, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Shield, ListOrdered, Wrench, Info, MapPin, Hash, Tag, ShoppingCart, Package, BookOpen, FileText } from 'lucide-react'
+import { Shield, ListOrdered, Wrench, Info, MapPin, Hash, Tag, ShoppingCart, Package, BookOpen, FileText } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
 import PageMeta from '../components/PageMeta'
+import BackButton from '../components/BackButton'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
 import youtubeVideos from '../data/youtube-videos.json'
@@ -142,16 +143,11 @@ export default function EquipmentPage() {
       <SiteHeader />
 
       <main className="mx-auto w-full px-4 sm:px-6 md:px-8 py-8 sm:py-10">
-        <motion.a
-          href={fromCatalog ? '/#/catalog' : '/#/'}
-          onClick={() => { if (!fromCatalog) sessionStorage.setItem('homeScrollY', String(window.scrollY)) }}
-          initial={{ opacity: 0, x: -12 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-8 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-lum-slate-warm transition-colors hover:text-lum-accent"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{fromCatalog ? t('backToList') : t('back')}</span>
-        </motion.a>
+        <BackButton
+          fallback={fromCatalog ? '/catalog' : '/'}
+          label={fromCatalog ? t('backToList') : t('back')}
+          className="mb-8"
+        />
         {/* ─── HERO ─── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

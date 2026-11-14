@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useI18n, type Lang } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import PageMeta from '../components/PageMeta'
+import BackButton from '../components/BackButton'
 import SiteFooter from '../components/SiteFooter'
 import staticEquipments from '../data/equipments.json'
 import imageMap from '../data/imageMap.json'
@@ -77,6 +78,7 @@ export default function CatalogItemPage() {
       <SiteHeader />
 
       <main className="mx-auto w-full flex-1 px-4 py-10 md:px-8 md:py-14">
+        <BackButton fallback="/catalog" label={t('backToList')} className="mb-6 max-w-lg mx-auto w-full" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto">
           <div className="lum-card p-6 md:p-8 flex flex-col items-center text-center mb-6">
             {imgSrc ? (

@@ -5,6 +5,7 @@ import { useI18n } from '../i18n'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
 import PageMeta from '../components/PageMeta'
+import BackButton from '../components/BackButton'
 
 const PAGE_KEYS: Record<string, { title: string; desc: string }> = {
   '/training': { title: 'featTrainingTitle', desc: 'featTrainingDesc' },
@@ -38,6 +39,7 @@ export default function InfoPage() {
       </section>
 
       <main className="mx-auto w-full flex-1 px-4 py-14 md:px-8">
+        <BackButton className="mb-6" />
         <div className="lum-card flex flex-col items-center px-6 py-16 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-lum-accent-soft">
             <Clock3 className="h-6 w-6 text-lum-accent" />
